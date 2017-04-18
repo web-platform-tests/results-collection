@@ -1,6 +1,6 @@
-# [Web Platform Tests Dashboard](https://wptdashboard.appspot.com/)
+# [web-platform-tests dashboard](https://wptdashboard.appspot.com/)
 
-A dashboard of cross-browser results for the W3C [Web Platform Tests](https://github.com/w3c/web-platform-tests).
+A dashboard of cross-browser results for the W3C [web-platform-tests](https://github.com/w3c/web-platform-tests).
 
 It consists of 2 parts:
 
@@ -26,7 +26,7 @@ dev_appserver .
 
 #### Location of the WPT in each browser’s source tree
 
-- Chromium: [`src/third_party/WebKit/LayoutTests/imported/wpt`](https://cs.chromium.org/chromium/src/third_party/WebKit/LayoutTests/imported/wpt/)
+- Chromium: [`src/third_party/WebKit/LayoutTests/imported/wpt`](https://cs.chromium.org/chromium/src/third_party/WebKit/LayoutTests/external/wpt/)
 - Firefox: [`testing/web-platform/tests`](https://dxr.mozilla.org/mozilla-central/source/testing/web-platform/tests)
 - WebKit: [`LayoutTests/imported/w3c/web-platform-tests`](https://trac.webkit.org/browser/trunk/LayoutTests/imported/w3c/web-platform-tests)
 
