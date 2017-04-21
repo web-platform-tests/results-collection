@@ -15,16 +15,33 @@
 package wptdashboard
 
 import (
-    "html/template"
     "net/http"
+    "encoding/json"
+
+    "appengine"
+    "fmt"
 )
 
-var templates = template.Must(template.ParseGlob("templates/*.html"))
+func currentWPTHandler(w http.ResponseWriter, r *http.Request) {
+    ctx := appengine.NewContext(r)
+    latestRevs, err := getCurrentWPTRevision(ctx)
 
-func init() {
-    http.HandleFunc("/", testHandler)
-    http.HandleFunc("/about", aboutHandler)
-    http.HandleFunc("/current-wpt.json", currentWPTHandler)
-    http.HandleFunc("/tasks/update-wpt-revision", updateWPTRevisionHandler)
+    if err != nil {
+        fmt.Fprintf(w, "yes %s", err)
+        return
+    }
+    if len(latestRevs) == 0 {
+        fmt.Fprintf(w, "no zero")
+        return
+    }
+
+    body, err := json.Marshal(struct {
+        CurrentRevision     string      `json:"current_revision"`
+    }{
+        CurrentRevision:    latestRevs[0].StringID(),
+    })
+    if err != nil {
+        fmt.Println("error:", err)
+    }
+    fmt.Fprintf(w, "%s", body)
 }
-
