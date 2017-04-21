@@ -26,10 +26,10 @@ func revisionsHandler(w http.ResponseWriter, r *http.Request) {
     q := datastore.NewQuery("WPTRevision").Order("-Number").Limit(50)
 
     if _, err := q.GetAll(ctx, &revisions); err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 
     if err := templates.ExecuteTemplate(w, "revisions.html", revisions); err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }

@@ -41,10 +41,7 @@ type WPTRevision struct {
 }
 
 func getCurrentWPTRevisionKeys(ctx appengine.Context) ([]*datastore.Key, error) {
-    // var wptRevision []WPTRevision
-    // var keys []datastore.Key
     q := datastore.NewQuery("WPTRevision").Order("-Number").Limit(1).KeysOnly()
     keys, err := q.GetAll(ctx, nil)
-    ctx.Debugf("Done processing results")
     return keys, err
 }

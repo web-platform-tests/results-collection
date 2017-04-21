@@ -43,12 +43,10 @@ func updateWPTRevisionHandler(w http.ResponseWriter, r *http.Request) {
 
     if len(results) > 0 {
         fmt.Fprintf(w, "WPTD SHA: %s\n", results[0].SHA)
-
         if gitHubWPTSHA == results[0].SHA {
             fmt.Fprintf(w, "SHAs match, stopping.\n")
             return
         }
-
         newNumber = results[0].Number + 1
     } else {
         fmt.Fprintf(w, "No current revision, creating first WPTRevision.\n")
@@ -83,7 +81,7 @@ func fetchLatestWPTRevisionFromGitHubAPI(ctx appengine.Context) (string, error) 
     client := urlfetch.Client(ctx)
     resp, err := client.Get("https://api.github.com/repos/w3c/web-platform-tests/commits/master")
     if err != nil {
-            return "", err
+        return "", err
     }
 
     defer resp.Body.Close()
@@ -92,7 +90,6 @@ func fetchLatestWPTRevisionFromGitHubAPI(ctx appengine.Context) (string, error) 
     var commit struct {
         SHA string `json:"sha"`
     }
-    // TODO: can we pass json.Unmarshal a raw file handle?
     err = json.Unmarshal(body, &commit)
     if err != nil {
         fmt.Println("error:", err)
