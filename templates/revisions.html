@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+{{ template "_head.html" }}
+<body>
+<div id="content">
+    {{ template "_header.html" }}
+    <section>
+      <h1>WPT Revisions</h1>
+      <p>In order to make sure all bots are testing against the same revision of WPT, they pull and test against the <a href="/current-wpt.json">locked WPT revision</a> highlighted below. The revision is updated to <a href="https://github.com/w3c/web-platform-tests/commits/master">origin/master@HEAD</a> every morning at 2am PT.</p>
+    </section>
+    <table class="Revisions">
+      <tr>
+        <th>Number
+        <th>SHA
+        <th>Created
+        <th>Save results?
+      </tr>
+      {{ range . }}
+        <tr>
+          <td>{{ .Number }}
+          <td><a href="https://github.com/w3c/web-platform-tests/commit/{{ .SHA }}">{{ .SHA }}</a>
+          <td>{{ .CreatedAt.Format "01/02 '06" }}
+          <td>{{ .Retain }}
+        </tr>
+      {{ end }}
+    </table>
+</div>
+</body>
+</html>

@@ -24,7 +24,7 @@ import (
 
 func currentWPTHandler(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    latestRevs, err := getCurrentWPTRevision(ctx)
+    latestRevs, err := getCurrentWPTRevisionKeys(ctx)
 
     if err != nil {
         fmt.Fprintf(w, "yes %s", err)

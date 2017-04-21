@@ -19,6 +19,7 @@ a {
 }
 header {
     padding: 0.5em 0;
+    margin-bottom: 1.5em;
 }
 header h1 {
     font-size: 1.5em;
@@ -27,5 +28,41 @@ header h1 {
 header nav a {
     margin-right: 1em;
 }
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+section {
+    margin-bottom: 1em;
+}
+section h1 {
+    margin-bottom: 0.5em;
+}
+section p {
+    margin-bottom: 1em;
+}
+section a {
+    font-weight: bold;
+    color: #fc047e;
+}
+section a:hover {
+    color: #fe79ba;
+}
+
+/* Component-specific styles */
+table.Revisions {
+  font-family: monospace;
+}
+table.Revisions th {
+    text-align: left;
+}
+table.Revisions th,
+table.Revisions td {
+    padding: 0.75em;
+}
+table.Revisions tr:nth-child(2) {
+  background-color: aqua;
+}
+
 </style>
 </head>

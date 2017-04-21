@@ -3,17 +3,12 @@
 {{ template "_head.html" }}
 <body>
 <div id="content">
-    <header>
-        <h1><a href="/">web-platform-tests dashboard</a></h1>
-        <nav>
-            <a href="/">Root</a>
-            <a href="/about">About</a>
-        </nav>
-    </header>
-    <div>
+    {{ template "_header.html" }}
+    <section>
       <h1>Background</h1>
       <p><a href="https://github.com/w3c/web-platform-tests">web-platform-tests</a> is a test suite for the web platform.</p>
-    </div>
+      <p>You can find documentation for the web-platform-tests themselves at <a href="http://web-platform-tests.org/">web-platform-tests.org</a>.</p>
+    </section>
 </div>
 </body>
 </html>

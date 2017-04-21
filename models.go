@@ -15,11 +15,17 @@
 package wptdashboard
 
 import (
+    "time"
+
     "appengine"
     "appengine/datastore"
 )
 
 type WPTRevision struct {
+    // The full SHA1 of the revision.
+    // Also used as the key.
+    SHA             string
+
     // This is not the number of commits since the first commit
     // in WPT. It is meant to be a monotonically increasing number
     // incremented by the WPT revision updater daily cron job.
@@ -30,9 +36,11 @@ type WPTRevision struct {
     // marked true it signals to the data pruner
     // not to delete results under this WPT revision.
     Retain          bool
+
+    CreatedAt       time.Time
 }
 
-func getCurrentWPTRevision(ctx appengine.Context) ([]*datastore.Key, error) {
+func getCurrentWPTRevisionKeys(ctx appengine.Context) ([]*datastore.Key, error) {
     // var wptRevision []WPTRevision
     // var keys []datastore.Key
     q := datastore.NewQuery("WPTRevision").Order("-Number").Limit(1).KeysOnly()

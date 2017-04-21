@@ -15,51 +15,62 @@
 package wptdashboard
 
 import (
-    "net/http"
     "encoding/json"
+    "fmt"
     "io/ioutil"
+    "net/http"
+    "time"
 
     "appengine"
     "appengine/datastore"
     "appengine/urlfetch"
-    "fmt"
 )
 
 func updateWPTRevisionHandler(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
-    gitHubWPTRevisionSHA, _ := fetchLatestWPTRevisionFromGitHubAPI(ctx)
-    fmt.Fprintf(w, "sha: %s", gitHubWPTRevisionSHA)
+    w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
+    gitHubWPTSHA, _ := fetchLatestWPTRevisionFromGitHubAPI(ctx)
 
-    // - fetch latest WPTRevision in datastore
-    // - if API revision == latest revision, quit
-    latestRevs, err := getLatestWPTRevision(ctx)
-    if err != nil {
-        fmt.Fprintf(w, "yes %s", err)
+    var results []WPTRevision
+    q := datastore.NewQuery("WPTRevision").Order("-Number").Limit(1)
+    if _, err := q.GetAll(ctx, &results); err != nil {
+        fmt.Fprintf(w, "Error fetching current WPTD revision: %s\n", err)
         return
     }
-    var newRev *WPTRevision
-    if len(latestRevs) == 0 {
-        fmt.Fprintf(w, "create new")
-        newRev = &WPTRevision{1, true}
-    } else {
-        fmt.Fprintf(w, "overwrite")
-        latestRev := latestRevs[0]
-        newRev = &WPTRevision{latestRev.Number + 1, false}
-    }
-    key := datastore.NewKey(ctx, "WPTRevision", gitHubWPTRevisionSHA, 0, nil)
+    fmt.Fprintf(w, "GH SHA: %s\n", gitHubWPTSHA)
+    newNumber := 0
 
-    if _, err := datastore.Put(ctx, key, newRev); err != nil {
+    if len(results) > 0 {
+        fmt.Fprintf(w, "WPTD SHA: %s\n", results[0].SHA)
+
+        if gitHubWPTSHA == results[0].SHA {
+            fmt.Fprintf(w, "SHAs match, stopping.\n")
+            return
+        }
+
+        newNumber = results[0].Number + 1
+    } else {
+        fmt.Fprintf(w, "No current revision, creating first WPTRevision.\n")
+    }
+
+    fmt.Fprintf(w, "Creating new revision.\n")
+
+    newRevision := &WPTRevision{
+        SHA:    gitHubWPTSHA,
+        Number: newNumber,
+        Retain: true,
+        CreatedAt: time.Now(),
+    }
+    key := datastore.NewKey(ctx, "WPTRevision", gitHubWPTSHA, 0, nil)
+
+    if _, err := datastore.Put(ctx, key, newRevision); err != nil {
         http.Error(w, err.Error(), 500)
         return
     }
 
-    // - else, create new WPTRevision
+    fmt.Fprintf(w, "Created: %+v\n", newRevision)
 }
-
-// func getLatestWPTRevision(ctx context.Context) {
-//}
-
 
 func getLatestWPTRevision(ctx appengine.Context) ([]WPTRevision, error) {
     var wptRevision []WPTRevision
