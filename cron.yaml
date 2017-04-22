@@ -17,4 +17,3 @@ cron:
   url: /tasks/update-wpt-revision
   schedule: every 24 hours 2:00
   timezone: America/Los_Angeles
-  login: admin

@@ -17,5 +17,8 @@ api_version: go1
 service: dev
 
 handlers:
+- url: /tasks/.*
+  script: _go_app
+  login: admin
 - url: /.*
   script: _go_app
