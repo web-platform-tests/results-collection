@@ -15,17 +15,21 @@
 package wptdashboard
 
 import (
-    "html/template"
+    "appengine"
+    "appengine/datastore"
     "net/http"
 )
 
-var templates = template.Must(template.ParseGlob("templates/*.html"))
+func revisionsHandler(w http.ResponseWriter, r *http.Request) {
+    ctx := appengine.NewContext(r)
+    var revisions []WPTRevision
+    q := datastore.NewQuery("WPTRevision").Order("-Number").Limit(50)
 
-func init() {
-    http.HandleFunc("/", testHandler)
-    http.HandleFunc("/about", aboutHandler)
-    http.HandleFunc("/revisions", revisionsHandler)
-    http.HandleFunc("/current-wpt.json", currentWPTHandler)
-    http.HandleFunc("/tasks/update-wpt-revision", updateWPTRevisionHandler)
+    if _, err := q.GetAll(ctx, &revisions); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    if err := templates.ExecuteTemplate(w, "revisions.html", revisions); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 }
-
