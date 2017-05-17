@@ -1,6 +1,6 @@
 # [web-platform-tests dashboard](https://wptdashboard.appspot.com/) 📈
 
-A dashboard of cross-browser results for the W3C [web-platform-tests](https://github.com/w3c/web-platform-tests).
+A dashboard of cross-browser results for [web-platform-tests](https://github.com/w3c/web-platform-tests).
 
 It consists of 2 parts:
 
