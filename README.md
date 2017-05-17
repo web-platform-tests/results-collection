@@ -20,7 +20,7 @@ dev_appserver .
 
 #### WPT documentation page for each browser
 
-- Chromium: https://www.chromium.org/blink/importing-the-w3c-tests
+- Chromium: https://chromium.googlesource.com/chromium/src/+/master/docs/testing/web_platform_tests.md
 - Firefox: https://wiki.mozilla.org/Auto-tools/Projects/web-platform-tests
 - WebKit: https://trac.webkit.org/wiki/WebKitW3CTesting
 
