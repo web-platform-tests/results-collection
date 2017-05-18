@@ -1,0 +1,7 @@
+{
+  "name": "polymer-2-carousel",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#2"
+  }
+}
