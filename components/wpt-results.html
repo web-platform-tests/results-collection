@@ -23,7 +23,7 @@ limitations under the License.
       :host {
         display: block;
       }
-      .WPTResults__spec {
+      .spec {
         background-color: #eee;
         padding: 1em;
         margin-bottom: 1em;
@@ -32,7 +32,7 @@ limitations under the License.
     </style>
 
     <template is="dom-repeat" items="{{specs}}">
-      <div class="WPTResults__spec">
+      <div class="spec">
         <b>{{item.spec}}</b><br/>
         {{item.passing}} / {{item.total}}<br/>
         {{_passingPercent(item)}}%
