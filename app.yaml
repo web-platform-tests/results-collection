@@ -16,5 +16,9 @@ runtime: go
 api_version: go1
 
 handlers:
+- url: /components
+  static_dir: components
+- url: /bower_components
+  static_dir: bower_components
 - url: /.*
   script: _go_app
