@@ -2,6 +2,7 @@
 <html>
 {{ template "_head.html" }}
 <body>
+
 <div id="content">
     <header>
         <h1><a href="/">web-platform-tests dashboard</a></h1>
@@ -11,7 +12,7 @@
         </nav>
     </header>
     <div>
-      <wpt-results></wpt-results>
+      <wpt-results test-runs="{{ . }}"></wpt-results>
     </div>
 </div>
 </body>

@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-runtime: go
-api_version: go1
-
-handlers:
-- url: /components
-  static_dir: components
-- url: /bower_components
-  static_dir: bower_components
-- url: /static
-  static_dir: static
-- url: /.*
-  script: _go_app
+indexes:
+- kind: TestRun
+  properties:
+  - name: BrowserName
+  - name: CreatedAt
+    direction: desc

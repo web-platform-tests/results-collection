@@ -15,11 +15,39 @@
 package wptdashboard
 
 import (
+    "encoding/json"
     "net/http"
+
+    "appengine"
+    "appengine/datastore"
 )
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
-    if err := templates.ExecuteTemplate(w, "index.html", nil); err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
+    ctx := appengine.NewContext(r)
+
+    var testRuns []TestRun
+    var chromeTestRuns []TestRun
+    var firefoxTestRuns []TestRun
+    baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
+    chromeQuery := baseQuery.Filter("BrowserName =", "chrome")
+    firefoxQuery := baseQuery.Filter("BrowserName =", "firefox")
+
+    if _, err := chromeQuery.GetAll(ctx, &chromeTestRuns); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+    if _, err := firefoxQuery.GetAll(ctx, &firefoxTestRuns); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+    testRuns = append(testRuns, chromeTestRuns...)
+    testRuns = append(testRuns, firefoxTestRuns...)
+
+    testRunsBytes, err := json.Marshal(testRuns)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+    testRunsJSON := string(testRunsBytes)
+
+    if err := templates.ExecuteTemplate(w, "index.html", testRunsJSON); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }

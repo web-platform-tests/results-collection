@@ -15,15 +15,21 @@
 package wptdashboard
 
 import (
-    "html/template"
-    "net/http"
+    "time"
 )
 
-var templates = template.Must(template.ParseGlob("templates/*.html"))
+type TestRun struct {
+    // Platform information
+    BrowserName     string          `json:"browser_name"`
+    BrowserVersion  string          `json:"browser_version"`
+    OSName          string          `json:"os_name"`
+    OSVersion       string          `json:"os_version"`
 
-func init() {
-    http.HandleFunc("/tasks/populate-dev-data", populateDevData)
-    http.HandleFunc("/about", aboutHandler)
-    http.HandleFunc("/", testHandler)
+    // The full SHA1 of the tested WPT revision
+    Revision        string          `json:"revision"`
+
+    // Results URL
+    ResultsURL      string          `json:"results_url"`
+
+    CreatedAt       time.Time       `json:"created_at"`
 }
-
