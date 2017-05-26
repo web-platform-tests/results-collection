@@ -1,0 +1,12 @@
+syntax = "proto3";
+package wptdashboard;
+
+message TestRun {
+  string results_url = 1; // Used as unique key
+  string browser_name = 2;
+  string browser_version = 3;
+  string os_name = 4;
+  string os_version = 5;
+  string revision = 6; // The full WPT SHA-1
+  string created_at = 7; // ISO8601 date
+}
