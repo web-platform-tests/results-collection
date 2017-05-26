@@ -22,6 +22,7 @@ limitations under the License.
     <style>
       :host {
         display: block;
+        font-size: 16px;
       }
       .spec {
         background-color: #eee;
@@ -29,13 +30,86 @@ limitations under the License.
         margin-bottom: 1em;
         border: solid 1px #ccc;
       }
+      section.search {
+        border-bottom: solid 1px #ccc;
+        padding-bottom: 1em;
+        margin-bottom: 1em;
+      }
+      input.query {
+        font-size: 16px;
+        display: block;
+        padding: 0.5em 0;
+        width: 100%;
+      }
+      .browsers.headers {
+        padding: 1em;
+      }
+      .browsers {
+        display: flex;
+        flex-direction: row-reverse;
+      }
+      .browser {
+        display: inline-block;
+        font-size: 0.8em;
+        min-width: 100px;
+      }
+      .browser img {
+        width: 32px;
+        height: 32px;
+      }
     </style>
 
-    <template is="dom-repeat" items="{{specs}}">
+    <section class="search">
+      <input
+        value="{{query::input}}"
+        class="query"
+        placeholder="Search test files, like cors/allow-headers.htm">
+    </section>
+
+    <section class="browsers headers">
+      <template is="dom-repeat" items="{{testRuns}}">
+        <div class="browser">
+          <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
+          <div>{{item.browser_name}} {{item.browser_version}}</div>
+          <div>{{item.os_name}} {{item.os_version}}</div>
+          <div>@{{item.revision}}</div>
+        </div>
+      </template>
+    </section>
+
+    <template
+      is="dom-repeat"
+      items="{{specs}}" as="spec" filter="_specFilter" id="spec_list" sort="_specSort">
       <div class="spec">
-        <b>{{item.spec}}</b><br/>
-        {{item.passing}} / {{item.total}}<br/>
-        {{_passingPercent(item)}}%
+        <div>
+          <b style="display: inline-block;">{{spec.specName}}</b>
+
+          <div class="browsers">
+            <template is="dom-repeat" items="{{spec.results}}" as="result">
+              <div class="browser">
+                <div class="browser">{{ result.passing }} / {{ result.total }}<br>{{ _passingPercent(result) }}%</div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- TODO(jeffcarp): This nested sort isn't working -->
+        <template is="dom-repeat" items="{{spec.testFiles}}" as="testFile" filter="_testFileFilter" sort="_testFileSort" class="test_file_list">
+          <div>{{ testFile.testFile }}</div>
+
+          <!-- This is the only way I've found to get sub-lists to update -->
+          <div style="display:none;">{{query}}</div>
+
+          <div class="browsers">
+            <template is="dom-repeat" items="{{testFile.results}}" as="result">
+              <div class="browser">
+                <div class="browser">{{ result.passing }} / {{ result.total }}<br>{{ _passingPercent(result) }}%</div>
+              </div>
+            </template>
+          </div>
+
+        </template>
+
       </div>
     </template>
   </template>
@@ -46,58 +120,169 @@ limitations under the License.
 
       static get properties() {
         return {
+          query: {
+            type: String,
+            value: '',
+            observer: '_queryChanged'
+          },
           specs: {
             type: Array,
-            observer: '_specsChanged',
             value: []
-          }
+          },
+          testRuns: {
+            type: Array,
+          },
         };
       }
 
-      connectedCallback() {
+      async connectedCallback() {
         super.connectedCallback();
 
-        this._fetchResults()
+        const testFileResults = await Promise.all(this.testRuns.map(testRun => {
+          return this._fetchResults(testRun.results_url)
+        }))
+
+        let specs = []
+
+        testFileResults.forEach(result => {
+          const testFiles = result.testFiles
+          const resultsURL = result.resultsURL
+
+          Object.keys(result.testFiles).forEach(testFileName => {
+            const specName = this._specFromTestPath(testFileName)
+
+            let spec = this._arrayElemByProperty(specs, 'specName', specName, {
+              results: [], specName: specName, testFiles: []
+            })
+
+            // Set spec.results
+            let result = this._arrayElemByProperty(spec.results, 'resultsURL', resultsURL, {
+              resultsURL: resultsURL, passing: 0, total: 0
+            })
+            result.passing += testFiles[testFileName][0]
+            result.total += testFiles[testFileName][1]
+            this._setArrayElemByProperty(spec.results, 'resultsURL', resultsURL, result)
+
+            // Set spec.testFile and testFile.results
+            let testFile = this._arrayElemByProperty(spec.testFiles, 'testFile', testFileName, {
+              testFile: testFileName, results: []
+            })
+            let testFileResult  = this._arrayElemByProperty(testFile.results, 'resultsURL', resultsURL, {
+              resultsURL: resultsURL, passing: 0, total: 0
+            })
+            testFileResult.passing += testFiles[testFileName][0]
+            testFileResult.total += testFiles[testFileName][1]
+            this._setArrayElemByProperty(testFile.results, 'resultsURL', resultsURL, testFileResult)
+            this._setArrayElemByProperty(spec.testFiles, 'testFile', testFileName, testFile)
+
+            this._setArrayElemByProperty(spec.results, 'resultsURL', resultsURL, result)
+            this._setArrayElemByProperty(specs, 'specName', specName, spec)
+          })
+        })
+
+        this.set('specs', specs)
+      }
+
+      _specFilter(spec) {
+        if (this.query.length === 0) {
+          return true
+        }
+
+        const matchesQuery = (tf) => tf.testFile.toLowerCase().includes(this.query.toLowerCase())
+        return spec.testFiles.some(matchesQuery)
+      }
+
+      _testFileFilter(testFile) {
+        if (this.query.length < 3) {
+          return false
+        }
+
+        return testFile.testFile.toLowerCase().includes(this.query.toLowerCase())
+      }
+
+      _testFileSort(a, b) {
+        if (a.testFile < b.testFile) return -1;
+        if (a.testFile > b.testFil) return 1;
+        return 0;
+      }
+
+      _specSort(a, b) {
+        if (a.specName < b.specName) return -1;
+        if (a.specName > b.specName) return 1;
+        return 0;
+      }
+
+      _arrayElemByProperty(arr, propName, propVal, defaultVal) {
+        for (var key in arr) {
+          if (arr[key][propName] === propVal) {
+            return arr[key]
+          }
+        }
+        return defaultVal
+      }
+
+      _setArrayElemByProperty(arr, propName, propVal, value) {
+        for (var key in arr) {
+          if (arr[key][propName] === propVal) {
+            arr.splice(key, 1, value)
+            return
+          }
+        }
+        arr.push(value)
+        return
+      }
+
+      _resultWithRunIndex(results, runIndex) {
+        for (var key in results) {
+          if (results[key].runIndex === runIndex) {
+            return results[key]
+          }
+        }
       }
 
       _specFromTestPath(path) {
         return path.split('/')[1]
       }
 
-      async _fetchResults() {
-        const url = 'https://storage.googleapis.com/wptdashboard.appspot.com/results/e2d2cde03d/chrome-60.0-debian-8.json.gz'
+      async _fetchResults(url) {
         const response = await fetch(url)
-        const data = await response.json()
-        console.log(data)
+        const testFiles = await response.json()
+        return {testFiles: testFiles, resultsURL: url}
 
-        let specs = {}
-        Object.keys(data).forEach(k => {
-          let specName = this._specFromTestPath(k)
-          if (!(specName in specs)) {
-            specs[specName] = {passing: 0, total: 0, spec: specName}
-          }
-
-          specs[specName].passing += data[k][0]
-          specs[specName].total += data[k][1]
-        })
-
-        specs = Object.keys(specs).map(k => specs[k])
-        specs.sort((a, b) => {
-          if (a.spec < b.spec) return -1;
-          if (a.spec > b.spec) return 1;
-          return 0;
-        })
-        this.specs = specs
-        console.log(this.specs)
       }
 
-      _specsChanged() {
-        // FIXME Either do something or delete this method
-        console.log('specs changed')
+      _queryChanged() {
+        this.$.spec_list.render()
       }
 
       _passingPercent(item) {
         return parseFloat((item.passing / item.total) * 100).toFixed(1)
+      }
+
+      /* Function for getting total numbers.
+       * Intentionally not exposed in UI.
+       * To generate, open your console and run:
+       * document.querySelector('wpt-results').generateTotalPassNumbers()
+       */
+      generateTotalPassNumbers() {
+        const totals = {}
+
+        this.specs.forEach(spec => {
+          spec.results.forEach(totalResult => {
+            if (!(totalResult.resultsURL in totals)) {
+              totals[totalResult.resultsURL] = {passing: 0, total: 0}
+            }
+
+            totals[totalResult.resultsURL].passing += totalResult.passing
+            totals[totalResult.resultsURL].total += totalResult.total
+          })
+        })
+
+        Object.keys(totals).forEach(key => {
+          totals[key].percent = (totals[key].passing / totals[key].total) * 100
+        })
+
+        return totals
       }
     }
 
