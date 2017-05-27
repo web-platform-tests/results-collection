@@ -33,7 +33,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
         BrowserVersion: "60.0",
         OSName: "debian",
         OSVersion: "8",
-        ResultsURL: "https://storage.googleapis.com/wptdashboard.appspot.com/results/e2d2cde03d/chrome-60.0-debian-8.json.gz",
+        ResultsURL: "/static/chrome-60.0-debian-8.json",
         CreatedAt: time.Now(),
     }
 
@@ -50,7 +50,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
         BrowserVersion: "55.0",
         OSName: "debian",
         OSVersion: "8",
-        ResultsURL: "https://storage.googleapis.com/wptdashboard.appspot.com/results/e2d2cde03d/firefox-55.0-debian-8.json.gz",
+        ResultsURL: "/static/firefox-55.0-debian-8.json",
         CreatedAt: time.Now(),
     }
 
