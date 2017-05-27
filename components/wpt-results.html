@@ -24,12 +24,6 @@ limitations under the License.
         display: block;
         font-size: 16px;
       }
-      .spec {
-        background-color: #eee;
-        padding: 1em;
-        margin-bottom: 1em;
-        border: solid 1px #ccc;
-      }
       section.search {
         border-bottom: solid 1px #ccc;
         padding-bottom: 1em;
@@ -41,21 +35,23 @@ limitations under the License.
         padding: 0.5em 0;
         width: 100%;
       }
-      .browsers.headers {
-        padding: 1em;
+      table {
+        width: 100%;
+        border-collapse: collapse;
       }
-      .browsers {
-        display: flex;
-        flex-direction: row-reverse;
-      }
-      .browser {
-        display: inline-block;
-        font-size: 0.8em;
-        min-width: 100px;
-      }
-      .browser img {
+      th.browser img {
         width: 32px;
         height: 32px;
+      }
+      tr.spec {
+        background-color: #eee;
+      }
+      tr td {
+        padding: 0 0.5em;
+      }
+      tr.spec td {
+        padding: 0.2em 0.5em;
+        border: solid 1px #ccc;
       }
     </style>
 
@@ -66,52 +62,52 @@ limitations under the License.
         placeholder="Search test files, like cors/allow-headers.htm">
     </section>
 
-    <section class="browsers headers">
-      <template is="dom-repeat" items="{{testRuns}}">
-        <div class="browser">
-          <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
-          <div>{{item.browser_name}} {{item.browser_version}}</div>
-          <div>{{item.os_name}} {{item.os_version}}</div>
-          <div>@{{item.revision}}</div>
-        </div>
-      </template>
-    </section>
+    <table>
+      <thead>
+        <tr>
+          <th>Spec</th>
+          <template is="dom-repeat" items="{{testRuns}}">
+            <th class="browser">
+              <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
+              <div>{{item.browser_name}} {{item.browser_version}}</div>
+              <div>{{item.os_name}} {{item.os_version}}</div>
+              <div>@{{item.revision}}</div>
+              <!-- TODO format date <div>{{item.created_at}}</div> -->
+            </th>
+          </template>
+        </tr>
+      </thead>
+      <tbody>
 
-    <template
-      is="dom-repeat"
-      items="{{specs}}" as="spec" filter="_specFilter" id="spec_list" sort="_specSort">
-      <div class="spec">
-        <div>
-          <b style="display: inline-block;">{{spec.specName}}</b>
+        <template
+          is="dom-repeat"
+          items="{{specs}}" as="spec" filter="_specFilter" id="spec_list" sort="_specSort">
 
-          <div class="browsers">
+          <tr class="spec">
+            <td><b>{{spec.specName}}</b></td>
+
             <template is="dom-repeat" items="{{spec.results}}" as="result">
-              <div class="browser">
-                <div class="browser">{{ result.passing }} / {{ result.total }}<br>{{ _passingPercent(result) }}%</div>
-              </div>
+              <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
             </template>
-          </div>
-        </div>
+          </tr>
 
-        <!-- TODO(jeffcarp): This nested sort isn't working -->
-        <template is="dom-repeat" items="{{spec.testFiles}}" as="testFile" filter="_testFileFilter" sort="_testFileSort" class="test_file_list">
-          <div>{{ testFile.testFile }}</div>
+          <!-- TODO(jeffcarp): This nested sort isn't working -->
+          <template is="dom-repeat" items="{{spec.testFiles}}" as="testFile" filter="_testFileFilter" sort="_testFileSort" class="test_file_list">
+            <tr>
+              <!-- This is the only way I've found to get sub-lists to update -->
+              <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
 
-          <!-- This is the only way I've found to get sub-lists to update -->
-          <div style="display:none;">{{query}}</div>
+              <template is="dom-repeat" items="{{testFile.results}}" as="result">
+                <td>{{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }}) <span style="display:none;">{{query}}</span></td>
+              </template>
+            </tr>
+          </template>
 
-          <div class="browsers">
-            <template is="dom-repeat" items="{{testFile.results}}" as="result">
-              <div class="browser">
-                <div class="browser">{{ result.passing }} / {{ result.total }}<br>{{ _passingPercent(result) }}%</div>
-              </div>
-            </template>
-          </div>
 
         </template>
+      </tbody>
+    </table>
 
-      </div>
-    </template>
   </template>
 
   <script>
