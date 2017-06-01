@@ -98,7 +98,10 @@ limitations under the License.
               <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
 
               <template is="dom-repeat" items="{{testFile.results}}" as="result">
-                <td>{{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }}) <span style="display:none;">{{query}}</span></td>
+                <td style="{{ _testResultStyle(result) }}">
+                  {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
+                  <span style="display:none;">{{query}}</span>
+                </td>
               </template>
             </tr>
           </template>
@@ -283,6 +286,19 @@ limitations under the License.
 
       _dateFormat(dateStr) {
         return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
+      }
+
+      _testResultStyle(result) {
+        // Need saturation between 65-100, reversed (range 35)
+        const passRate = result.passing / result.total
+        if (passRate === 1) {
+          // Green
+          return 'background-color: hsl(129, 85%, 65%)'
+        } else {
+          const luminance = 65 + passRate * 20
+          // Some shade of red
+          return `background-color: hsl(0, 85%, ${luminance}%)`
+        }
       }
     }
 
