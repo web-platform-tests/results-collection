@@ -250,7 +250,7 @@ limitations under the License.
             return spec.results[key]
           })
 
-          if (this.query.length < 4) {
+          if (this.query.length < 3) {
             displaySpec.testFiles = []
             displayedSpecs.push(displaySpec)
             continue
@@ -269,10 +269,12 @@ limitations under the License.
             return displayTestFile
           })
 
+          const MAX_RESULTS = 5
+
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
-            displaySpec.testFiles = matchingTestFiles.slice(0, 20)
-            displaySpec.notAllTestFilesShown = matchingTestFiles.length > 20
+            displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS)
+            displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS
             displayedSpecs.push(displaySpec)
           }
         }
