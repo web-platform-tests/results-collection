@@ -47,7 +47,15 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
     }
     testRunsJSON := string(testRunsBytes)
 
-    if err := templates.ExecuteTemplate(w, "index.html", testRunsJSON); err != nil {
+
+    var templatePath string
+    if r.URL.Path == "/" {
+        templatePath = "index.html"
+    } else {
+        templatePath = "test.html"
+    }
+
+    if err := templates.ExecuteTemplate(w, templatePath, testRunsJSON); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }
