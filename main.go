@@ -24,6 +24,9 @@ var templates = template.Must(template.ParseGlob("templates/*.html"))
 func init() {
     http.HandleFunc("/tasks/populate-dev-data", populateDevData)
     http.HandleFunc("/about", aboutHandler)
+    http.HandleFunc("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+        http.ServeFile(w, r, "static/sw.js")
+    })
     http.HandleFunc("/", testHandler)
 }
 

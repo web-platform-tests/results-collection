@@ -29,6 +29,16 @@ header nav a {
 }
 </style>
 
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', {scope: '/'}).then(function(reg) {
+    console.log('Registration succeeded. Scope is ' + reg.scope)
+  }).catch(function(error) {
+    console.log('Registration failed with ' + error)
+  })
+}
+</script>
+
 <script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 <link rel="import" href="/components/wpt-results.html">
 </head>
