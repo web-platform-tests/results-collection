@@ -325,6 +325,8 @@ limitations under the License.
       }
 
       _testResultStyle(result) {
+        if (!result) return ''
+
         // Need saturation between 65-100, reversed (range 35)
         const passRate = result.passing / result.total
         if (passRate === 1) {
