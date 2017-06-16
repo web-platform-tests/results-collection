@@ -106,6 +106,7 @@ limitations under the License.
           </template>
 
           <template is="dom-if" if="{{ spec.notAllTestFilesShown }}">
+            <!-- TODO(jeffcarp): add a button to show more results -->
             <div>not all matching test files shown</div>
           </template>
 
@@ -127,10 +128,6 @@ limitations under the License.
             observer: '_queryChanged'
           },
           specs: {
-            type: Array,
-            value: []
-          },
-          specsObject: {
             type: Object,
             value: {}
           },
@@ -161,22 +158,22 @@ limitations under the License.
           Object.keys(result.testFiles).forEach(testFileName => {
             const specName = this._specFromTestPath(testFileName)
 
-            if (!(specName in this.specsObject)) {
-              this.specsObject[specName] = {results: {}, specName: specName, testFiles: {}}
+            if (!(specName in this.specs)) {
+              this.specs[specName] = {results: {}, specName: specName, testFiles: {}}
             }
-            if (!(encodedResultsURL in this.specsObject[specName].results)) {
-              this.specsObject[specName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
+            if (!(encodedResultsURL in this.specs[specName].results)) {
+              this.specs[specName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
             }
-            this.specsObject[specName].results[encodedResultsURL].passing += testFiles[testFileName][0]
-            this.specsObject[specName].results[encodedResultsURL].total += testFiles[testFileName][1]
-            if (!(testFileName in this.specsObject[specName].testFiles)) {
-              this.specsObject[specName].testFiles[testFileName] = {testFile: testFileName, results: {}}
+            this.specs[specName].results[encodedResultsURL].passing += testFiles[testFileName][0]
+            this.specs[specName].results[encodedResultsURL].total += testFiles[testFileName][1]
+            if (!(testFileName in this.specs[specName].testFiles)) {
+              this.specs[specName].testFiles[testFileName] = {testFile: testFileName, results: {}}
             }
-            if (!(encodedResultsURL in this.specsObject[specName].testFiles[testFileName].results)) {
-              this.specsObject[specName].testFiles[testFileName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
+            if (!(encodedResultsURL in this.specs[specName].testFiles[testFileName].results)) {
+              this.specs[specName].testFiles[testFileName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
             }
-            this.specsObject[specName].testFiles[testFileName].results[encodedResultsURL].passing = testFiles[testFileName][0]
-            this.specsObject[specName].testFiles[testFileName].results[encodedResultsURL].total = testFiles[testFileName][1]
+            this.specs[specName].testFiles[testFileName].results[encodedResultsURL].passing = testFiles[testFileName][0]
+            this.specs[specName].testFiles[testFileName].results[encodedResultsURL].total = testFiles[testFileName][1]
           })
         })
 
@@ -236,12 +233,11 @@ limitations under the License.
       }
 
       _refreshDisplayedSpecs() {
-        // this.$.spec_list.render()
         const matchesQuery = (tf) => tf.testFile.toLowerCase().includes(this.query.toLowerCase())
         const displayedSpecs = []
 
-        for (var key in this.specsObject) {
-          let spec = this.specsObject[key]
+        for (var key in this.specs) {
+          let spec = this.specs[key]
           let displaySpec = {}
 
           displaySpec.specName = spec.specName
@@ -269,12 +265,12 @@ limitations under the License.
             return displayTestFile
           })
 
-          const MAX_RESULTS = 5
+          const MAX_RESULTS_PER_SPEC = 10
 
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
-            displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS)
-            displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS
+            displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
+            displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC
             displayedSpecs.push(displaySpec)
           }
         }
@@ -286,6 +282,10 @@ limitations under the License.
         return parseFloat((item.passing / item.total) * 100).toFixed(1)
       }
 
+      _platformID(testRun) {
+        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+      }
+
       /* Function for getting total numbers.
        * Intentionally not exposed in UI.
        * To generate, open your console and run:
@@ -294,16 +294,14 @@ limitations under the License.
       generateTotalPassNumbers() {
         const totals = {}
 
-        // FIXME: this has broken since refactoring
+        this.testRuns.forEach(testRun => {
+          const testRunKey = btoa(testRun.results_url)
+          const testRunID = this._platformID(testRun)
+          totals[testRunID] = {passing: 0, total: 0}
 
-        this.specs.forEach(spec => {
-          spec.results.forEach(totalResult => {
-            if (!(totalResult.resultsURL in totals)) {
-              totals[totalResult.resultsURL] = {passing: 0, total: 0}
-            }
-
-            totals[totalResult.resultsURL].passing += totalResult.passing
-            totals[totalResult.resultsURL].total += totalResult.total
+          Object.keys(this.specs).forEach(specKey => {
+            totals[testRunID].passing += this.specs[specKey].results[testRunKey].passing
+            totals[testRunID].total += this.specs[specKey].results[testRunKey].total
           })
         })
 
@@ -311,7 +309,15 @@ limitations under the License.
           totals[key].percent = (totals[key].passing / totals[key].total) * 100
         })
 
-        return totals
+        console.table(Object.keys(totals).map(k => ({
+          platformID: k,
+          passing: totals[k].passing,
+          total: totals[k].total,
+          percent: totals[k].percent
+        })))
+
+        console.log('JSON version:', JSON.stringify(totals))
+        return
       }
 
       _dateFormat(dateStr) {
@@ -331,7 +337,6 @@ limitations under the License.
         }
       }
     }
-
 
     customElements.define(WPTResults.is, WPTResults);
   </script>
