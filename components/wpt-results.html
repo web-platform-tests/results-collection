@@ -15,6 +15,7 @@ limitations under the License.
 -->
 
 <link rel="import" href="/bower_components/polymer/polymer-element.html">
+<link rel="import" href="/bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-repeat.html">
 
 <dom-module id="wpt-results">
@@ -79,9 +80,7 @@ limitations under the License.
       </thead>
       <tbody>
 
-        <template
-          is="dom-repeat"
-          items="{{specs}}" as="spec" filter="_specFilter" id="spec_list" sort="_specSort">
+        <template is="dom-repeat" items="{{displayedSpecs}}" as="spec" id="spec_list">
 
           <tr class="spec">
             <td><b>{{spec.specName}}</b></td>
@@ -92,7 +91,7 @@ limitations under the License.
           </tr>
 
           <!-- TODO(jeffcarp): This nested sort isn't working -->
-          <template is="dom-repeat" items="{{spec.testFiles}}" as="testFile" filter="_testFileFilter" sort="_testFileSort" class="test_file_list">
+          <template is="dom-repeat" items="{{spec.testFiles}}" as="testFile" class="test_file_list">
             <tr>
               <!-- This is the only way I've found to get sub-lists to update -->
               <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
@@ -106,6 +105,10 @@ limitations under the License.
             </tr>
           </template>
 
+          <template is="dom-if" if="{{ spec.notAllTestFilesShown }}">
+            <!-- TODO(jeffcarp): add a button to show more results -->
+            <div>not all matching test files shown</div>
+          </template>
 
         </template>
       </tbody>
@@ -125,6 +128,10 @@ limitations under the License.
             observer: '_queryChanged'
           },
           specs: {
+            type: Object,
+            value: {}
+          },
+          displayedSpecs: {
             type: Array,
             value: []
           },
@@ -146,40 +153,31 @@ limitations under the License.
         testFileResults.forEach(result => {
           const testFiles = result.testFiles
           const resultsURL = result.resultsURL
+          const encodedResultsURL = btoa(result.resultsURL)
 
           Object.keys(result.testFiles).forEach(testFileName => {
             const specName = this._specFromTestPath(testFileName)
 
-            let spec = this._arrayElemByProperty(specs, 'specName', specName, {
-              results: [], specName: specName, testFiles: []
-            })
-
-            // Set spec.results
-            let result = this._arrayElemByProperty(spec.results, 'resultsURL', resultsURL, {
-              resultsURL: resultsURL, passing: 0, total: 0
-            })
-            result.passing += testFiles[testFileName][0]
-            result.total += testFiles[testFileName][1]
-            this._setArrayElemByProperty(spec.results, 'resultsURL', resultsURL, result)
-
-            // Set spec.testFile and testFile.results
-            let testFile = this._arrayElemByProperty(spec.testFiles, 'testFile', testFileName, {
-              testFile: testFileName, results: []
-            })
-            let testFileResult  = this._arrayElemByProperty(testFile.results, 'resultsURL', resultsURL, {
-              resultsURL: resultsURL, passing: 0, total: 0
-            })
-            testFileResult.passing += testFiles[testFileName][0]
-            testFileResult.total += testFiles[testFileName][1]
-            this._setArrayElemByProperty(testFile.results, 'resultsURL', resultsURL, testFileResult)
-            this._setArrayElemByProperty(spec.testFiles, 'testFile', testFileName, testFile)
-
-            this._setArrayElemByProperty(spec.results, 'resultsURL', resultsURL, result)
-            this._setArrayElemByProperty(specs, 'specName', specName, spec)
+            if (!(specName in this.specs)) {
+              this.specs[specName] = {results: {}, specName: specName, testFiles: {}}
+            }
+            if (!(encodedResultsURL in this.specs[specName].results)) {
+              this.specs[specName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
+            }
+            this.specs[specName].results[encodedResultsURL].passing += testFiles[testFileName][0]
+            this.specs[specName].results[encodedResultsURL].total += testFiles[testFileName][1]
+            if (!(testFileName in this.specs[specName].testFiles)) {
+              this.specs[specName].testFiles[testFileName] = {testFile: testFileName, results: {}}
+            }
+            if (!(encodedResultsURL in this.specs[specName].testFiles[testFileName].results)) {
+              this.specs[specName].testFiles[testFileName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
+            }
+            this.specs[specName].testFiles[testFileName].results[encodedResultsURL].passing = testFiles[testFileName][0]
+            this.specs[specName].testFiles[testFileName].results[encodedResultsURL].total = testFiles[testFileName][1]
           })
         })
 
-        this.set('specs', specs)
+        this._refreshDisplayedSpecs()
       }
 
       _specFilter(spec) {
@@ -211,26 +209,6 @@ limitations under the License.
         return 0;
       }
 
-      _arrayElemByProperty(arr, propName, propVal, defaultVal) {
-        for (var key in arr) {
-          if (arr[key][propName] === propVal) {
-            return arr[key]
-          }
-        }
-        return defaultVal
-      }
-
-      _setArrayElemByProperty(arr, propName, propVal, value) {
-        for (var key in arr) {
-          if (arr[key][propName] === propVal) {
-            arr.splice(key, 1, value)
-            return
-          }
-        }
-        arr.push(value)
-        return
-      }
-
       _resultWithRunIndex(results, runIndex) {
         for (var key in results) {
           if (results[key].runIndex === runIndex) {
@@ -251,11 +229,61 @@ limitations under the License.
       }
 
       _queryChanged() {
-        this.$.spec_list.render()
+        this._refreshDisplayedSpecs()
+      }
+
+      _refreshDisplayedSpecs() {
+        const matchesQuery = (tf) => tf.testFile.toLowerCase().includes(this.query.toLowerCase())
+        const displayedSpecs = []
+
+        for (var key in this.specs) {
+          let spec = this.specs[key]
+          let displaySpec = {}
+
+          displaySpec.specName = spec.specName
+          displaySpec.results = this.testRuns.map(testRun => {
+            let key = btoa(testRun.results_url)
+            return spec.results[key]
+          })
+
+          if (this.query.length < 3) {
+            displaySpec.testFiles = []
+            displayedSpecs.push(displaySpec)
+            continue
+          }
+
+          let allTestFiles = Object.keys(spec.testFiles).map(k => {
+            let displayTestFile = {}
+            let originalTestFile = spec.testFiles[k]
+
+            displayTestFile.testFile = originalTestFile.testFile
+            displayTestFile.results = this.testRuns.map(testRun => {
+              let key = btoa(testRun.results_url)
+              return originalTestFile.results[key]
+            })
+
+            return displayTestFile
+          })
+
+          const MAX_RESULTS_PER_SPEC = 10
+
+          let matchingTestFiles = allTestFiles.filter(matchesQuery)
+          if (matchingTestFiles.length > 0) {
+            displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
+            displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC
+            displayedSpecs.push(displaySpec)
+          }
+        }
+        this.set('displayedSpecs', displayedSpecs)
       }
 
       _passingPercent(item) {
+        if (!item || isNaN(item.passing) || isNaN(item.total)) return ''
         return parseFloat((item.passing / item.total) * 100).toFixed(1)
+      }
+
+      _platformID(testRun) {
+        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
       }
 
       /* Function for getting total numbers.
@@ -266,14 +294,14 @@ limitations under the License.
       generateTotalPassNumbers() {
         const totals = {}
 
-        this.specs.forEach(spec => {
-          spec.results.forEach(totalResult => {
-            if (!(totalResult.resultsURL in totals)) {
-              totals[totalResult.resultsURL] = {passing: 0, total: 0}
-            }
+        this.testRuns.forEach(testRun => {
+          const testRunKey = btoa(testRun.results_url)
+          const testRunID = this._platformID(testRun)
+          totals[testRunID] = {passing: 0, total: 0}
 
-            totals[totalResult.resultsURL].passing += totalResult.passing
-            totals[totalResult.resultsURL].total += totalResult.total
+          Object.keys(this.specs).forEach(specKey => {
+            totals[testRunID].passing += this.specs[specKey].results[testRunKey].passing
+            totals[testRunID].total += this.specs[specKey].results[testRunKey].total
           })
         })
 
@@ -281,7 +309,15 @@ limitations under the License.
           totals[key].percent = (totals[key].passing / totals[key].total) * 100
         })
 
-        return totals
+        console.table(Object.keys(totals).map(k => ({
+          platformID: k,
+          passing: totals[k].passing,
+          total: totals[k].total,
+          percent: totals[k].percent
+        })))
+
+        console.log('JSON version:', JSON.stringify(totals))
+        return
       }
 
       _dateFormat(dateStr) {
@@ -289,6 +325,8 @@ limitations under the License.
       }
 
       _testResultStyle(result) {
+        if (!result) return ''
+
         // Need saturation between 65-100, reversed (range 35)
         const passRate = result.passing / result.total
         if (passRate === 1) {
@@ -301,7 +339,6 @@ limitations under the License.
         }
       }
     }
-
 
     customElements.define(WPTResults.is, WPTResults);
   </script>
