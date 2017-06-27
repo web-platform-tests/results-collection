@@ -180,23 +180,6 @@ limitations under the License.
         this._refreshDisplayedSpecs()
       }
 
-      _specFilter(spec) {
-        if (this.query.length === 0) {
-          return true
-        }
-
-        const matchesQuery = (tf) => tf.testFile.toLowerCase().includes(this.query.toLowerCase())
-        return spec.testFiles.some(matchesQuery)
-      }
-
-      _testFileFilter(testFile) {
-        if (this.query.length < 3) {
-          return false
-        }
-
-        return testFile.testFile.toLowerCase().includes(this.query.toLowerCase())
-      }
-
       _testFileSort(a, b) {
         if (a.testFile < b.testFile) return -1;
         if (a.testFile > b.testFil) return 1;
@@ -270,10 +253,12 @@ limitations under the License.
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
             displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
+            displaySpec.testFiles.sort(this._testFileSort)
             displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC
             displayedSpecs.push(displaySpec)
           }
         }
+        displayedSpecs.sort(this._specSort)
         this.set('displayedSpecs', displayedSpecs)
       }
 
