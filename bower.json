@@ -3,5 +3,8 @@
   "private": true,
   "dependencies": {
     "polymer": "Polymer/polymer#2"
+  },
+  "devDependencies": {
+    "web-component-tester": "^6.0.0"
   }
 }

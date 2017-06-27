@@ -1,0 +1,7 @@
+{
+  "name": "lighthouse-logger",
+  "version": "1.0.0",
+  "dependencies": {
+    "debug": "^2.6.8"
+  }
+}

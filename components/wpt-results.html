@@ -144,6 +144,10 @@ limitations under the License.
       async connectedCallback() {
         super.connectedCallback();
 
+        if (!this.testRuns || this.testRuns.length === 0) {
+          return
+        }
+
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
           return this._fetchResults(testRun.results_url)
         }))
@@ -317,7 +321,7 @@ limitations under the License.
         })))
 
         console.log('JSON version:', JSON.stringify(totals))
-        return
+        return totals
       }
 
       _dateFormat(dateStr) {
