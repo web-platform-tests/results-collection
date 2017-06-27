@@ -114,6 +114,10 @@ limitations under the License.
       </tbody>
     </table>
 
+    <template is="dom-if" if="{{ testRuns.length === 0 }}">
+      <div>No test runs found.</div>
+    </template>
+
   </template>
 
   <script>
@@ -143,6 +147,10 @@ limitations under the License.
 
       async connectedCallback() {
         super.connectedCallback();
+
+        if (this.testRuns.length === 0) {
+          return
+        }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
           return this._fetchResults(testRun.results_url)
