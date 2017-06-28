@@ -47,6 +47,10 @@ limitations under the License.
       tr.spec {
         background-color: #eee;
       }
+      tr.spec:hover {
+        cursor: pointer;
+        background-color: #e7e7e7;
+      }
       tr td {
         padding: 0 0.5em;
       }
@@ -61,6 +65,10 @@ limitations under the License.
         value="{{query::input}}"
         class="query"
         placeholder="Search test files, like cors/allow-headers.htm">
+
+        <template is="dom-if" if="{{ specFilter }}">
+          <div>Spec: {{ specFilter }} <span on-click="_removeSpecFilter">X</span></div>
+        </template>
     </section>
 
     <table>
@@ -83,7 +91,7 @@ limitations under the License.
         <template is="dom-repeat" items="{{displayedSpecs}}" as="spec" id="spec_list">
 
           <tr class="spec">
-            <td><b>{{spec.specName}}</b></td>
+            <td><b on-click="_handleSpecClick">{{spec.specName}}</b></td>
 
             <template is="dom-repeat" items="{{spec.results}}" as="result">
               <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
@@ -137,6 +145,10 @@ limitations under the License.
           },
           testRuns: {
             type: Array,
+          },
+          specFilter: {
+            type: String,
+            value: ''
           },
         };
       }
@@ -221,6 +233,11 @@ limitations under the License.
 
         for (var key in this.specs) {
           let spec = this.specs[key]
+
+          if (this.specFilter.length > 0 && key !== this.specFilter) {
+            continue
+          }
+
           let displaySpec = {}
 
           displaySpec.specName = spec.specName
@@ -307,6 +324,23 @@ limitations under the License.
 
       _dateFormat(dateStr) {
         return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
+      }
+
+      _handleSpecClick(event) {
+        const specName = event.target.textContent
+        if (!(specName in this.specs)) {
+          return
+        }
+
+        // TODO: Change location to /spec with pushState
+        // window.location = '/' + specName
+        this.specFilter = specName
+        this._refreshDisplayedSpecs()
+      }
+
+      _removeSpecFilter() {
+        this.specFilter = ''
+        this._refreshDisplayedSpecs()
       }
 
       _testResultStyle(result) {
