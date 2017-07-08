@@ -83,7 +83,7 @@ limitations under the License.
         <template is="dom-repeat" items="{{displayedSpecs}}" as="spec" id="spec_list">
 
           <tr class="spec">
-            <td><b>{{spec.specName}}</b></td>
+            <td><b><a href="/{{spec.specName}}">{{spec.specName}}</a></b></td>
 
             <template is="dom-repeat" items="{{spec.results}}" as="result">
               <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
@@ -138,11 +138,19 @@ limitations under the License.
           testRuns: {
             type: Array,
           },
+          filteredDirectories: {
+            type: Array,
+            value: []
+          },
         };
       }
 
       async connectedCallback() {
         super.connectedCallback();
+
+        if (window.location.pathname !== '/') {
+          this.filteredDirectories.push(window.location.pathname)
+        }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
           return this._fetchResults(testRun.results_url)
@@ -229,7 +237,14 @@ limitations under the License.
             return spec.results[key]
           })
 
-          if (this.query.length < 3) {
+          if (this.filteredDirectories.length > 0) {
+              const inFilteredDir = this.filteredDirectories.some(filterDir =>  filterDir.startsWith(`/${displaySpec.specName}`))
+              if (!inFilteredDir) {
+                continue
+              }
+          }
+
+          if (this.query.length < 3 && this.filteredDirectories.length === 0) {
             displaySpec.testFiles = []
             displayedSpecs.push(displaySpec)
             continue
@@ -252,9 +267,18 @@ limitations under the License.
 
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
-            displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
+
+            if (this.filteredDirectories.length > 0) {
+              displaySpec.testFiles = matchingTestFiles
+              displaySpec.testFiles = displaySpec.testFiles.filter(tf => (
+                this.filteredDirectories.some(filterDir =>  tf.testFile.startsWith(filterDir))
+              ))
+            } else {
+              displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
+              displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC
+            }
+
             displaySpec.testFiles.sort(this._testFileSort)
-            displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC
             displayedSpecs.push(displaySpec)
           }
         }
