@@ -238,7 +238,9 @@ limitations under the License.
           })
 
           if (this.filteredDirectories.length > 0) {
-              const inFilteredDir = this.filteredDirectories.some(filterDir =>  filterDir.startsWith(`/${displaySpec.specName}`))
+              const inFilteredDir = this.filteredDirectories.some(filterDir => (
+                filterDir.startsWith(`/${displaySpec.specName}`)
+              ))
               if (!inFilteredDir) {
                 continue
               }
@@ -271,7 +273,7 @@ limitations under the License.
             if (this.filteredDirectories.length > 0) {
               displaySpec.testFiles = matchingTestFiles
               displaySpec.testFiles = displaySpec.testFiles.filter(tf => (
-                this.filteredDirectories.some(filterDir =>  tf.testFile.startsWith(filterDir))
+                this.filteredDirectories.some(filterDir => tf.testFile.startsWith(filterDir))
               ))
             } else {
               displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
