@@ -16,6 +16,8 @@ You'll need the [Google App Engine Go SDK](https://cloud.google.com/appengine/do
 dev_appserver .
 ```
 
+See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
+
 ## Miscellaneous
 
 #### WPT documentation page for each browser

@@ -1,0 +1,10 @@
+{
+  "name": "wptdashboard",
+  "devDependencies": {
+    "standard": "*",
+    "eslint-plugin-html": "*"
+  },
+  "scripts": {
+    "test": "standard --plugin html 'components/*.html'"
+  }
+}
