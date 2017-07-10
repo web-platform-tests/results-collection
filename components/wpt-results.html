@@ -142,11 +142,11 @@ limitations under the License.
             type: Array,
             value: []
           },
-        };
+        }
       }
 
       async connectedCallback() {
-        super.connectedCallback();
+        super.connectedCallback()
 
         if (window.location.pathname !== '/') {
           this.filteredDirectories.push(window.location.pathname)
@@ -189,15 +189,15 @@ limitations under the License.
       }
 
       _testFileSort(a, b) {
-        if (a.testFile < b.testFile) return -1;
-        if (a.testFile > b.testFile) return 1;
-        return 0;
+        if (a.testFile < b.testFile) return -1
+        if (a.testFile > b.testFile) return 1
+        return 0
       }
 
       _specSort(a, b) {
-        if (a.specName < b.specName) return -1;
-        if (a.specName > b.specName) return 1;
-        return 0;
+        if (a.specName < b.specName) return -1
+        if (a.specName > b.specName) return 1
+        return 0
       }
 
       _resultWithRunIndex(results, runIndex) {
@@ -351,6 +351,6 @@ limitations under the License.
       }
     }
 
-    customElements.define(WPTResults.is, WPTResults);
+    customElements.define(WPTResults.is, WPTResults)
   </script>
 </dom-module>
