@@ -80,18 +80,18 @@ limitations under the License.
       </thead>
       <tbody>
 
-        <template is="dom-repeat" items="{{displayedSpecs}}" as="spec" id="spec_list">
+        <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
 
           <tr class="spec">
-            <td><b><a href="/{{spec.specName}}">{{spec.specName}}</a></b></td>
+            <td><b><a href="/{{specDir.specName}}">{{specDir.specName}}</a></b></td>
 
-            <template is="dom-repeat" items="{{spec.results}}" as="result">
+            <template is="dom-repeat" items="{{specDir.results}}" as="result">
               <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
             </template>
           </tr>
 
           <!-- TODO(jeffcarp): This nested sort isn't working -->
-          <template is="dom-repeat" items="{{spec.testFiles}}" as="testFile" class="test_file_list">
+          <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
             <tr>
               <!-- This is the only way I've found to get sub-lists to update -->
               <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
@@ -105,7 +105,7 @@ limitations under the License.
             </tr>
           </template>
 
-          <template is="dom-if" if="{{ spec.notAllTestFilesShown }}">
+          <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
             <!-- TODO(jeffcarp): add a button to show more results -->
             <div>not all matching test files shown</div>
           </template>
@@ -127,17 +127,22 @@ limitations under the License.
             value: '',
             observer: '_queryChanged'
           },
-          specs: {
+          // An object where the key is a top-level directory in WPT (top-level
+          // directories are spec names) and the value is an object containing
+          // all test files in the spec directory.
+          specDirs: {
             type: Object,
             value: {}
           },
-          displayedSpecs: {
+          displayedSpecDirs: {
             type: Array,
             value: []
           },
           testRuns: {
             type: Array
           },
+          // If any directory names are present, displayedSpecDirs should be a
+          // union of filteredDirectories, not an intersection.
           filteredDirectories: {
             type: Array,
             value: []
@@ -159,31 +164,30 @@ limitations under the License.
         testFileResults.forEach(result => {
           const testFiles = result.testFiles
           const resultsURL = result.resultsURL
-          const encodedResultsURL = window.btoa(result.resultsURL)
 
           Object.keys(result.testFiles).forEach(testFileName => {
             const specName = this._specFromTestPath(testFileName)
 
-            if (!(specName in this.specs)) {
-              this.specs[specName] = {results: {}, specName: specName, testFiles: {}}
+            if (!(specName in this.specDirs)) {
+              this.specDirs[specName] = {results: {}, specName: specName, testFiles: {}}
             }
-            if (!(encodedResultsURL in this.specs[specName].results)) {
-              this.specs[specName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
+            if (!(resultsURL in this.specDirs[specName].results)) {
+              this.specDirs[specName].results[resultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
             }
-            this.specs[specName].results[encodedResultsURL].passing += testFiles[testFileName][0]
-            this.specs[specName].results[encodedResultsURL].total += testFiles[testFileName][1]
-            if (!(testFileName in this.specs[specName].testFiles)) {
-              this.specs[specName].testFiles[testFileName] = {testFile: testFileName, results: {}}
+            this.specDirs[specName].results[resultsURL].passing += testFiles[testFileName][0]
+            this.specDirs[specName].results[resultsURL].total += testFiles[testFileName][1]
+            if (!(testFileName in this.specDirs[specName].testFiles)) {
+              this.specDirs[specName].testFiles[testFileName] = {testFile: testFileName, results: {}}
             }
-            if (!(encodedResultsURL in this.specs[specName].testFiles[testFileName].results)) {
-              this.specs[specName].testFiles[testFileName].results[encodedResultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
+            if (!(resultsURL in this.specDirs[specName].testFiles[testFileName].results)) {
+              this.specDirs[specName].testFiles[testFileName].results[resultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
             }
-            this.specs[specName].testFiles[testFileName].results[encodedResultsURL].passing = testFiles[testFileName][0]
-            this.specs[specName].testFiles[testFileName].results[encodedResultsURL].total = testFiles[testFileName][1]
+            this.specDirs[specName].testFiles[testFileName].results[resultsURL].passing = testFiles[testFileName][0]
+            this.specDirs[specName].testFiles[testFileName].results[resultsURL].total = testFiles[testFileName][1]
           })
         })
 
-        this._refreshDisplayedSpecs()
+        this._refreshDisplayedSpecDirs()
       }
 
       _testFileSort (a, b) {
@@ -192,7 +196,7 @@ limitations under the License.
         return 0
       }
 
-      _specSort (a, b) {
+      _specDirSort (a, b) {
         if (a.specName < b.specName) return -1
         if (a.specName > b.specName) return 1
         return 0
@@ -217,26 +221,24 @@ limitations under the License.
       }
 
       _queryChanged () {
-        this._refreshDisplayedSpecs()
+        this._refreshDisplayedSpecDirs()
       }
 
-      _refreshDisplayedSpecs () {
+      _refreshDisplayedSpecDirs () {
+        /* Recomputes the list of displayed spec directories and their child test results. */
         const matchesQuery = (tf) => tf.testFile.toLowerCase().includes(this.query.toLowerCase())
-        const displayedSpecs = []
+        const displayedSpecDirs = []
 
-        for (var key in this.specs) {
-          let spec = this.specs[key]
-          let displaySpec = {}
+        for (var key in this.specDirs) {
+          let specDir = this.specDirs[key]
+          let displaySpecDir = {}
 
-          displaySpec.specName = spec.specName
-          displaySpec.results = this.testRuns.map(testRun => {
-            let key = window.btoa(testRun.results_url)
-            return spec.results[key]
-          })
+          displaySpecDir.specName = specDir.specName
+          displaySpecDir.results = this.testRuns.map(testRun => specDir.results[testRun.results_url])
 
           if (this.filteredDirectories.length > 0) {
             const inFilteredDir = this.filteredDirectories.some(filterDir => (
-              filterDir.startsWith(`/${displaySpec.specName}`)
+              filterDir.startsWith(`/${displaySpecDir.specName}`)
             ))
             if (!inFilteredDir) {
               continue
@@ -244,44 +246,41 @@ limitations under the License.
           }
 
           if (this.query.length < 3 && this.filteredDirectories.length === 0) {
-            displaySpec.testFiles = []
-            displayedSpecs.push(displaySpec)
+            displaySpecDir.testFiles = []
+            displayedSpecDirs.push(displaySpecDir)
             continue
           }
 
-          let allTestFiles = Object.keys(spec.testFiles).map(k => {
+          let allTestFiles = Object.keys(specDir.testFiles).map(k => {
             let displayTestFile = {}
-            let originalTestFile = spec.testFiles[k]
+            let originalTestFile = specDir.testFiles[k]
 
             displayTestFile.testFile = originalTestFile.testFile
-            displayTestFile.results = this.testRuns.map(testRun => {
-              let key = window.btoa(testRun.results_url)
-              return originalTestFile.results[key]
-            })
+            displayTestFile.results = this.testRuns.map(testRun => originalTestFile.results[testRun.results_url])
 
             return displayTestFile
           })
 
-          const MAX_RESULTS_PER_SPEC = 10
+          const MAX_RESULTS_PER_SPEC_DIR = 10
 
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
             if (this.filteredDirectories.length > 0) {
-              displaySpec.testFiles = matchingTestFiles
-              displaySpec.testFiles = displaySpec.testFiles.filter(tf => (
+              displaySpecDir.testFiles = matchingTestFiles
+              displaySpecDir.testFiles = displaySpecDir.testFiles.filter(tf => (
                 this.filteredDirectories.some(filterDir => tf.testFile.startsWith(filterDir))
               ))
             } else {
-              displaySpec.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC)
-              displaySpec.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC
+              displaySpecDir.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC_DIR)
+              displaySpecDir.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC_DIR
             }
 
-            displaySpec.testFiles.sort(this._testFileSort)
-            displayedSpecs.push(displaySpec)
+            displaySpecDir.testFiles.sort(this._testFileSort)
+            displayedSpecDirs.push(displaySpecDir)
           }
         }
-        displayedSpecs.sort(this._specSort)
-        this.set('displayedSpecs', displayedSpecs)
+        displayedSpecDirs.sort(this._specDirSort)
+        this.set('displayedSpecDirs', displayedSpecDirs)
       }
 
       _passingPercent (item) {
@@ -302,13 +301,12 @@ limitations under the License.
         const totals = {}
 
         this.testRuns.forEach(testRun => {
-          const testRunKey = window.btoa(testRun.results_url)
           const testRunID = this._platformID(testRun)
           totals[testRunID] = {passing: 0, total: 0}
 
-          Object.keys(this.specs).forEach(specKey => {
-            totals[testRunID].passing += this.specs[specKey].results[testRunKey].passing
-            totals[testRunID].total += this.specs[specKey].results[testRunKey].total
+          Object.keys(this.specDirs).forEach(specKey => {
+            totals[testRunID].passing += this.specDirs[specKey].results[testRun.results_url].passing
+            totals[testRunID].total += this.specDirs[specKey].results[testRun.results_url].total
           })
         })
 
