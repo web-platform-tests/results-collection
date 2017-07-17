@@ -17,6 +17,7 @@ limitations under the License.
 <link rel="import" href="/bower_components/polymer/polymer-element.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="/components/test-file-results.html">
 
 <dom-module id="wpt-results">
   <template>
@@ -56,63 +57,69 @@ limitations under the License.
       }
     </style>
 
-    <section class="search">
-      <input
-        value="{{query::input}}"
-        class="query"
-        placeholder="Search test files, like cors/allow-headers.htm">
-    </section>
+    <template is="dom-if" if="{{ testFileName.length }}">
+      <test-file-results style="margin-bottom: 5em;"
+        test-runs="[[testRuns]]"
+        test-file="[[testFileName]]">
+      </test-file-results>
+    </template>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Spec</th>
-          <template is="dom-repeat" items="{{testRuns}}">
-            <th class="browser">
-              <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
-              <div>{{item.browser_name}} {{item.browser_version}}</div>
-              <div>{{item.os_name}} {{item.os_version}}</div>
-              <div>@{{item.revision}}</div>
-              <div>{{_dateFormat(item.created_at)}}</div>
-            </th>
-          </template>
-        </tr>
-      </thead>
-      <tbody>
+    <template is="dom-if" if="{{ !testFileName.length }}">
+      <section class="search">
+        <input
+          value="{{query::input}}"
+          class="query"
+          placeholder="Search test files, like cors/allow-headers.htm">
+      </section>
 
-        <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
-
-          <tr class="spec">
-            <td><b><a href="/{{specDir.specName}}">{{specDir.specName}}</a></b></td>
-
-            <template is="dom-repeat" items="{{specDir.results}}" as="result">
-              <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
+      <table>
+        <thead>
+          <tr>
+            <th>Spec</th>
+            <template is="dom-repeat" items="{{testRuns}}">
+              <th class="browser">
+                <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
+                <div>{{item.browser_name}} {{item.browser_version}}</div>
+                <div>{{item.os_name}} {{item.os_version}}</div>
+                <div>@{{item.revision}}</div>
+                <div>{{_dateFormat(item.created_at)}}</div>
+              </th>
             </template>
           </tr>
+        </thead>
+        <tbody>
 
-          <!-- TODO(jeffcarp): This nested sort isn't working -->
-          <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
-            <tr>
-              <!-- This is the only way I've found to get sub-lists to update -->
-              <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
+          <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
 
-              <template is="dom-repeat" items="{{testFile.results}}" as="result">
-                <td style="{{ _testResultStyle(result) }}">
-                  {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
-                  <span style="display:none;">{{query}}</span>
-                </td>
+            <tr class="spec">
+              <td><b><a href="/{{specDir.specName}}">{{specDir.specName}}</a></b></td>
+
+              <template is="dom-repeat" items="{{specDir.results}}" as="result">
+                <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
               </template>
             </tr>
-          </template>
 
-          <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
-            <!-- TODO(jeffcarp): add a button to show more results -->
-            <div>not all matching test files shown</div>
-          </template>
+            <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
+              <tr>
+                <td><a href="{{ testFile.testFile }}">{{ testFile.testFile }}</a></td>
 
-        </template>
-      </tbody>
-    </table>
+                <template is="dom-repeat" items="{{testFile.results}}" as="result">
+                  <td style="{{ _testResultStyle(result) }}">
+                    {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
+                  </td>
+                </template>
+              </tr>
+            </template>
+
+            <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
+              <!-- TODO(jeffcarp): add a button to show more results -->
+              <div>not all matching test files shown</div>
+            </template>
+
+          </template>
+        </tbody>
+      </table>
+    </template>
 
   </template>
 
@@ -139,13 +146,17 @@ limitations under the License.
             value: []
           },
           testRuns: {
-            type: Array
+            type: Array,
           },
           // If any directory names are present, displayedSpecDirs should be a
           // union of filteredDirectories, not an intersection.
           filteredDirectories: {
             type: Array,
             value: []
+          },
+          testFileName: {
+            type: String,
+            value: ''
           }
         }
       }
@@ -155,6 +166,12 @@ limitations under the License.
 
         if (window.location.pathname !== '/') {
           this.filteredDirectories.push(window.location.pathname)
+        }
+
+        // TODO is this an ok assumption?
+        if (window.location.pathname.endsWith('.html')) {
+          this.testFileName = window.location.pathname
+          return
         }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {

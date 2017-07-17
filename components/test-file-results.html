@@ -1,0 +1,182 @@
+<!--
+Copyright 2017 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
+<link rel="import" href="/bower_components/polymer/lib/elements/dom-if.html">
+<link rel="import" href="/bower_components/polymer/lib/elements/dom-repeat.html">
+
+<dom-module id="test-file-results">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-size: 16px;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+
+      /* TODO this is duplicated from wpt-results */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th.browser img {
+        width: 32px;
+        height: 32px;
+      }
+
+      tr.sub-test-results .OK, tr.sub-test-results .PASS {
+        background-color: rgb(90, 242, 113);
+      }
+      tr.sub-test-results .FAIL {
+        background-color: rgb(242, 90, 90);
+      }
+    </style>
+
+    <div>Test file results for:</div>
+    <h1>{{ testFile }}</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Subtest</th>
+          <template is="dom-repeat" items="{{testRuns}}">
+            <th class="browser">
+              <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
+              <div>{{item.browser_name}} {{item.browser_version}}</div>
+              <div>{{item.os_name}} {{item.os_version}}</div>
+              <div>@{{item.revision}}</div>
+              <div>{{_dateFormat(item.created_at)}}</div>
+            </th>
+          </template>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- for subTestname in subTestName (access by testRun.subtests[subTestName]) -->
+        <template is="dom-repeat" items="{{subtestNames}}" as="subtestName">
+          <tr class="sub-test-results">
+            <td>{{ subtestName }}</td>
+
+            <template is="dom-repeat" items="{{testRuns}}" as="testRun">
+              <td class$="[[ _subTestResultForTestRun(testRun, subtestName) ]]">
+                {{ _subTestResultForTestRun(testRun, subtestName) }}
+              </td>
+            </template>
+          </tr>
+        </template>
+
+      </tbody>
+    </table>
+
+
+
+  </template>
+
+  <script>
+    class TestFileResults extends window.Polymer.Element {
+      static get is () { return 'test-file-results' }
+
+      static get properties () {
+        return {
+          testRuns: {
+            type: Array
+          },
+          testFile: {
+            type: String
+          },
+          subtestNames: {
+            type: Array,
+            value: []
+            // value: ['Test file']
+          }
+        }
+      }
+
+      async connectedCallback () {
+        super.connectedCallback()
+        console.assert(this.testFile)
+        console.assert(this.testFile[0] === '/')
+        console.assert(this.testRuns)
+        console.assert(this.testRuns.length > 0)
+
+        const resultPerTestRun = await Promise.all(this.testRuns.map(testRun => (
+          this.loadResultFile(testRun, this.testFile)
+        )))
+
+        resultPerTestRun.forEach((resultData, i) => {
+          if (!resultData) return
+          const platformID = this._platformID(this.testRuns[i])
+          this.testRuns[i].subtests = {}
+          this.testRuns[i].subtests['Test file'] = { status: resultData.status }
+          this.subtestNames = this.subtestNames.concat(['Test file'])
+
+          for (let subTestResult of resultData.subtests) {
+            console.log('subTestResult', subTestResult)
+            this.testRuns[i].subtests[subTestResult.name] = subTestResult
+            if (!this.subtestNames.includes(subTestResult.name)) {
+              this.subtestNames = this.subtestNames.concat([subTestResult.name])
+            }
+          }
+        })
+      }
+
+      async loadResultFile (testRun, testFile) {
+        const url = this.resultsURL(testRun, testFile)
+        const response = await window.fetch(url)
+        if (response.status !== 200) {
+          console.log('Got non-200 status for url:', url)
+          return Promise.resolve(null)
+        }
+        return await response.json()
+      }
+
+      resultsURL (testRun, testFile) {
+        const resultsBase = 'https://storage.googleapis.com/wptdashboard.appspot.com/results'
+        const platformID = `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+        // FIXME for testing
+        // return `${resultsBase}288744c60d/chrome-61.0-linux-4.4.0-75-generic${testFile}`
+        return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
+
+      }
+
+     _subTestResultForTestRun (testRun, subtestName) {
+        if (!testRun) return null
+        if (!testRun.subtests) return null
+        if (!testRun.subtests[subtestName]) return null
+        if (testRun.subtests[subtestName].status === 'OK') return 'OK'
+        if (testRun.subtests[subtestName].status === 'PASS') return 'PASS'
+        if (testRun.subtests[subtestName].message) {
+          return `Failure message: ${testRun.subtests[subtestName].message}`
+        }
+        return testRun.subtests[subtestName].status
+      }
+
+      /* TODO these are duplicated from wpt-results */
+      _dateFormat (dateStr) {
+        return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
+      }
+      _platformID (testRun) {
+        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+      }
+      /* end duplication */
+
+    }
+
+    window.customElements.define(TestFileResults.is, TestFileResults)
+  </script>
+</dom-module>
