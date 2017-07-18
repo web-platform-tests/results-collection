@@ -59,7 +59,7 @@ limitations under the License.
         </tr>
       </thead>
       <tbody>
-        <template is="dom-repeat" items="{{subtestNames}}" as="subtestName">
+        <template is="dom-repeat" items="{{subTestNames}}" as="subtestName">
           <tr>
             <td class="sub-test-name">{{ subtestName }}</td>
 
@@ -85,22 +85,25 @@ limitations under the License.
             type: Array
           },
           testFile: {
-            type: String
+            type: String,
+            observer: '_testFileChanged'
           },
-          subtestNames: {
+          subTestNames: {
             type: Array,
             value: []
           }
         }
       }
 
-      async connectedCallback () {
+      connectedCallback () {
         super.connectedCallback()
         console.assert(this.testFile)
         console.assert(this.testFile[0] === '/')
         console.assert(this.testRuns)
         console.assert(this.testRuns.length > 0)
+      }
 
+      async fetchTestFile () {
         const resultPerTestRun = await Promise.all(this.testRuns.map(tr => this.loadResultFile(tr)))
 
         resultPerTestRun.forEach((resultData, i) => {
@@ -112,14 +115,14 @@ limitations under the License.
           this.testRuns[i].subtests = {}
           this.testRuns[i].subtests['Test file'] = { status: resultData.status }
 
-          if (!this.subtestNames.includes('Test file')) {
-            this.subtestNames = this.subtestNames.concat(['Test file'])
+          if (!this.subTestNames.includes('Test file')) {
+            this.subTestNames = this.subTestNames.concat(['Test file'])
           }
 
           for (let subTestResult of resultData.subtests) {
             this.testRuns[i].subtests[subTestResult.name] = subTestResult
-            if (!this.subtestNames.includes(subTestResult.name)) {
-              this.subtestNames = this.subtestNames.concat([subTestResult.name])
+            if (!this.subTestNames.includes(subTestResult.name)) {
+              this.subTestNames = this.subTestNames.concat([subTestResult.name])
             }
           }
         })
@@ -133,6 +136,12 @@ limitations under the License.
           return Promise.resolve(null)
         }
         return response.json()
+      }
+
+      _testFileChanged () {
+        console.log('_testFileChanged')
+        this.subTestNames = []
+        this.fetchTestFile()
       }
 
       resultsURL (testRun, testFile) {
