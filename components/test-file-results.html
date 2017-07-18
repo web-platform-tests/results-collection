@@ -114,7 +114,6 @@ limitations under the License.
             this.testRuns[i].subtests['Test file'] = { status: '(results not found)' }
             return
           }
-          const platformID = this._platformID(this.testRuns[i])
           this.testRuns[i].subtests = {}
           this.testRuns[i].subtests['Test file'] = { status: resultData.status }
 
@@ -138,17 +137,16 @@ limitations under the License.
           console.error('Got non-200 status for url:', url)
           return Promise.resolve(null)
         }
-        return await response.json()
+        return response.json()
       }
 
       resultsURL (testRun, testFile) {
         const resultsBase = 'https://storage.googleapis.com/wptdashboard.appspot.com/results'
         const platformID = `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
         return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
-
       }
 
-     _subTestResultForTestRun (testRun, subtestName) {
+      _subTestResultForTestRun (testRun, subtestName) {
         if (!testRun) return null
         if (!testRun.subtests) return null
         if (!testRun.subtests[subtestName]) return null
@@ -159,12 +157,6 @@ limitations under the License.
         }
         return testRun.subtests[subtestName].status
       }
-
-      /* TODO this is duplicated from wpt-results */
-      _platformID (testRun) {
-        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
-      }
-
     }
 
     window.customElements.define(TestFileResults.is, TestFileResults)
