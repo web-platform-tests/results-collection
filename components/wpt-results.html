@@ -23,18 +23,26 @@ limitations under the License.
     <style>
       :host {
         display: block;
-        font-size: 16px;
+        font-size: 15px;
       }
       section.search {
         border-bottom: solid 1px #ccc;
         padding-bottom: 1em;
         margin-bottom: 1em;
       }
+      section.search .path {
+        margin-top: 1em;
+      }
       input.query {
         font-size: 16px;
         display: block;
         padding: 0.5em 0;
         width: 100%;
+      }
+      a {
+        text-decoration: none;
+        color: #0d5de6;
+        font-family: monospace;
       }
       table {
         width: 100%;
@@ -54,6 +62,9 @@ limitations under the License.
         padding: 0.2em 0.5em;
         border: solid 1px #ccc;
       }
+      .path-separator {
+        padding: 0 0.1em;
+      }
     </style>
 
     <section class="search">
@@ -61,7 +72,26 @@ limitations under the License.
         value="{{query::input}}"
         class="query"
         placeholder="Search test files, like cors/allow-headers.htm">
+      <div class="path">
+        <a href="/" on-click="_navigate">WPT</a>
+        <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
+          <span class="path-separator">/</span>
+          <a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
+        </template>
+      </div>
     </section>
+
+    <template is="dom-if" if="{{ pathIsATestFile }}">
+      <div>
+        Test file!!!!!!!
+      </div>
+    </template>
+
+    <template is="dom-if" if="{{ !pathIsATestFile }}">
+      <div>
+        Not a test file!!!!!!!
+      </div>
+    </template>
 
     <table>
       <thead>
@@ -90,24 +120,22 @@ limitations under the License.
             </template>
           </tr>
 
-          <!-- TODO(jeffcarp): This nested sort isn't working -->
           <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
             <tr>
-              <!-- This is the only way I've found to get sub-lists to update -->
-              <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
+              <td>
+                <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testFile.testFile) }}" as="part"><span class="path-separator">/</span><a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a></template>
+              </td>
 
               <template is="dom-repeat" items="{{testFile.results}}" as="result">
                 <td style="{{ _testResultStyle(result) }}">
                   {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
-                  <span style="display:none;">{{query}}</span>
                 </td>
               </template>
             </tr>
           </template>
 
           <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
-            <!-- TODO(jeffcarp): add a button to show more results -->
-            <div>not all matching test files shown</div>
+            <a href="/{{ specDir.specName }}">See all files in the {{ specDir.specName }} spec</a>
           </template>
 
         </template>
@@ -141,11 +169,13 @@ limitations under the License.
           testRuns: {
             type: Array
           },
-          // If any directory names are present, displayedSpecDirs should be a
-          // union of filteredDirectories, not an intersection.
-          filteredDirectories: {
-            type: Array,
-            value: []
+          path: {
+            type: String,
+            value: window.location.pathname
+          },
+          pathIsATestFile: {
+            type: Boolean,
+            computed: '_computePathIsATestFile(path)'
           }
         }
       }
@@ -154,16 +184,8 @@ limitations under the License.
         super.connectedCallback()
 
         window.onpopstate = (event) => {
-          if (window.location.pathname === '/') {
-            this.filteredDirectories = []
-          } else {
-            this.filteredDirectories = [window.location.pathname]
-          }
+          this.path = window.location.pathname
           this._refreshDisplayedSpecDirs()
-        }
-
-        if (window.location.pathname !== '/') {
-          this.filteredDirectories = [window.location.pathname]
         }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
@@ -197,6 +219,11 @@ limitations under the License.
         })
 
         this._refreshDisplayedSpecDirs()
+      }
+
+      _computePathIsATestFile (path) {
+        // TODO: Evaluate this assumption
+        return path.endsWith('.html')
       }
 
       _testFileSort (a, b) {
@@ -245,16 +272,14 @@ limitations under the License.
           displaySpecDir.specName = specDir.specName
           displaySpecDir.results = this.testRuns.map(testRun => specDir.results[testRun.results_url])
 
-          if (this.filteredDirectories.length > 0) {
-            const inFilteredDir = this.filteredDirectories.some(filterDir => (
-              filterDir.startsWith(`/${displaySpecDir.specName}`)
-            ))
+          if (this.path !== '/') {
+            const inFilteredDir = this.path.startsWith(`/${displaySpecDir.specName}`)
             if (!inFilteredDir) {
               continue
             }
           }
 
-          if (this.query.length < 3 && this.filteredDirectories.length === 0) {
+          if (this.query.length < 3 && this.path === '/') {
             displaySpecDir.testFiles = []
             displayedSpecDirs.push(displaySpecDir)
             continue
@@ -274,10 +299,10 @@ limitations under the License.
 
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
-            if (this.filteredDirectories.length > 0) {
+            if (this.path !== '/') {
               displaySpecDir.testFiles = matchingTestFiles
               displaySpecDir.testFiles = displaySpecDir.testFiles.filter(tf => (
-                this.filteredDirectories.some(filterDir => tf.testFile.startsWith(filterDir))
+                tf.testFile.startsWith(this.path)
               ))
             } else {
               displaySpecDir.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC_DIR)
@@ -301,14 +326,42 @@ limitations under the License.
         return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
       }
 
+      _navigate (event) {
+        event.preventDefault()
+        const path = event.target.pathname
+        if (path === this.path) {
+          return
+        }
+        this.path = path
+        this.query = ''
+        this._refreshDisplayedSpecDirs()
+        window.history.pushState({}, '', path)
+      }
+
       // TODO: handle event where state is changed via back button
       // TODO: make root navigation also use pushState (add breadcrumbs?)
       _navigateSpec (event) {
         event.preventDefault()
         const specPath = '/' + event.target.dataset.specName
-        this.filteredDirectories = [specPath]
+        if (specPath === this.path) {
+          return
+        }
+        this.path = specPath
+        this.query = ''
         this._refreshDisplayedSpecDirs()
         window.history.pushState({}, '', specPath)
+      }
+
+      _splitIntoLinkedParts (path) {
+        const parts = path.split('/').slice(1)
+        let pathSoFar = ''
+        return parts.map(part => {
+          pathSoFar += '/' + part
+          return {
+            name: part,
+            path: pathSoFar
+          }
+        })
       }
 
       /* Function for getting total numbers.
