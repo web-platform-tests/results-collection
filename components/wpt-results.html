@@ -104,7 +104,7 @@ limitations under the License.
           <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
 
             <tr class="spec">
-              <td><b><a href="/{{specDir.specName}}" data-spec-name$="[[ specDir.specName ]]" on-click="_navigateSpec">{{specDir.specName}}</a></b></td>
+              <td><b><a href="/{{specDir.specName}}" on-click="_navigate">{{specDir.specName}}</a></b></td>
 
               <template is="dom-repeat" items="{{specDir.results}}" as="result">
                 <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
@@ -214,7 +214,6 @@ limitations under the License.
       }
 
       _computePathIsATestFile (path) {
-        // TODO: Evaluate this assumption
         return path.endsWith('.html') || path.endsWith('.htm')
       }
 
@@ -323,20 +322,6 @@ limitations under the License.
         this.query = ''
         this._refreshDisplayedSpecDirs()
         window.history.pushState({}, '', path)
-      }
-
-      // TODO: handle event where state is changed via back button
-      // TODO: make root navigation also use pushState (add breadcrumbs?)
-      _navigateSpec (event) {
-        event.preventDefault()
-        const specPath = '/' + event.target.dataset.specName
-        if (specPath === this.path) {
-          return
-        }
-        this.path = specPath
-        this.query = ''
-        this._refreshDisplayedSpecDirs()
-        window.history.pushState({}, '', specPath)
       }
 
       _splitIntoLinkedParts (path) {

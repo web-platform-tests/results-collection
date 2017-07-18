@@ -30,7 +30,6 @@ limitations under the License.
         font-size: 1.5em;
       }
 
-      /* TODO this is duplicated from wpt-results */
       table {
         width: 100%;
         border-collapse: collapse;
@@ -60,7 +59,6 @@ limitations under the License.
         </tr>
       </thead>
       <tbody>
-        <!-- for subTestname in subTestName (access by testRun.subtests[subTestName]) -->
         <template is="dom-repeat" items="{{subtestNames}}" as="subtestName">
           <tr>
             <td class="sub-test-name">{{ subtestName }}</td>
@@ -75,7 +73,6 @@ limitations under the License.
 
       </tbody>
     </table>
-
   </template>
 
   <script>
@@ -104,9 +101,7 @@ limitations under the License.
         console.assert(this.testRuns)
         console.assert(this.testRuns.length > 0)
 
-        const resultPerTestRun = await Promise.all(this.testRuns.map(testRun => (
-          this.loadResultFile(testRun, this.testFile)
-        )))
+        const resultPerTestRun = await Promise.all(this.testRuns.map(tr => this.loadResultFile(tr)))
 
         resultPerTestRun.forEach((resultData, i) => {
           if (!resultData) {
@@ -130,8 +125,8 @@ limitations under the License.
         })
       }
 
-      async loadResultFile (testRun, testFile) {
-        const url = this.resultsURL(testRun, testFile)
+      async loadResultFile (testRun) {
+        const url = this.resultsURL(testRun, this.testFile)
         const response = await window.fetch(url)
         if (response.status !== 200) {
           console.error('Got non-200 status for url:', url)
