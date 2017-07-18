@@ -83,7 +83,7 @@ limitations under the License.
         <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
 
           <tr class="spec">
-            <td><b><a href="/{{specDir.specName}}">{{specDir.specName}}</a></b></td>
+            <td><b><a href="/{{specDir.specName}}" data-spec-name$="[[ specDir.specName ]]" on-click="_navigateSpec">{{specDir.specName}}</a></b></td>
 
             <template is="dom-repeat" items="{{specDir.results}}" as="result">
               <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
@@ -153,8 +153,17 @@ limitations under the License.
       async connectedCallback () {
         super.connectedCallback()
 
+        window.onpopstate = (event) => {
+          if (window.location.pathname === '/') {
+            this.filteredDirectories = []
+          } else {
+            this.filteredDirectories = [window.location.pathname]
+          }
+          this._refreshDisplayedSpecDirs()
+        }
+
         if (window.location.pathname !== '/') {
-          this.filteredDirectories.push(window.location.pathname)
+          this.filteredDirectories = [window.location.pathname]
         }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
@@ -290,6 +299,16 @@ limitations under the License.
 
       _platformID (testRun) {
         return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+      }
+
+      // TODO: handle event where state is changed via back button
+      // TODO: make root navigation also use pushState (add breadcrumbs?)
+      _navigateSpec (event) {
+        event.preventDefault()
+        const specPath = '/' + event.target.dataset.specName
+        this.filteredDirectories = [specPath]
+        this._refreshDisplayedSpecDirs()
+        window.history.pushState({}, '', specPath)
       }
 
       /* Function for getting total numbers.
