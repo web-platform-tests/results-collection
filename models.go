@@ -25,7 +25,7 @@ type TestRun struct {
     OSName          string          `json:"os_name"`
     OSVersion       string          `json:"os_version"`
 
-    // The full SHA1 of the tested WPT revision
+    // The first 10 characters of the SHA1 of the tested WPT revision
     Revision        string          `json:"revision"`
 
     // Results URL

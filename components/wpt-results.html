@@ -17,6 +17,8 @@ limitations under the License.
 <link rel="import" href="/bower_components/polymer/polymer-element.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="/components/test-file-results.html">
+<link rel="import" href="/components/test-run.html">
 
 <dom-module id="wpt-results">
   <template>
@@ -44,13 +46,12 @@ limitations under the License.
         color: #0d5de6;
         font-family: monospace;
       }
+      a:hover {
+        color: #226ff3;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
-      }
-      th.browser img {
-        width: 32px;
-        height: 32px;
       }
       tr.spec {
         background-color: #eee;
@@ -82,65 +83,56 @@ limitations under the License.
     </section>
 
     <template is="dom-if" if="{{ pathIsATestFile }}">
-      <div>
-        Test file!!!!!!!
-      </div>
+      <test-file-results
+        test-runs="[[testRuns]]"
+        test-file="[[path]]">
+      </test-file-results>
     </template>
 
     <template is="dom-if" if="{{ !pathIsATestFile }}">
-      <div>
-        Not a test file!!!!!!!
-      </div>
-    </template>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Spec</th>
-          <template is="dom-repeat" items="{{testRuns}}">
-            <th class="browser">
-              <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
-              <div>{{item.browser_name}} {{item.browser_version}}</div>
-              <div>{{item.os_name}} {{item.os_version}}</div>
-              <div>@{{item.revision}}</div>
-              <div>{{_dateFormat(item.created_at)}}</div>
-            </th>
-          </template>
-        </tr>
-      </thead>
-      <tbody>
-
-        <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
-
-          <tr class="spec">
-            <td><b><a href="/{{specDir.specName}}" data-spec-name$="[[ specDir.specName ]]" on-click="_navigateSpec">{{specDir.specName}}</a></b></td>
-
-            <template is="dom-repeat" items="{{specDir.results}}" as="result">
-              <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
+      <table>
+        <thead>
+          <tr>
+            <th>Spec</th>
+            <template is="dom-repeat" items="{{testRuns}}" as="testRun">
+              <th><test-run test-run="[[testRun]]"></test-run></th>
             </template>
           </tr>
+        </thead>
+        <tbody>
 
-          <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
-            <tr>
-              <td>
-                <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testFile.testFile) }}" as="part"><span class="path-separator">/</span><a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a></template>
-              </td>
+          <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
 
-              <template is="dom-repeat" items="{{testFile.results}}" as="result">
-                <td style="{{ _testResultStyle(result) }}">
-                  {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
-                </td>
+            <tr class="spec">
+              <td><b><a href="/{{specDir.specName}}" data-spec-name$="[[ specDir.specName ]]" on-click="_navigateSpec">{{specDir.specName}}</a></b></td>
+
+              <template is="dom-repeat" items="{{specDir.results}}" as="result">
+                <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
               </template>
             </tr>
-          </template>
 
-          <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
-            <a href="/{{ specDir.specName }}">See all files in the {{ specDir.specName }} spec</a>
-          </template>
+            <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
+              <tr>
+                <td>
+                  <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testFile.testFile) }}" as="part"><span class="path-separator">/</span><a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a></template>
+                </td>
 
-        </template>
-      </tbody>
-    </table>
+                <template is="dom-repeat" items="{{testFile.results}}" as="result">
+                  <td style="{{ _testResultStyle(result) }}">
+                    {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
+                  </td>
+                </template>
+              </tr>
+            </template>
+
+            <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
+              <a href="/{{ specDir.specName }}">See all files in the {{ specDir.specName }} spec</a>
+            </template>
+
+          </template>
+        </tbody>
+      </table>
+    </template>
 
   </template>
 
@@ -223,7 +215,7 @@ limitations under the License.
 
       _computePathIsATestFile (path) {
         // TODO: Evaluate this assumption
-        return path.endsWith('.html')
+        return path.endsWith('.html') || path.endsWith('.htm')
       }
 
       _testFileSort (a, b) {
@@ -317,11 +309,6 @@ limitations under the License.
         this.set('displayedSpecDirs', displayedSpecDirs)
       }
 
-      _passingPercent (item) {
-        if (!item || isNaN(item.passing) || isNaN(item.total)) return ''
-        return parseFloat((item.passing / item.total) * 100).toFixed(1)
-      }
-
       _platformID (testRun) {
         return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
       }
@@ -364,6 +351,26 @@ limitations under the License.
         })
       }
 
+      _testResultStyle (result) {
+        if (!result) return ''
+
+        // Need saturation between 65-100, reversed (range 35)
+        const passRate = result.passing / result.total
+        if (passRate === 1) {
+          // Green
+          return 'background-color: hsl(129, 85%, 65%)'
+        } else {
+          const luminance = 65 + passRate * 20
+          // Some shade of red
+          return `background-color: hsl(0, 85%, ${luminance}%)`
+        }
+      }
+
+      _passingPercent (item) {
+        if (!item || isNaN(item.passing) || isNaN(item.total)) return ''
+        return parseFloat((item.passing / item.total) * 100).toFixed(1)
+      }
+
       /* Function for getting total numbers.
        * Intentionally not exposed in UI.
        * To generate, open your console and run:
@@ -394,25 +401,6 @@ limitations under the License.
         })))
 
         console.log('JSON version:', JSON.stringify(totals))
-      }
-
-      _dateFormat (dateStr) {
-        return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
-      }
-
-      _testResultStyle (result) {
-        if (!result) return ''
-
-        // Need saturation between 65-100, reversed (range 35)
-        const passRate = result.passing / result.total
-        if (passRate === 1) {
-          // Green
-          return 'background-color: hsl(129, 85%, 65%)'
-        } else {
-          const luminance = 65 + passRate * 20
-          // Some shade of red
-          return `background-color: hsl(0, 85%, ${luminance}%)`
-        }
       }
     }
 
