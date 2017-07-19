@@ -37,10 +37,10 @@ npm test
 
 ## License header
 
-All source files must begin with a comment of the below header:
+All source files (including `.js`, `.go`, `.html`, `.css`) must begin with a comment of the below header:
 
 ```go
-// Copyright 2017 Google Inc.
+// Copyright {YEAR} Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
