@@ -139,13 +139,13 @@ limitations under the License.
       }
 
       _testFileChanged () {
-        console.log('_testFileChanged')
         this.subTestNames = []
         this.fetchTestFile()
       }
 
       resultsURL (testRun, testFile) {
-        const resultsBase = 'https://storage.googleapis.com/wptdashboard.appspot.com/results'
+        // This is relying on the assumption that result files are under a directory named SHA[0:10]
+        const resultsBase = testRun.results_url.split('/' + testRun.revision)[0]
         const platformID = `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
         return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
       }
