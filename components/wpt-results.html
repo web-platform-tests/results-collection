@@ -17,18 +17,23 @@ limitations under the License.
 <link rel="import" href="/bower_components/polymer/polymer-element.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="/bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="/components/test-file-results.html">
+<link rel="import" href="/components/test-run.html">
 
 <dom-module id="wpt-results">
   <template>
     <style>
       :host {
         display: block;
-        font-size: 16px;
+        font-size: 15px;
       }
       section.search {
         border-bottom: solid 1px #ccc;
         padding-bottom: 1em;
         margin-bottom: 1em;
+      }
+      section.search .path {
+        margin-top: 1em;
       }
       input.query {
         font-size: 16px;
@@ -36,13 +41,17 @@ limitations under the License.
         padding: 0.5em 0;
         width: 100%;
       }
+      a {
+        text-decoration: none;
+        color: #0d5de6;
+        font-family: monospace;
+      }
+      a:hover {
+        color: #226ff3;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
-      }
-      th.browser img {
-        width: 32px;
-        height: 32px;
       }
       tr.spec {
         background-color: #eee;
@@ -54,6 +63,9 @@ limitations under the License.
         padding: 0.2em 0.5em;
         border: solid 1px #ccc;
       }
+      .path-separator {
+        padding: 0 0.1em;
+      }
     </style>
 
     <section class="search">
@@ -61,58 +73,66 @@ limitations under the License.
         value="{{query::input}}"
         class="query"
         placeholder="Search test files, like cors/allow-headers.htm">
+      <div class="path">
+        <a href="/" on-click="_navigate">WPT</a>
+        <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
+          <span class="path-separator">/</span>
+          <a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
+        </template>
+      </div>
     </section>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Spec</th>
-          <template is="dom-repeat" items="{{testRuns}}">
-            <th class="browser">
-              <div><img src="/static/{{item.browser_name}}_64x64.png" /></div>
-              <div>{{item.browser_name}} {{item.browser_version}}</div>
-              <div>{{item.os_name}} {{item.os_version}}</div>
-              <div>@{{item.revision}}</div>
-              <div>{{_dateFormat(item.created_at)}}</div>
-            </th>
-          </template>
-        </tr>
-      </thead>
-      <tbody>
+    <template is="dom-if" if="{{ pathIsATestFile }}">
+      <test-file-results
+        test-runs="[[testRuns]]"
+        test-file="[[path]]">
+      </test-file-results>
+    </template>
 
-        <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
-
-          <tr class="spec">
-            <td><b><a href="/{{specDir.specName}}">{{specDir.specName}}</a></b></td>
-
-            <template is="dom-repeat" items="{{specDir.results}}" as="result">
-              <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
+    <template is="dom-if" if="{{ !pathIsATestFile }}">
+      <table>
+        <thead>
+          <tr>
+            <th>Spec</th>
+            <template is="dom-repeat" items="{{testRuns}}" as="testRun">
+              <th><test-run test-run="[[testRun]]"></test-run></th>
             </template>
           </tr>
+        </thead>
+        <tbody>
 
-          <!-- TODO(jeffcarp): This nested sort isn't working -->
-          <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
-            <tr>
-              <!-- This is the only way I've found to get sub-lists to update -->
-              <td>{{ testFile.testFile }} <span style="display:none;">{{query}}</span></td>
+          <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
 
-              <template is="dom-repeat" items="{{testFile.results}}" as="result">
-                <td style="{{ _testResultStyle(result) }}">
-                  {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
-                  <span style="display:none;">{{query}}</span>
-                </td>
+            <tr class="spec">
+              <td><b><a href="/{{specDir.specName}}" on-click="_navigate">{{specDir.specName}}</a></b></td>
+
+              <template is="dom-repeat" items="{{specDir.results}}" as="result">
+                <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
               </template>
             </tr>
-          </template>
 
-          <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
-            <!-- TODO(jeffcarp): add a button to show more results -->
-            <div>not all matching test files shown</div>
-          </template>
+            <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
+              <tr>
+                <td>
+                  <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testFile.testFile) }}" as="part"><span class="path-separator">/</span><a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a></template>
+                </td>
 
-        </template>
-      </tbody>
-    </table>
+                <template is="dom-repeat" items="{{testFile.results}}" as="result">
+                  <td style="{{ _testResultStyle(result) }}">
+                    {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
+                  </td>
+                </template>
+              </tr>
+            </template>
+
+            <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
+              <a href="/{{ specDir.specName }}">See all files in the {{ specDir.specName }} spec</a>
+            </template>
+
+          </template>
+        </tbody>
+      </table>
+    </template>
 
   </template>
 
@@ -141,11 +161,13 @@ limitations under the License.
           testRuns: {
             type: Array
           },
-          // If any directory names are present, displayedSpecDirs should be a
-          // union of filteredDirectories, not an intersection.
-          filteredDirectories: {
-            type: Array,
-            value: []
+          path: {
+            type: String,
+            value: window.location.pathname
+          },
+          pathIsATestFile: {
+            type: Boolean,
+            computed: '_computePathIsATestFile(path)'
           }
         }
       }
@@ -153,8 +175,9 @@ limitations under the License.
       async connectedCallback () {
         super.connectedCallback()
 
-        if (window.location.pathname !== '/') {
-          this.filteredDirectories.push(window.location.pathname)
+        window.onpopstate = (event) => {
+          this.path = window.location.pathname
+          this._refreshDisplayedSpecDirs()
         }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
@@ -188,6 +211,10 @@ limitations under the License.
         })
 
         this._refreshDisplayedSpecDirs()
+      }
+
+      _computePathIsATestFile (path) {
+        return path.endsWith('.html') || path.endsWith('.htm')
       }
 
       _testFileSort (a, b) {
@@ -236,16 +263,14 @@ limitations under the License.
           displaySpecDir.specName = specDir.specName
           displaySpecDir.results = this.testRuns.map(testRun => specDir.results[testRun.results_url])
 
-          if (this.filteredDirectories.length > 0) {
-            const inFilteredDir = this.filteredDirectories.some(filterDir => (
-              filterDir.startsWith(`/${displaySpecDir.specName}`)
-            ))
+          if (this.path !== '/') {
+            const inFilteredDir = this.path.startsWith(`/${displaySpecDir.specName}`)
             if (!inFilteredDir) {
               continue
             }
           }
 
-          if (this.query.length < 3 && this.filteredDirectories.length === 0) {
+          if (this.query.length < 3 && this.path === '/') {
             displaySpecDir.testFiles = []
             displayedSpecDirs.push(displaySpecDir)
             continue
@@ -265,10 +290,10 @@ limitations under the License.
 
           let matchingTestFiles = allTestFiles.filter(matchesQuery)
           if (matchingTestFiles.length > 0) {
-            if (this.filteredDirectories.length > 0) {
+            if (this.path !== '/') {
               displaySpecDir.testFiles = matchingTestFiles
               displaySpecDir.testFiles = displaySpecDir.testFiles.filter(tf => (
-                this.filteredDirectories.some(filterDir => tf.testFile.startsWith(filterDir))
+                tf.testFile.startsWith(this.path)
               ))
             } else {
               displaySpecDir.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC_DIR)
@@ -283,13 +308,52 @@ limitations under the License.
         this.set('displayedSpecDirs', displayedSpecDirs)
       }
 
+      _platformID (testRun) {
+        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+      }
+
+      _navigate (event) {
+        event.preventDefault()
+        const path = event.target.pathname
+        if (path === this.path) {
+          return
+        }
+        this.path = path
+        this.query = ''
+        this._refreshDisplayedSpecDirs()
+        window.history.pushState({}, '', path)
+      }
+
+      _splitIntoLinkedParts (path) {
+        const parts = path.split('/').slice(1)
+        let pathSoFar = ''
+        return parts.map(part => {
+          pathSoFar += '/' + part
+          return {
+            name: part,
+            path: pathSoFar
+          }
+        })
+      }
+
+      _testResultStyle (result) {
+        if (!result) return ''
+
+        // Need saturation between 65-100, reversed (range 35)
+        const passRate = result.passing / result.total
+        if (passRate === 1) {
+          // Green
+          return 'background-color: hsl(129, 85%, 65%)'
+        } else {
+          const luminance = 65 + passRate * 20
+          // Some shade of red
+          return `background-color: hsl(0, 85%, ${luminance}%)`
+        }
+      }
+
       _passingPercent (item) {
         if (!item || isNaN(item.passing) || isNaN(item.total)) return ''
         return parseFloat((item.passing / item.total) * 100).toFixed(1)
-      }
-
-      _platformID (testRun) {
-        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
       }
 
       /* Function for getting total numbers.
@@ -322,25 +386,6 @@ limitations under the License.
         })))
 
         console.log('JSON version:', JSON.stringify(totals))
-      }
-
-      _dateFormat (dateStr) {
-        return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
-      }
-
-      _testResultStyle (result) {
-        if (!result) return ''
-
-        // Need saturation between 65-100, reversed (range 35)
-        const passRate = result.passing / result.total
-        if (passRate === 1) {
-          // Green
-          return 'background-color: hsl(129, 85%, 65%)'
-        } else {
-          const luminance = 65 + passRate * 20
-          // Some shade of red
-          return `background-color: hsl(0, 85%, ${luminance}%)`
-        }
       }
     }
 
