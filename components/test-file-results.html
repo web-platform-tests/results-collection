@@ -59,13 +59,13 @@ limitations under the License.
         </tr>
       </thead>
       <tbody>
-        <template is="dom-repeat" items="{{subTestNames}}" as="subtestName">
+        <template is="dom-repeat" items="{{subtestNames}}" as="subtestName">
           <tr>
             <td class="sub-test-name">{{ subtestName }}</td>
 
             <template is="dom-repeat" items="{{testRuns}}" as="testRun">
-              <td class$="result [[ _subTestResultForTestRun(testRun, subtestName) ]]">
-                {{ _subTestResultForTestRun(testRun, subtestName) }}
+              <td class$="result [[ _subtestResultForTestRun(testRun, subtestName) ]]">
+                {{ _subtestResultForTestRun(testRun, subtestName) }}
               </td>
             </template>
           </tr>
@@ -88,7 +88,7 @@ limitations under the License.
             type: String,
             observer: '_testFileChanged'
           },
-          subTestNames: {
+          subtestNames: {
             type: Array,
             value: []
           }
@@ -115,14 +115,14 @@ limitations under the License.
           this.testRuns[i].subtests = {}
           this.testRuns[i].subtests['Test file'] = { status: resultData.status }
 
-          if (!this.subTestNames.includes('Test file')) {
-            this.subTestNames = this.subTestNames.concat(['Test file'])
+          if (!this.subtestNames.includes('Test file')) {
+            this.subtestNames = this.subtestNames.concat(['Test file'])
           }
 
-          for (let subTestResult of resultData.subtests) {
-            this.testRuns[i].subtests[subTestResult.name] = subTestResult
-            if (!this.subTestNames.includes(subTestResult.name)) {
-              this.subTestNames = this.subTestNames.concat([subTestResult.name])
+          for (let subtestResult of resultData.subtests) {
+            this.testRuns[i].subtests[subtestResult.name] = subtestResult
+            if (!this.subtestNames.includes(subtestResult.name)) {
+              this.subtestNames = this.subtestNames.concat([subtestResult.name])
             }
           }
         })
@@ -139,7 +139,7 @@ limitations under the License.
       }
 
       _testFileChanged () {
-        this.subTestNames = []
+        this.subtestNames = []
         this.fetchTestFile()
       }
 
@@ -150,7 +150,7 @@ limitations under the License.
         return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
       }
 
-      _subTestResultForTestRun (testRun, subtestName) {
+      _subtestResultForTestRun (testRun, subtestName) {
         if (!testRun) return null
         if (!testRun.subtests) return null
         if (!testRun.subtests[subtestName]) return null
