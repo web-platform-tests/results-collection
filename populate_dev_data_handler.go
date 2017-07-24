@@ -23,42 +23,49 @@ import (
     "appengine/datastore"
 )
 
+// Create TestRun entities for local development and testing.
+// These point to JSON files stored in /static/.
+// Key names for each entity are specified to make this route idempotent.
 func populateDevData(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
 
-    // Add Chrome TestRun
-    testRun := &TestRun{
-        Revision: "e2d2cde03d",
-        BrowserName: "chrome",
-        BrowserVersion: "60.0",
-        OSName: "debian",
-        OSVersion: "8",
-        ResultsURL: "/static/chrome-60.0-debian-8.json",
-        CreatedAt: time.Now(),
+    devData := map[string]*TestRun{
+        "dev-testrun-chrome-60": &TestRun{
+            Revision: "e2d2cde03d",
+            BrowserName: "chrome",
+            BrowserVersion: "60.0",
+            OSName: "debian",
+            OSVersion: "8",
+            ResultsURL: "/static/chrome-60.0-debian-8.json",
+            CreatedAt: time.Now(),
+        },
+        "dev-testrun-firefox-55": &TestRun{
+            Revision: "e2d2cde03d",
+            BrowserName: "firefox",
+            BrowserVersion: "55.0",
+            OSName: "debian",
+            OSVersion: "8",
+            ResultsURL: "/static/firefox-55.0-debian-8.json",
+            CreatedAt: time.Now(),
+        },
+        "dev-testrun-edge-15": &TestRun{
+            Revision: "dd44fd07c5",
+            BrowserName: "edge",
+            BrowserVersion: "15",
+            OSName: "windows",
+            OSVersion: "10",
+            ResultsURL: "/static/edge-15-windows-10.json",
+            CreatedAt: time.Now(),
+        },
     }
 
-    // Specify key to make this route idempotent
-    key := datastore.NewKey(ctx, "TestRun", "dev-testrun-chrome-60", 0, nil)
-    if _, err := datastore.Put(ctx, key, testRun); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+    for key, testRun := range devData {
+        key := datastore.NewKey(ctx, "TestRun", key, 0, nil)
+        if _, err := datastore.Put(ctx, key, testRun); err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
     }
 
-    // Add Firefox TestRun
-    testRun = &TestRun{
-        Revision: "e2d2cde03d",
-        BrowserName: "firefox",
-        BrowserVersion: "55.0",
-        OSName: "debian",
-        OSVersion: "8",
-        ResultsURL: "/static/firefox-55.0-debian-8.json",
-        CreatedAt: time.Now(),
-    }
-
-    // Specify key to make this route idempotent
-    key = datastore.NewKey(ctx, "TestRun", "dev-testrun-firefox-55", 0, nil)
-    if _, err := datastore.Put(ctx, key, testRun); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-
-    fmt.Fprintf(w, "Successfully created 2 TestRuns.")
+    fmt.Fprintf(w, "Successfully created %d TestRuns.", len(devData))
 }
