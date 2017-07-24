@@ -26,20 +26,19 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
 
     var testRuns []TestRun
-    var chromeTestRuns []TestRun
-    var firefoxTestRuns []TestRun
     baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
-    chromeQuery := baseQuery.Filter("BrowserName =", "chrome")
-    firefoxQuery := baseQuery.Filter("BrowserName =", "firefox")
+    // TODO(jeffcarp): get these from browsers.json once it lands on master
+    browserNames := []string{"chrome", "edge", "firefox"}
 
-    if _, err := chromeQuery.GetAll(ctx, &chromeTestRuns); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+    for _, browserName := range browserNames {
+        var testRunResults []TestRun
+        query := baseQuery.Filter("BrowserName =", browserName)
+        if _, err := query.GetAll(ctx, &testRunResults); err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        testRuns = append(testRuns, testRunResults...)
     }
-    if _, err := firefoxQuery.GetAll(ctx, &firefoxTestRuns); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-    testRuns = append(testRuns, chromeTestRuns...)
-    testRuns = append(testRuns, firefoxTestRuns...)
 
     testRunsBytes, err := json.Marshal(testRuns)
     if err != nil {
