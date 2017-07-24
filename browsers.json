@@ -1,0 +1,35 @@
+{
+    "chrome-61.0-linux": {
+        "initially_loaded": true,
+        "currently_run": true,
+        "browser_name": "chrome",
+        "browser_version": "61.0",
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "chrome-60.0-linux": {
+        "initially_loaded": false,
+        "currently_run": false,
+        "browser_name": "chrome",
+        "browser_version": "60.0",
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "firefox-56.0-linux": {
+        "initially_loaded": true,
+        "currently_run": true,
+        "browser_name": "firefox",
+        "browser_version": "56.0",
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "edge-15-windows-10-sauce": {
+        "initially_loaded": true,
+        "currently_run": true,
+        "browser_name": "edge",
+        "browser_version": "15",
+        "os_name": "windows",
+        "os_version": "10",
+        "sauce": true
+    }
+}
