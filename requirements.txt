@@ -1,0 +1,4 @@
+requests==2.18.1
+
+# This is needed to upload results files
+# google-cloud==0.26.1
