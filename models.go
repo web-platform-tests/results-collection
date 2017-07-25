@@ -34,9 +34,9 @@ type TestRun struct {
     CreatedAt       time.Time       `json:"created_at"`
 }
 
-
 type Browser struct {
     InitiallyLoaded bool            `json:"initially_loaded"`
+    CurrentlyRun    bool            `json:"currently_run"`
     BrowserName     string          `json:"browser_name"`
     BrowserVersion  string          `json:"browser_version"`
     OSName          string          `json:"os_name"`
