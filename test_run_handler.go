@@ -16,10 +16,12 @@ package wptdashboard
 
 import (
     "encoding/json"
-    "net/http"
-    "io/ioutil"
     "fmt"
+    "io/ioutil"
+    "net/http"
+    "os"
     "time"
+
     "appengine"
     "appengine/datastore"
 )
@@ -27,6 +29,9 @@ import (
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
     var err error
     ctx := appengine.NewContext(r)
+
+    secret := os.Getenv("UPLOAD_SECRET")
+    fmt.Fprintf(w, "THE VAR!!!... %s", secret)
 
     if r.Method != "POST" {
         http.Error(w, "This endpoint only supports POST.", http.StatusMethodNotAllowed)
