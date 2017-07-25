@@ -1,3 +1,10 @@
-language: node_js
-node_js:
-  - "node"
+matrix:
+  include:
+    - language: node_js
+      node_js:
+        - "node"
+
+    - language: python
+      python: 2.7
+      script:
+        - python -m unittest discover -p "*_test.py"
