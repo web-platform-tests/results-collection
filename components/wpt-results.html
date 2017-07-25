@@ -322,6 +322,11 @@ limitations under the License.
         this.query = ''
         this._refreshDisplayedSpecDirs()
         window.history.pushState({}, '', path)
+
+        // Send Google Analytics pageview event
+        if ('ga' in window) {
+          window.ga('send', 'pageview', path)
+        }
       }
 
       _splitIntoLinkedParts (path) {
