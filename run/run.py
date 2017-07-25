@@ -38,7 +38,7 @@ Before you run the script, you need to:
 
 1. Copy run/running.example.ini to run/running.ini
 2. Modify the applicable fields of run/running.ini (this may also involve installing browsers)
-3. Install dependencies with `pip install -r requirements.txt`
+3. Install dependencies with `pip3 install -r requirements.txt`
 4. Make sure you have gsutil installed (see https://cloud.google.com/storage/docs/gsutil)
 
 The script will only accept platform IDs listed in browsers.json.
@@ -120,11 +120,12 @@ def main(platform_id, platform, args, config):
     GS_RESULTS_FILEPATH_BASE = "%s/%s/%s" % (config['build_path'], SHORT_SHA, platform_id)
     GS_HTTP_RESULTS_URL = 'https://storage.googleapis.com/%s/%s' % (config['gs_results_bucket'], SUMMARY_PATH)
 
-    print('==================================================')
-    print('Installing wptrunner')
-    command = ['pip', 'install', '--user', '-e', 'tools/wptrunner']
-    return_code = subprocess.check_call(command, cwd=config['wpt_path'])
-    assert return_code == 0
+    if config.getboolean('install_wptrunner'):
+        print('==================================================')
+        print('Installing wptrunner')
+        command = ['pip', 'install', '--user', '-e', 'tools/wptrunner']
+        return_code = subprocess.check_call(command, cwd=config['wpt_path'])
+        assert return_code == 0
 
     print('==================================================')
     print('Running WPT')
@@ -143,7 +144,7 @@ def main(platform_id, platform, args, config):
     ]
     if platform['browser_name'] == 'firefox':
         command.append('--certutil-binary=certutil')
-        command.append('--prefs-root=%s' % FIREFOX_PREFS_ROOT)
+        command.append('--prefs-root=%s' % config['firefox_prefs_root'])
     if args.path:
         command.append(args.path)
 
