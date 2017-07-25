@@ -37,13 +37,13 @@ class TestBrowsers(unittest.TestCase):
             cls.browsers = json.load(f)
 
     def test_all_platforms_have_only_valid_characters(self):
-        for platform_id, platform_info in self.browsers.iteritems():
+        for platform_id, platform_info in self.browsers.items():
             self.assertTrue(re.match(VALID_PLATFORM_ID_REGEX, platform_id),
                 'platform_id with invalid characters: %s' % platform_id)
 
     def test_all_browsers_have_required_fields(self):
-        for platform_id, platform_info in self.browsers.iteritems():
-            for key, valid_values in REQUIRED_PLATFORM_FIELDS.iteritems():
+        for platform_id, platform_info in self.browsers.items():
+            for key, valid_values in REQUIRED_PLATFORM_FIELDS.items():
                 self.assertTrue(key in platform_info.keys(),
                     'Required field missing: %s (platform %s)' % (key, platform_id))
 
@@ -52,10 +52,10 @@ class TestBrowsers(unittest.TestCase):
                         'Field has invalid value: %s (platform %s)' % (key, platform_id))
 
     def test_no_two_browser_configs_are_equal(self):
-        for first_platform_id, first_platform in self.browsers.iteritems():
+        for first_platform_id, first_platform in self.browsers.items():
             identical_platforms = [
                 second_platform for second_platform_id, second_platform
-                in self.browsers.iteritems()
+                in self.browsers.items()
                 if second_platform == first_platform
             ]
             self.assertEqual(len(identical_platforms), 1,
