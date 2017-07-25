@@ -1,0 +1,1 @@
+0 * * * * cd $HOME/wptdashboard && ./run/run.py firefox-56.0-linux --upload --create-testrun &>> /var/log/wptd.log
