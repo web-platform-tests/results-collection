@@ -75,7 +75,7 @@ def main(platform_id, platform, args, config):
         verify_gsutil_installed(config)
 
     if args.create_testrun:
-        assert len(config['secret']) > 32, 'Valid secret required to create TestRun'
+        assert len(config['secret']) == 64, 'Valid secret required to create TestRun'
 
     if platform['browser_name'] == 'chrome':
         browser_binary = config['chrome_binary']
@@ -99,11 +99,11 @@ def main(platform_id, platform, args, config):
     print('Setting up WPT checkout')
 
     wpt_setup_commands = [
-        ['git', 'reset', '--hard', 'HEAD'], # Part of keep-wpt-running.patch
+        ['git', 'reset', '--hard', 'HEAD'], # Needed b/c of keep-wpt-running.patch
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
         ['./manifest', '--work'],
-        # Necessary to keep WPT running. jeffcarp has a PR out
+        # Necessary to keep WPT running on long runs. jeffcarp has a PR out
         # with this patch: https://github.com/w3c/web-platform-tests/pull/5774
         # however it needs more work.
         ['git', 'apply', '%s/util/keep-wpt-running.patch' % config['wptd_path']],
@@ -214,7 +214,7 @@ def main(platform_id, platform, args, config):
     if response.status_code == 201:
         print('Run created!')
     else:
-        print('There was an issue creating the TestRun')
+        print('There was an issue creating the TestRun.')
 
     print('Response status code:', response.status_code)
     print('Response text:', response.text)
@@ -233,17 +233,15 @@ def version_string_to_major_minor(version):
 
 
 def verify_browser_binary_version(platform, browser_binary):
-    if platform['browser_name'] in ('chrome', 'firefox'):
-        output = subprocess.check_output([browser_binary, '--version']).decode('UTF-8').strip()
-        version = version_string_to_major_minor(output)
-        assert version == platform['browser_version'], (
-            'Browser binary version does not match desired platform version.\n'
-            'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
-            % (browser_binary, version, browser['browser_version']))
-    else:
-        raise
+    if platform['browser_name'] not in ('chrome', 'firefox'):
+        return
 
-    return version
+    output = subprocess.check_output([browser_binary, '--version']).decode('UTF-8').strip()
+    version = version_string_to_major_minor(output)
+    assert version == platform['browser_version'], (
+        'Browser binary version does not match desired platform version.\n'
+        'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
+        % (browser_binary, version, browser['browser_version']))
 
 
 def verify_os_name(platform):
@@ -252,7 +250,6 @@ def verify_os_name(platform):
         'Host OS name does not match platform os_name.\n'
         'Host OS name: %s\nPlatform os_name: %s'
         % (os_name, platform['os_name']))
-    return os_name
 
 
 def verify_or_set_os_version(platform):
@@ -326,9 +323,9 @@ def get_config():
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('platform_id',
-        help='A platform ID (specified as keys in browsers.json)')
+        help='A platform ID, specified as keys in browsers.json.')
     parser.add_argument('--path',
-        help='WPT path to run, if not specified, runs all WPT.',
+        help='WPT path to run. If not specified, runs all WPT.',
         default='')
     parser.add_argument('--upload',
         help='Upload results to Google Storage.',
