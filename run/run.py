@@ -38,8 +38,9 @@ Before you run the script, you need to:
 
 1. Copy run/running.example.ini to run/running.ini
 2. Modify the applicable fields of run/running.ini (this may also involve installing browsers)
-3. Install dependencies with `pip3 install -r requirements.txt`
-4. Make sure you have gsutil installed (see https://cloud.google.com/storage/docs/gsutil)
+3. Make sure you have the correct secret in run/running.ini
+4. Install dependencies with `pip3 install -r requirements.txt`
+5. Make sure you have gsutil installed (see https://cloud.google.com/storage/docs/gsutil)
 
 The script will only accept platform IDs listed in browsers.json.
 
@@ -72,6 +73,9 @@ def main(platform_id, platform, args, config):
         storage_client = storage.Client(project='wptdashboard')
         bucket = storage_client.get_bucket(config['gs_results_bucket'])
         verify_gsutil_installed(config)
+
+    if args.create_testrun:
+        assert len(config['secret']) > 32, 'Valid secret required to create TestRun'
 
     if platform['browser_name'] == 'chrome':
         browser_binary = config['chrome_binary']
@@ -195,14 +199,18 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Creating new TestRun in the dashboard...')
     url = '%s/test-runs' % config['wptd_prod_host']
-    response = requests.post(url, data=json.dumps({
-        'browser_name': platform['browser_name'],
-        'browser_version': platform['browser_version'],
-        'os_name': platform['os_name'],
-        'os_version': platform['os_version'],
-        'revision': SHORT_SHA,
-        'results_url': GS_HTTP_RESULTS_URL
-    }))
+    response = requests.post(url, params={
+            'secret': config['secret']
+        },
+        data=json.dumps({
+            'browser_name': platform['browser_name'],
+            'browser_version': platform['browser_version'],
+            'os_name': platform['os_name'],
+            'os_version': platform['os_version'],
+            'revision': SHORT_SHA,
+            'results_url': GS_HTTP_RESULTS_URL
+        }
+    ))
     if response.status_code == 201:
         print('Run created!')
     else:
