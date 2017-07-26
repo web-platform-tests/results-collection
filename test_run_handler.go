@@ -26,11 +26,24 @@ import (
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
-    var err error
     ctx := appengine.NewContext(r)
+    var err error
 
     if r.Method != "POST" {
         http.Error(w, "This endpoint only supports POST.", http.StatusMethodNotAllowed)
+        return
+    }
+
+    suppliedSecret := r.URL.Query().Get("secret")
+    tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
+    var token Token
+    if err = datastore.Get(ctx, tokenKey, &token); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if suppliedSecret != token.Secret {
+        http.Error(w, err.Error(), http.StatusUnauthorized)
         return
     }
 

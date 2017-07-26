@@ -43,3 +43,7 @@ type Browser struct {
     OSVersion       string          `json:"os_version"`
     Sauce           bool            `json:"sauce"`
 }
+
+type Token struct {
+    Secret          string          `json:"secret"`
+}
