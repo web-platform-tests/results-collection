@@ -107,7 +107,7 @@ limitations under the License.
               <td><b><a href="/{{specDir.specName}}" on-click="_navigate">{{specDir.specName}}</a></b></td>
 
               <template is="dom-repeat" items="{{specDir.results}}" as="result">
-                <td>{{ _passingPercent(result) }}% ({{ result.passing }} / {{ result.total }})</td>
+                <td>{{ result.passing }} / {{ result.total }}</td>
               </template>
             </tr>
 
@@ -119,7 +119,7 @@ limitations under the License.
 
                 <template is="dom-repeat" items="{{testFile.results}}" as="result">
                   <td style="{{ _testResultStyle(result) }}">
-                    {{ _passingPercent(result) }}% ({{ result.passing }}/{{ result.total }})
+                    {{ result.passing }}/{{ result.total }}
                   </td>
                 </template>
               </tr>
@@ -354,11 +354,6 @@ limitations under the License.
           // Some shade of red
           return `background-color: hsl(0, 85%, ${luminance}%)`
         }
-      }
-
-      _passingPercent (item) {
-        if (!item || isNaN(item.passing) || isNaN(item.total)) return ''
-        return parseFloat((item.passing / item.total) * 100).toFixed(1)
       }
 
       /* Function for getting total numbers.
