@@ -31,5 +31,14 @@
         "os_name": "windows",
         "os_version": "10",
         "sauce": true
+    },
+    "safari-10-macos-10.12-sauce": {
+        "initially_loaded": true,
+        "currently_run": true,
+        "browser_name": "safari",
+        "browser_version": "10",
+        "os_name": "macos",
+        "os_version": "10.12",
+        "sauce": true
     }
 }

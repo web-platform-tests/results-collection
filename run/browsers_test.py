@@ -22,9 +22,9 @@ VALID_PLATFORM_ID_REGEX = r"^[a-z0-9\-\.]+$"
 REQUIRED_PLATFORM_FIELDS = {
     'currently_run': (True, False),
     'initially_loaded': (True, False),
-    'browser_name': ('chrome', 'firefox', 'edge'),
+    'browser_name': ('chrome', 'firefox', 'edge', 'safari'),
     'browser_version': None,
-    'os_name': ('linux', 'windows'),
+    'os_name': ('linux', 'windows', 'macos'),
     'os_version': None,
 }
 
