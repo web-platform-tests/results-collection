@@ -57,6 +57,15 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
             ResultsURL: "/static/edge-15-windows-10.json",
             CreatedAt: time.Now(),
         },
+        "dev-testrun-safari-10": &TestRun{
+            Revision: "dd44fd07c5",
+            BrowserName: "safari",
+            BrowserVersion: "10",
+            OSName: "macos",
+            OSVersion: "10.12",
+            ResultsURL: "/static/safari-10-macos-10.12.json",
+            CreatedAt: time.Now(),
+        },
     }
 
     for key, testRun := range devData {
