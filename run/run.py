@@ -77,14 +77,14 @@ def main(platform_id, platform, args, config):
     if args.create_testrun:
         assert len(config['secret']) == 64, 'Valid secret required to create TestRun'
 
+    browser_binary = None
+    webdriver_binary = None
     if platform['browser_name'] == 'chrome':
         browser_binary = config['chrome_binary']
         webdriver_binary = config['chromedriver_binary']
     elif platform['browser_name'] == 'firefox':
         browser_binary = config['firefox_binary']
         webdriver_binary = config['geckodriver_binary']
-    else:
-        raise
 
     verify_browser_binary_version(platform, browser_binary)
     verify_os_name(platform)
@@ -94,6 +94,7 @@ def main(platform_id, platform, args, config):
     print('Browser version: %s' % platform['browser_version'])
     print('OS name: %s' % platform['os_name'])
     print('OS version: %s' % platform['os_version'])
+    print('Running on Sauce? %s' % platform.get('sauce', False))
 
     print('==================================================')
     print('Setting up WPT checkout')
@@ -134,21 +135,46 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    command = [
-        'xvfb-run',
-        'wptrunner', # FIXME was wptrunner_path, is this ok?
-        '--product', platform['browser_name'],
-        '--binary', browser_binary,
-        '--webdriver-binary', webdriver_binary,
-        '--meta', config['wpt_path'],
-        '--tests', config['wpt_path'],
-        '--log-wptreport', LOCAL_REPORT_FILEPATH,
-        '--log-mach=-',
-        '--processes=1', # TODO(jeffcarp): investigate if increasing this is stable
-    ]
-    if platform['browser_name'] == 'firefox':
-        command.append('--certutil-binary=certutil')
-        command.append('--prefs-root=%s' % config['firefox_prefs_root'])
+    if product.get('sauce', False):
+        command = [
+            'xvfb-run',
+            'wptrunner', # FIXME was wptrunner_path, is this ok?
+            '--product', platform['browser_name'],
+            '--binary', browser_binary,
+            '--webdriver-binary', webdriver_binary,
+            '--meta', config['wpt_path'],
+            '--tests', config['wpt_path'],
+            '--log-wptreport', LOCAL_REPORT_FILEPATH,
+            '--log-mach=-',
+            '--processes=1', # TODO(jeffcarp): investigate if increasing this is stable
+        ]
+        if platform['browser_name'] == 'firefox':
+            command.append('--certutil-binary=certutil')
+            command.append('--prefs-root=%s' % config['firefox_prefs_root'])
+    else:
+        command = [
+            WPTRUNNER_PATH,
+            '--product', 'sauce',
+            '--meta', WPT_PATH,
+            '--tests', WPT_PATH,
+
+            '--sauce-browser', '"safari"',
+            '--sauce-platform', '"macOS 10.12"',
+            '--sauce-version', '"10"',
+            '--sauce-key=%s' % config['sauce_key'],
+            '--sauce-user=%s' % config['sauce_user'],
+            '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+
+            # in my experience the below flag doesn't work with Sauce, it can't recover
+            # broken connections and once the last connection fails, it keeps trying to send
+            # events to the closed connection
+            # '--no-restart-on-unexpected', # use this when running Sauce, otherwise it takes O(days)
+
+            '--processes=4',
+            '--log-mach=-',
+            '--log-wptreport', LOCAL_REPORT_FILEPATH,
+        ]
     if args.path:
         command.append(args.path)
 
@@ -233,7 +259,7 @@ def version_string_to_major_minor(version):
 
 
 def verify_browser_binary_version(platform, browser_binary):
-    if platform['browser_name'] not in ('chrome', 'firefox'):
+    if platform['sauce']:
         return
 
     output = subprocess.check_output([browser_binary, '--version']).decode('UTF-8').strip()
@@ -245,6 +271,9 @@ def verify_browser_binary_version(platform, browser_binary):
 
 
 def verify_os_name(platform):
+    if platform['sauce']:
+        return
+
     os_name = host_platform.system().lower()
     assert os_name == platform['os_name'], (
         'Host OS name does not match platform os_name.\n'
@@ -253,6 +282,9 @@ def verify_os_name(platform):
 
 
 def verify_or_set_os_version(platform):
+    if platform['sauce']:
+        return
+
     os_version = version_string_to_major_minor(host_platform.release())
 
     if platform['os_version'] == '*':
