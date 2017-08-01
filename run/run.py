@@ -109,9 +109,11 @@ def main(platform_id, platform, args, config):
         # however it needs more work.
         ['git', 'apply', '%s/util/keep-wpt-running.patch' % config['wptd_path']],
     ]
+    ''' FIXME disabling temporarily b/c of local WPT modifications
     for command in wpt_setup_commands:
         return_code = subprocess.check_call(command, cwd=config['wpt_path'])
         assert return_code == 0, 'Got non-0 return code: %d from command %s' % (return_code, command)
+    '''
 
     # TODO(#40): modify this to test against the first SHA of the day
     CURRENT_WPT_SHA = get_current_wpt_sha(config)
@@ -135,7 +137,24 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    if product.get('sauce', False):
+    if platform.get('sauce', False):
+        command = [
+            'wptrunner',
+            '--product', 'sauce',
+            '--meta', config['wpt_path'],
+            '--tests', config['wpt_path'],
+            '--sauce-browser=%s' % platform['browser_name'],
+            '--sauce-version=%s' % platform['browser_version'],
+            '--sauce-platform="%s %s"' % (platform['os_name'], platform['os_version']),
+            '--sauce-key=%s' % config['sauce_key'],
+            '--sauce-user=%s' % config['sauce_user'],
+            '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+            '--processes=1',
+            '--log-mach=-',
+            '--log-wptreport', LOCAL_REPORT_FILEPATH,
+        ]
+    else:
         command = [
             'xvfb-run',
             'wptrunner', # FIXME was wptrunner_path, is this ok?
@@ -151,32 +170,12 @@ def main(platform_id, platform, args, config):
         if platform['browser_name'] == 'firefox':
             command.append('--certutil-binary=certutil')
             command.append('--prefs-root=%s' % config['firefox_prefs_root'])
-    else:
-        command = [
-            WPTRUNNER_PATH,
-            '--product', 'sauce',
-            '--meta', WPT_PATH,
-            '--tests', WPT_PATH,
 
-            '--sauce-browser', '"safari"',
-            '--sauce-platform', '"macOS 10.12"',
-            '--sauce-version', '"10"',
-            '--sauce-key=%s' % config['sauce_key'],
-            '--sauce-user=%s' % config['sauce_user'],
-            '--sauce-connect-binary=%s' % config['sauce_connect_path'],
-            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
-
-            # in my experience the below flag doesn't work with Sauce, it can't recover
-            # broken connections and once the last connection fails, it keeps trying to send
-            # events to the closed connection
-            # '--no-restart-on-unexpected', # use this when running Sauce, otherwise it takes O(days)
-
-            '--processes=4',
-            '--log-mach=-',
-            '--log-wptreport', LOCAL_REPORT_FILEPATH,
-        ]
     if args.path:
         command.append(args.path)
+
+    print('platform', platform)
+    print('Command to exec:\n', ' '.join(command))
 
     return_code = subprocess.call(command, cwd=config['wpt_path'])
 
@@ -346,7 +345,7 @@ def get_config():
     config.read('run/running.ini')
 
     # Expand paths, this is for convenience so you can use $HOME
-    for key in ['build_path', 'wpt_path', 'wptd_path', 'firefox_binary', 'firefox_prefs_root']:
+    for key in [k for k in config['default'].keys() if 'path' in k]:
         config.set('default', key, os.path.expandvars(config['default'][key]))
 
     return config['default']
