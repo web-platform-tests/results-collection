@@ -136,7 +136,7 @@ def main(platform_id, platform, args, config):
 
     command = [
         'xvfb-run',
-        'wptrunner', # FIXME was wptrunner_path, is this ok?
+        config['wptrunner_path'],
         '--product', platform['browser_name'],
         '--binary', browser_binary,
         '--webdriver-binary', webdriver_binary,
