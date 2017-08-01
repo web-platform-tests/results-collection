@@ -146,7 +146,7 @@ limitations under the License.
       resultsURL (testRun, testFile) {
         // This is relying on the assumption that result files are under a directory named SHA[0:10]
         const resultsBase = testRun.results_url.split('/' + testRun.revision)[0]
-        const platformID = `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+        const platformID = testRun.results_url.split('/').pop().replace('-summary.json.gz', '')
         return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
       }
 
