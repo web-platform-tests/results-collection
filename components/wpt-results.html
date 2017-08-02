@@ -104,7 +104,12 @@ limitations under the License.
           <template is="dom-repeat" items="{{displayedNodes}}" as="node">
             <tr>
               <td>
-                <a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a>
+                <template is="dom-if" if="{{ node.isDir }}">
+                  <b><a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a></b>
+                </template>
+                <template is="dom-if" if="{{ !node.isDir }}">
+                  <a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a>
+                </template>
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
@@ -114,37 +119,6 @@ limitations under the License.
             </tr>
           </template>
 
-          <!--
-          <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
-
-            <tr class="spec">
-              <td><b><a href="/{{specDir.specName}}" on-click="_navigate">{{specDir.specName}}</a></b></td>
-
-              <template is="dom-repeat" items="{{specDir.results}}" as="result">
-                <td>{{ result.passing }} / {{ result.total }}</td>
-              </template>
-            </tr>
-
-            <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
-              <tr>
-                <td>
-                  <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testFile.testFile) }}" as="part"><span class="path-separator">/</span><a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a></template>
-                </td>
-
-                <template is="dom-repeat" items="{{testFile.results}}" as="result">
-                  <td style="{{ _testResultStyle(result) }}">
-                    {{ result.passing }}/{{ result.total }}
-                  </td>
-                </template>
-              </tr>
-            </template>
-
-            <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
-              <a href="/{{ specDir.specName }}">See all files in the {{ specDir.specName }} spec</a>
-            </template>
-
-          </template>
-          -->
         </tbody>
       </table>
     </template>
@@ -190,7 +164,7 @@ limitations under the License.
           },
           displayedNodes: {
             type: Array,
-            value: [{path: 'cookies', isDir: true}, {path: 'atestfile.html', isDir: false}]
+            value: []
           }
         }
       }
