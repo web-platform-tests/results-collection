@@ -1,0 +1,3 @@
+# This file is simply to help me (and others who may help maintain it) remember the cron command for running it in the VMs.
+SHELL=/bin/bash
+0 7 * * * cd $HOME/wptdashboard && ./run/run.py firefox-56.0-linux --upload --create-testrun &>> /var/log/wptd.log
