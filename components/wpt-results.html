@@ -300,7 +300,7 @@ limitations under the License.
         const currentPathParts = this._splitIntoLinkedParts(this.path)
 
         const updateResults = (testFileName, dirPath, isDir) => {
-          if (!(testFileName in displayedNodeDict)) {
+          if (!(dirPath in displayedNodeDict)) {
             displayedNodeDict[dirPath] = {isDir: isDir, results: {}}
           }
           let results = this.testFiles[testFileName]
@@ -330,7 +330,7 @@ limitations under the License.
             let path = parts[parts.length - 1].path
             updateResults(testFileName, path, false)
 
-          // Catch directories
+          // Catch all subdirectories
           } else if (parts.length > currentPathParts.length + 1) {
             let dirParts
             if (this.path === '/') {
@@ -339,29 +339,10 @@ limitations under the License.
               dirParts = parts.slice(0, currentPathParts.length + 1)
             }
             let dirPath = dirParts[dirParts.length - 1].path
+            if (testFileName.includes('building-paths')) console.log(testFileName, dirParts, dirPath)
             updateResults(testFileName, dirPath, true)
           }
 
-            /*
-            // Catch any test files in child directories
-            } else if (parts.length === currentPathParts.length + 1) {
-              //let dirParts = parts.slice(0, currentPathParts.length + 1)
-              // let dirPath = dirParts[dirParts.length - 1].path
-              // updateResults(testFileName, dirPath, false)
-
-            // Catch directories further down the tree
-            } else if (parts.length > currentPathParts.length + 1) {
-              let dirParts
-              if (this.path === '/') {
-                dirParts = [parts[0]]
-              } else {
-                dirParts = parts.slice(0, currentPathParts.length + 1)
-              }
-              let dirPath = dirParts[dirParts.length - 1].path
-              // displayedNodeDict[dirPath] = {isDir: true, results: {}}
-              updateResults(testFileName, dirPath, true)
-            }
-            */
         })
         let displayedNodes = Object.keys(displayedNodeDict).map(key => (
           {path: key, isDir: displayedNodeDict[key].isDir, results: displayedNodeDict[key].results}
