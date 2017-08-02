@@ -37,14 +37,16 @@ https://github.com/w3c/web-platform-tests/blob/master/tools/wptrun.py
 Before you run the script, you need to:
 
 1. Copy run/running.example.ini to run/running.ini
-2. Modify the applicable fields of run/running.ini (this may also involve installing browsers)
+2. Modify the applicable fields of run/running.ini
+   (this may also involve installing browsers)
 3. Make sure you have the correct secret in run/running.ini
 4. Install dependencies with `pip3 install -r requirements.txt`
-5. Make sure you have gsutil installed (see https://cloud.google.com/storage/docs/gsutil)
+5. Make sure you have gsutil installed
+   (see https://cloud.google.com/storage/docs/gsutil)
 
 The script will only accept platform IDs listed in browsers.json.
 
-By default this script will not upload anything! To do a full run for production:
+By default this script will not upload anything! To run for production:
 
     ./run/run.py firefox-56.0-linux --upload --create-testrun
 
@@ -52,9 +54,10 @@ By default this script will not upload anything! To do a full run for production
 
 - This script will only write files under config['build_path']
 - One run will write approximately 111MB to the filesystem
-- If --upload is specified, it will upload that 111MB of results to Google Storage
+- If --upload is specified, it will upload that 111MB of results
 - To upload results, you must be logged in with `gcloud` and authorized
 """
+
 
 def main(platform_id, platform, args, config):
     assert sys.version_info.major == 3, 'This script requires Python 3.'
@@ -75,7 +78,8 @@ def main(platform_id, platform, args, config):
         verify_gsutil_installed(config)
 
     if args.create_testrun:
-        assert len(config['secret']) == 64, 'Valid secret required to create TestRun'
+        assert len(config['secret']) == 64, (
+            'Valid secret required to create TestRun')
 
     if platform['browser_name'] == 'chrome':
         browser_binary = config['chrome_binary']
@@ -84,7 +88,7 @@ def main(platform_id, platform, args, config):
         browser_binary = config['firefox_binary']
         webdriver_binary = config['geckodriver_binary']
     else:
-        raise
+        raise 'Unsupported browser'
 
     verify_browser_binary_version(platform, browser_binary)
     verify_os_name(platform)
@@ -98,19 +102,22 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Setting up WPT checkout')
 
+    patch_path = '%s/util/keep-wpt-running.patch' % config['wptd_path']
     wpt_setup_commands = [
-        ['git', 'reset', '--hard', 'HEAD'], # Needed b/c of keep-wpt-running.patch
+        ['git', 'reset', '--hard', 'HEAD'],  # For keep-wpt-running.patch
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
         ['./manifest', '--work'],
         # Necessary to keep WPT running on long runs. jeffcarp has a PR out
         # with this patch: https://github.com/w3c/web-platform-tests/pull/5774
         # however it needs more work.
-        ['git', 'apply', '%s/util/keep-wpt-running.patch' % config['wptd_path']],
+        ['git', 'apply', patch_path],
     ]
     for command in wpt_setup_commands:
         return_code = subprocess.check_call(command, cwd=config['wpt_path'])
-        assert return_code == 0, 'Got non-0 return code: %d from command %s' % (return_code, command)
+        assert return_code == 0, (
+            'Got non-0 return code: '
+            '%d from command %s' % (return_code, command))
 
     # TODO(#40): modify this to test against the first SHA of the day
     CURRENT_WPT_SHA = get_current_wpt_sha(config)
@@ -118,11 +125,17 @@ def main(platform_id, platform, args, config):
 
     SHORT_SHA = CURRENT_WPT_SHA[0:10]
 
-    LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (config['build_path'], SHORT_SHA, platform_id)
+    LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (
+        config['build_path'], SHORT_SHA, platform_id
+    )
     SUMMARY_PATH = '%s/%s-summary.json.gz' % (SHORT_SHA, platform_id)
     LOCAL_SUMMARY_GZ_FILEPATH = "%s/%s" % (config['build_path'], SUMMARY_PATH)
-    GS_RESULTS_FILEPATH_BASE = "%s/%s/%s" % (config['build_path'], SHORT_SHA, platform_id)
-    GS_HTTP_RESULTS_URL = 'https://storage.googleapis.com/%s/%s' % (config['gs_results_bucket'], SUMMARY_PATH)
+    GS_RESULTS_FILEPATH_BASE = "%s/%s/%s" % (
+        config['build_path'], SHORT_SHA, platform_id
+    )
+    GS_HTTP_RESULTS_URL = 'https://storage.googleapis.com/%s/%s' % (
+        config['gs_results_bucket'], SUMMARY_PATH
+    )
 
     if config.getboolean('install_wptrunner'):
         print('==================================================')
@@ -136,7 +149,7 @@ def main(platform_id, platform, args, config):
 
     command = [
         'xvfb-run',
-        'wptrunner', # FIXME was wptrunner_path, is this ok?
+        'wptrunner',  # FIXME was wptrunner_path, is this ok?
         '--product', platform['browser_name'],
         '--binary', browser_binary,
         '--webdriver-binary', webdriver_binary,
@@ -144,7 +157,7 @@ def main(platform_id, platform, args, config):
         '--tests', config['wpt_path'],
         '--log-wptreport', LOCAL_REPORT_FILEPATH,
         '--log-mach=-',
-        '--processes=1', # TODO(jeffcarp): investigate if increasing this is stable
+        '--processes=1',  # TODO(jeffcarp): investigate increasing
     ]
     if platform['browser_name'] == 'firefox':
         command.append('--certutil-binary=certutil')
@@ -161,7 +174,8 @@ def main(platform_id, platform, args, config):
     with open(LOCAL_REPORT_FILEPATH) as f:
         report = json.load(f)
 
-    assert len(report['results']) > 0, '0 test results, something went wrong, stopping.'
+    assert len(report['results']) > 0, (
+        '0 test results, something went wrong, stopping.')
 
     summary = report_to_summary(report)
 
@@ -185,7 +199,8 @@ def main(platform_id, platform, args, config):
 
     print('==================================================')
     print('Uploading results to gs://%s' % config['gs_results_bucket'])
-    command = ['gsutil', '-m', '-h', 'Content-Encoding:gzip', 'rsync', '-r', SHORT_SHA, 'gs://wptd/%s' % SHORT_SHA]
+    command = ['gsutil', '-m', '-h', 'Content-Encoding:gzip',
+               'rsync', '-r', SHORT_SHA, 'gs://wptd/%s' % SHORT_SHA]
     return_code = subprocess.check_call(command, cwd=config['build_path'])
     assert return_code == 0
     print('Successfully uploaded!')
@@ -193,7 +208,8 @@ def main(platform_id, platform, args, config):
 
     if not args.create_testrun:
         print('==================================================')
-        print('Stopping here (pass --create-testrun to create and promote this TestRun).')
+        print('Stopping here')
+        print('pass --create-testrun to create and promote this TestRun).')
         return
 
     print('==================================================')
@@ -229,6 +245,7 @@ def get_and_validate_platform(platform_id):
 
 
 def version_string_to_major_minor(version):
+    assert version
     return re.search("[0-9]{1,3}.[0-9]{1,3}", str(version)).group(0)
 
 
@@ -236,7 +253,8 @@ def verify_browser_binary_version(platform, browser_binary):
     if platform['browser_name'] not in ('chrome', 'firefox'):
         return
 
-    output = subprocess.check_output([browser_binary, '--version']).decode('UTF-8').strip()
+    command = [browser_binary, '--version']
+    output = subprocess.check_output(command).decode('UTF-8').strip()
     version = version_string_to_major_minor(output)
     assert version == platform['browser_version'], (
         'Browser binary version does not match desired platform version.\n'
@@ -267,7 +285,8 @@ def verify_or_set_os_version(platform):
 
 def get_current_wpt_sha(config):
     command = ['git', 'rev-parse', 'HEAD']
-    sha = subprocess.check_output(command, cwd=config['wpt_path']).decode('UTF-8').strip()
+    output = subprocess.check_output(command, cwd=config['wpt_path'])
+    sha = output.decode('UTF-8').strip()
 
     assert len(sha) == 40, 'Invalid SHA: "%s"' % sha
     return sha
@@ -278,7 +297,8 @@ def report_to_summary(wpt_report):
 
     for result in wpt_report['results']:
         test_file = result['test']
-        assert test_file not in test_files, 'Assumption that each test_file only shows up once broken!'
+        assert test_file not in test_files, (
+            'Assumption that each test_file only shows up once broken!')
 
         if result['status'] in ('OK', 'PASS'):
             test_files[test_file] = [1, 1]
@@ -306,15 +326,20 @@ def write_gzip_json(filepath, payload):
 
 
 def verify_gsutil_installed(config):
-    assert subprocess.check_output(['which', 'gsutil']), 'gsutil required for upload'
+    assert subprocess.check_output(['which', 'gsutil']), (
+        'gsutil required for upload')
 
 
 def get_config():
     config = configparser.ConfigParser()
     config.read('run/running.ini')
 
+    expand_keys = [
+        'build_path', 'wpt_path', 'wptd_path', 'firefox_binary',
+        'firefox_prefs_root',
+    ]
     # Expand paths, this is for convenience so you can use $HOME
-    for key in ['build_path', 'wpt_path', 'wptd_path', 'firefox_binary', 'firefox_prefs_root']:
+    for key in expand_keys:
         config.set('default', key, os.path.expandvars(config['default'][key]))
 
     return config['default']
@@ -322,20 +347,28 @@ def get_config():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('platform_id',
-        help='A platform ID, specified as keys in browsers.json.')
-    parser.add_argument('--path',
+    parser.add_argument(
+        'platform_id',
+        help='A platform ID, specified as keys in browsers.json.'
+    )
+    parser.add_argument(
+        '--path',
         help='WPT path to run. If not specified, runs all WPT.',
-        default='')
-    parser.add_argument('--upload',
+        default=''
+    )
+    parser.add_argument(
+        '--upload',
         help='Upload results to Google Storage.',
-        action='store_true')
-    parser.add_argument('--create-testrun',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--create-testrun',
         help=('Creates a new TestRun in the Dashboard. '
               'Results from this run will be automatically '
               'promoted if "initially_loaded" is true for the '
               'browser in browsers.json.'),
-        action='store_true')
+        action='store_true'
+    )
     args = parser.parse_args()
 
     return args

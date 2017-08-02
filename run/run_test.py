@@ -14,7 +14,10 @@
 
 import unittest
 
-from run.run import report_to_summary
+from run.run import (
+    report_to_summary,
+    version_string_to_major_minor
+)
 
 
 class TestRun(unittest.TestCase):
@@ -42,6 +45,12 @@ class TestRun(unittest.TestCase):
             '/dom/a.html': [2, 2],
             '/dom/b.html': [1, 2],
         })
+
+    def test_version_string_to_major_minor(self):
+        with self.assertRaises(AssertionError):
+            version_string_to_major_minor('')
+        self.assertEqual(version_string_to_major_minor('1.1'), '1.1')
+        self.assertEqual(version_string_to_major_minor('1.1.1'), '1.1')
 
 
 if __name__ == '__main__':

@@ -44,6 +44,7 @@ type Browser struct {
     Sauce           bool            `json:"sauce"`
 }
 
+// This is used for test result uploads.
 type Token struct {
     Secret          string          `json:"secret"`
 }

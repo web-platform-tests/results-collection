@@ -34,6 +34,7 @@ func testRunHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Fetch pre-uploaded Token entity.
     suppliedSecret := r.URL.Query().Get("secret")
     tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
     var token Token
@@ -62,6 +63,7 @@ func testRunHandler(w http.ResponseWriter, r *http.Request) {
 
     fmt.Fprintf(w, "got... %v", testRun)
 
+    // Create a new TestRun out of the JSON body of the request.
     key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
     if _, err := datastore.Put(ctx, key, &testRun); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
