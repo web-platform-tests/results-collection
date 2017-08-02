@@ -108,7 +108,7 @@ limitations under the License.
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
-                <td>{{ testRun.browser_name }}</td>
+                <td style="{{ _testResultStyle(node, testRun) }}">{{ _passingForNode(node, testRun) }} / {{ _totalForNode(node, testRun) }}</td>
               </template>
 
             </tr>
@@ -298,19 +298,58 @@ limitations under the License.
         const displayedNodeDict = {}
         const matchesQueryng = (name) => name.toLowerCase().includes(this.query.toLowerCase())
         const currentPathParts = this._splitIntoLinkedParts(this.path)
-        console.log(currentPathParts, this.path)
+
+        const updateResults = (testFileName, dirPath, isDir) => {
+          if (!(testFileName in displayedNodeDict)) {
+            displayedNodeDict[dirPath] = {isDir: isDir, results: {}}
+          }
+          let results = this.testFiles[testFileName]
+          Object.keys(results).forEach(resultURL => {
+            if (!(resultURL in displayedNodeDict[dirPath].results)) {
+              displayedNodeDict[dirPath].results[resultURL] = {passing: 0, total: 0}
+            }
+            displayedNodeDict[dirPath].results[resultURL].passing += results[resultURL][0]
+            displayedNodeDict[dirPath].results[resultURL].total += results[resultURL][1]
+          })
+        }
+
         Object.keys(this.testFiles).forEach(testFileName => {
-          if (testFileName.startsWith(this.path)) {
+          if (!testFileName.startsWith(this.path)) {
+            return
+          }
+          let parts = this._splitIntoLinkedParts(testFileName)
 
-            // console.log(this._splitIntoLinkedParts(testFileName), currentPathParts)
-            let parts = this._splitIntoLinkedParts(testFileName)
+          // Catch any top-level directories
+          if (this.path === '/' && parts.length === 2) {
+            let dirParts = [parts[0]]
+            let dirPath = dirParts[dirParts.length - 1].path
+            updateResults(testFileName, dirPath, true)
 
-            if (this.path === '/' && parts.length === 2) {
-              let dirParts = [parts[0]]
-              let dirPath = dirParts[dirParts.length - 1].path
-              displayedNodeDict[dirPath] = {isDir: true}
+          // Catch any test files in child directories
+          } else if (parts.length === currentPathParts.length + 1) {
+            let path = parts[parts.length - 1].path
+            updateResults(testFileName, path, false)
+
+          // Catch directories
+          } else if (parts.length > currentPathParts.length + 1) {
+            let dirParts
+            if (this.path === '/') {
+              dirParts = [parts[0]]
+            } else {
+              dirParts = parts.slice(0, currentPathParts.length + 1)
+            }
+            let dirPath = dirParts[dirParts.length - 1].path
+            updateResults(testFileName, dirPath, true)
+          }
+
+            /*
+            // Catch any test files in child directories
             } else if (parts.length === currentPathParts.length + 1) {
-              displayedNodeDict[testFileName] = {isDir: false}
+              //let dirParts = parts.slice(0, currentPathParts.length + 1)
+              // let dirPath = dirParts[dirParts.length - 1].path
+              // updateResults(testFileName, dirPath, false)
+
+            // Catch directories further down the tree
             } else if (parts.length > currentPathParts.length + 1) {
               let dirParts
               if (this.path === '/') {
@@ -319,13 +358,13 @@ limitations under the License.
                 dirParts = parts.slice(0, currentPathParts.length + 1)
               }
               let dirPath = dirParts[dirParts.length - 1].path
-              displayedNodeDict[dirPath] = {isDir: true}
+              // displayedNodeDict[dirPath] = {isDir: true, results: {}}
+              updateResults(testFileName, dirPath, true)
             }
-
-          }
+            */
         })
         let displayedNodes = Object.keys(displayedNodeDict).map(key => (
-          {path: key, isDir: displayedNodeDict[key].isDir}
+          {path: key, isDir: displayedNodeDict[key].isDir, results: displayedNodeDict[key].results}
         ))
         displayedNodes.sort(this._nodeSort)
         this.displayedNodes = displayedNodes
@@ -423,8 +462,11 @@ limitations under the License.
         })
       }
 
-      _testResultStyle (result) {
-        if (!result) return ''
+      _testResultStyle (node, testRun) {
+        if (!node) return
+        if (!testRun) return
+        if (!(testRun.results_url in node.results)) return
+        const result = node.results[testRun.results_url]
 
         // Need saturation between 65-100, reversed (range 35)
         const passRate = result.passing / result.total
@@ -440,6 +482,17 @@ limitations under the License.
 
       _relPath (path) {
         return path.replace(this.path + '/', '')
+      }
+
+      _passingForNode (node, testRun) {
+        if (testRun.results_url in node.results) {
+          return node.results[testRun.results_url].passing
+        }
+      }
+      _totalForNode (node, testRun) {
+        if (testRun.results_url in node.results) {
+          return node.results[testRun.results_url].total
+        }
       }
 
       /* Function for getting total numbers.
