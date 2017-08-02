@@ -144,9 +144,14 @@ limitations under the License.
       }
 
       resultsURL (testRun, testFile) {
-        // This is relying on the assumption that result files are under a directory named SHA[0:10]
+        // This is relying on the assumption that result files are under a directory named SHA[0:10].
         const resultsBase = testRun.results_url.split('/' + testRun.revision)[0]
-        const platformID = `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+        // This is currently a hack to extract the platform ID from the summary URL.
+        // A platform ID is any valid key from browsers.json.
+        const platformID = testRun.results_url.split('/').pop().replace('-summary.json.gz', '')
+        // Test file results are currently stored as JSON files with the following scheme:
+        // {GS bucket}/{WPT SHA[0:10]}/{platform ID}/{test file path}
+
         return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
       }
 
