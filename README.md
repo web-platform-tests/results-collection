@@ -18,6 +18,64 @@ dev_appserver .
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
 
+## Using the data
+
+All test result data is public. There are two types of gzipped JSON data files we store: test run summary files, and individual test result files.
+
+### Test run summary files
+
+These are of the pattern: `{sha[0:10]}/{platform_id}-summary.json.gz`
+
+- `sha[0:10]`: the first 10 characters of the WPT commit hash that run was tested against
+- `platform_id`: the key of the platform configuration in `browsers.json`
+
+Example: https://storage.googleapis.com/wptd/791e95323d/firefox-56.0-linux-summary.json.gz
+
+(Note that `wptd` is the bucket name)
+
+Structure:
+An object where the key is the test file name and the value is a list of the type
+`[number passing subtests, total number subtests]`.
+
+```json
+{
+    "/test/file/name1.html": [0, 1],
+    "/test/file/name2.html": [5, 10]
+}
+```
+
+### Individual test result files
+
+These are of the pattern: `{sha[0:10]}/{platform_id}/{test_file_path}`
+
+- `sha[0:10]`: the first 10 characters of the WPT commit hash that run was tested against
+- `platform_id`: the key of the platform configuration in `browsers.json`
+- `test_file_path`: the full WPT path of the test file
+
+Example: https://storage.googleapis.com/wptd/b12daf6ead/safari-10-macos-10.12-sauce/IndexedDB/abort-in-initial-upgradeneeded.html
+
+Structure:
+```json
+{
+    "test": "/test/file/name.html",
+    "status": "OK",
+    "message": "The failure message, if exists",
+    "subtests": [
+        {
+            "status": "FAIL",
+            "name": "The subtest name",
+            "message": "The failure message, if exists"
+        }
+    ]
+}
+```
+
+### Large-scale analysis
+
+There is no public API for TestRuns, so if you need to access only the most recent results, looking at
+the main page will give you the latest test SHAs. If you need to access earlier results, an
+exhaustive search is the only way to do that (see issue [#73](https://github.com/GoogleChrome/wptdashboard/issues/73) and [#43](https://github.com/GoogleChrome/wptdashboard/issues/43)).
+
 ## Miscellaneous
 
 #### WPT documentation page for each browser
