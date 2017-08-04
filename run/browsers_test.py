@@ -51,8 +51,7 @@ class TestBrowsers(unittest.TestCase):
                 self.assertTrue(
                     key in platform_info.keys(),
                     'Required field missing: %s (platform %s)' %
-                    (key, platform_id)
-                )
+                    (key, platform_id))
 
                 if REQUIRED_PLATFORM_FIELDS[key] is not None:
                     self.assertTrue(
@@ -70,8 +69,7 @@ class TestBrowsers(unittest.TestCase):
             self.assertEqual(
                 len(identical_platforms),
                 1,
-                'Duplicate platforms detected: %s' % identical_platforms
-            )
+                'Duplicate platforms detected: %s' % identical_platforms)
 
 
 if __name__ == '__main__':
