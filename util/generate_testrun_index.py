@@ -18,10 +18,10 @@ import json
 from google.cloud import storage
 
 """
-Scans all WPT results directories and generates an index.
+Scans all WPT results directories then generates and uploads an index.
 
-You must be logged into gcloud to run this script. The non-public permission
-necessary to generate this index is `bucket.list_blobs`.
+You must be logged into gcloud and a member of the wptdashboard project
+in order for this script to work.
 """
 
 GCP_PROJECT = 'wptdashboard'
@@ -31,20 +31,26 @@ RESULTS_BUCKET = 'wptd'
 def main():
     storage_client = storage.Client(project=GCP_PROJECT)
     bucket = storage_client.get_bucket(RESULTS_BUCKET)
+
+    # by_sha is an object where:
+    # Key: a WPT commit SHA
+    # Value: list of platform IDs the SHA was tested against
     by_sha = {}
+
+    # by_platform is an object where:
+    # Key: a platform ID
+    # Value: list of WPT commit SHAs the platform was tested against
     by_platform = {}
 
-    iterator = bucket.list_blobs(delimiter="/")
-    response = iterator._get_next_page_response()
-    sha_directories = response['prefixes']
+    sha_directories = list_directory(bucket)
 
     for sha_directory in sha_directories:
         sha = sha_directory.replace('/', '')
-        iterator = bucket.list_blobs(delimiter="/", prefix=sha_directory)
-        response = iterator._get_next_page_response()
+        directories = list_directory(bucket, sha_directory)
         platform_directories = [
             prefix[len(sha_directory):].replace('/', '')
-            for prefix in response['prefixes']]
+            for prefix in directories
+        ]
 
         for platform in platform_directories:
             by_sha.setdefault(sha, [])
@@ -67,6 +73,13 @@ def main():
 
     print('Uploaded!')
     print('https://storage.googleapis.com/wptd/%s' % filename)
+
+
+def list_directory(bucket, prefix=None):
+    iterator = bucket.list_blobs(delimiter='/', prefix=prefix)
+    response = iterator._get_next_page_response()
+    return response['prefixes']
+
 
 if __name__ == '__main__':
     main()
