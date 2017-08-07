@@ -1,7 +1,15 @@
 {
-    "chrome-61.0-linux": {
+    "chrome-62.0-linux": {
         "initially_loaded": true,
         "currently_run": true,
+        "browser_name": "chrome",
+        "browser_version": "62.0",
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "chrome-61.0-linux": {
+        "initially_loaded": false,
+        "currently_run": false,
         "browser_name": "chrome",
         "browser_version": "61.0",
         "os_name": "linux",

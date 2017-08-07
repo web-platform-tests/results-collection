@@ -107,7 +107,7 @@ def main(platform_id, platform, args, config):
         ['git', 'reset', '--hard', 'HEAD'],  # For keep-wpt-running.patch
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
-        ['./manifest', '--work'],
+        ['./wpt', 'manifest', '--work'],
         # Necessary to keep WPT running on long runs. jeffcarp has a PR out
         # with this patch: https://github.com/w3c/web-platform-tests/pull/5774
         # however it needs more work.
@@ -149,7 +149,7 @@ def main(platform_id, platform, args, config):
 
     command = [
         'xvfb-run',
-        'wptrunner',  # FIXME was wptrunner_path, is this ok?
+        config['wptrunner_path'],
         '--product', platform['browser_name'],
         '--binary', browser_binary,
         '--webdriver-binary', webdriver_binary,
@@ -259,7 +259,7 @@ def verify_browser_binary_version(platform, browser_binary):
     assert version == platform['browser_version'], (
         'Browser binary version does not match desired platform version.\n'
         'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
-        % (browser_binary, version, browser['browser_version']))
+        % (browser_binary, version, platform['browser_version']))
 
 
 def verify_os_name(platform):
