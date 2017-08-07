@@ -13,7 +13,7 @@ You'll need the [Google App Engine Go SDK](https://cloud.google.com/appengine/do
 
 ```sh
 # Start the server on localhost:8080
-dev_appserver .
+dev_appserver.py .
 ```
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
