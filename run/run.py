@@ -102,22 +102,19 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Setting up WPT checkout')
 
-    patch_path = '%s/util/keep-wpt-running.patch' % config['wptd_path']
     wpt_setup_commands = [
-        ['git', 'reset', '--hard', 'HEAD'],  # For keep-wpt-running.patch
+        ['git', 'reset', '--hard', 'HEAD'],  # For wpt.patch
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
         ['./wpt', 'manifest', '--work'],
-        # Necessary to keep WPT running on long runs. jeffcarp has a PR out
-        # with this patch: https://github.com/w3c/web-platform-tests/pull/5774
-        # however it needs more work.
-        ['git', 'apply', patch_path],
     ]
     for command in wpt_setup_commands:
         return_code = subprocess.check_call(command, cwd=config['wpt_path'])
         assert return_code == 0, (
             'Got non-0 return code: '
             '%d from command %s' % (return_code, command))
+
+    patch_wpt(config, platform)
 
     # TODO(#40): modify this to test against the first SHA of the day
     CURRENT_WPT_SHA = get_current_wpt_sha(config)
@@ -147,7 +144,6 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-
     if platform.get('sauce', False):
         # '--sauce-browser=%s' % 'MicrosoftEdge', # FIXME do this transformation automatically
         command = [
@@ -162,6 +158,7 @@ def main(platform_id, platform, args, config):
             '--sauce-user=%s' % config['sauce_user'],
             '--sauce-connect-binary=%s' % config['sauce_connect_path'],
             '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+            '--processes=3',
         ]
     else:
         command = [
@@ -361,6 +358,23 @@ def get_config():
         config.set('default', key, os.path.expandvars(config['default'][key]))
 
     return config['default']
+
+
+def patch_wpt(config, platform):
+    # wpt.patch is necessary to keep WPT running on long runs. jeffcarp has
+    # a PR out with this patch: https://github.com/w3c/web-platform-tests/pull/5774
+    # however it needs more work.
+    patch_path = '%s/util/wpt.patch' % config['wptd_path']
+    with open(patch_path) as f:
+        patch = f.read()
+
+    # Hackery since the --sauce-platform command line arg doesn't accept spaces,
+    # but Sauce requires them in the platform name.
+    patch = patch.replace('__platform_hack__', '%s %s' % (platform['os_name'], platform['os_version']))
+
+    cmd = ['git', 'apply', '-']
+    p = subprocess.Popen(cmd, cwd=config['wpt_path'], stdin=subprocess.PIPE)
+    p.communicate(input=bytes(patch, 'utf-8'))
 
 
 def parse_args():
