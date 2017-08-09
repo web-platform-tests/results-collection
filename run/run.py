@@ -81,18 +81,18 @@ def main(platform_id, platform, args, config):
         assert len(config['secret']) == 64, (
             'Valid secret required to create TestRun')
 
-    if platform['browser_name'] == 'chrome':
-        browser_binary = config['chrome_binary']
-        webdriver_binary = config['chromedriver_binary']
-    elif platform['browser_name'] == 'firefox':
-        browser_binary = config['firefox_binary']
-        webdriver_binary = config['geckodriver_binary']
-    else:
-        raise 'Unsupported browser'
+    if not platform['sauce']:
+        if platform['browser_name'] == 'chrome':
+            browser_binary = config['chrome_binary']
+            webdriver_binary = config['chromedriver_binary']
+        elif platform['browser_name'] == 'firefox':
+            browser_binary = config['firefox_binary']
+            webdriver_binary = config['geckodriver_binary']
 
-    verify_browser_binary_version(platform, browser_binary)
-    verify_os_name(platform)
-    verify_or_set_os_version(platform)
+        verify_browser_binary_version(platform, browser_binary)
+        verify_os_name(platform)
+        verify_or_set_os_version(platform)
+
 
     print('Platform information:')
     print('Browser version: %s' % platform['browser_version'])
@@ -147,21 +147,39 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    command = [
-        'xvfb-run',
-        config['wptrunner_path'],
-        '--product', platform['browser_name'],
-        '--binary', browser_binary,
-        '--webdriver-binary', webdriver_binary,
-        '--meta', config['wpt_path'],
-        '--tests', config['wpt_path'],
-        '--log-wptreport', LOCAL_REPORT_FILEPATH,
-        '--log-mach=-',
-        '--processes=1',  # TODO(jeffcarp): investigate increasing
-    ]
-    if platform['browser_name'] == 'firefox':
-        command.append('--certutil-binary=certutil')
-        command.append('--prefs-root=%s' % config['firefox_prefs_root'])
+
+    if platform.get('sauce', False):
+        # '--sauce-browser=%s' % 'MicrosoftEdge', # FIXME do this transformation automatically
+        # '--sauce-platform=hardcodedinWPT', # FIXME Currently for Sauce this must be hard-coded in WPT since spaces are impossible
+        command = [
+            config['wptrunner_path'],
+            '--product', 'sauce',
+            '--meta', config['wpt_path'],
+            '--tests', config['wpt_path'],
+            '--sauce-browser=%s' % platform['browser_name'],
+            '--sauce-version=%s' % platform['browser_version'],
+            '--sauce-key=%s' % config['sauce_key'],
+            '--sauce-user=%s' % config['sauce_user'],
+            '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+        ]
+    else:
+        command = [
+            'xvfb-run',
+            config['wptrunner_path'],
+            '--product', platform['browser_name'],
+            '--binary', browser_binary,
+            '--webdriver-binary', webdriver_binary,
+        ]
+        if platform['browser_name'] == 'firefox':
+            command.append('--certutil-binary=certutil')
+            command.append('--prefs-root=%s' % config['firefox_prefs_root'])
+
+    command.append('--log-mach=-')
+    command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
+    command.extend(['--meta', config['wpt_path']])
+    command.extend(['--tests', config['wpt_path']])
+
     if args.path:
         command.append(args.path)
 
