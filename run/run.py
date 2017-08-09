@@ -150,7 +150,6 @@ def main(platform_id, platform, args, config):
 
     if platform.get('sauce', False):
         # '--sauce-browser=%s' % 'MicrosoftEdge', # FIXME do this transformation automatically
-        # '--sauce-platform=hardcodedinWPT', # FIXME Currently for Sauce this must be hard-coded in WPT since spaces are impossible
         command = [
             config['wptrunner_path'],
             '--product', 'sauce',
@@ -158,6 +157,7 @@ def main(platform_id, platform, args, config):
             '--tests', config['wpt_path'],
             '--sauce-browser=%s' % platform['browser_name'],
             '--sauce-version=%s' % platform['browser_version'],
+            '--sauce-platform=%s' % platform['os_name'],
             '--sauce-key=%s' % config['sauce_key'],
             '--sauce-user=%s' % config['sauce_user'],
             '--sauce-connect-binary=%s' % config['sauce_connect_path'],
@@ -354,7 +354,7 @@ def get_config():
 
     expand_keys = [
         'build_path', 'wpt_path', 'wptd_path', 'firefox_binary',
-        'firefox_prefs_root',
+        'firefox_prefs_root', 'sauce_connect_path',
     ]
     # Expand paths, this is for convenience so you can use $HOME
     for key in expand_keys:

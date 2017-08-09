@@ -15,4 +15,15 @@ index e422cfe..51de088 100644
          self.command_queue.put((command, args))
  
      def init_timeout(self):
-
+diff --git a/tools/wptrunner/wptrunner/browsers/sauce.py b/tools/wptrunner/wptrunner/browsers/sauce.py
+index a2f29a4c54..3cd1d67802 100644
+--- a/tools/wptrunner/wptrunner/browsers/sauce.py
++++ b/tools/wptrunner/wptrunner/browsers/sauce.py
+@@ -151,6 +151,7 @@ class SauceConnect():
+             "--no-remove-colliding-tunnels",
+             "--tunnel-identifier=%s" % self.sauce_tunnel_id,
+             "--readyfile=./sauce_is_ready",
++            "--metrics-address=localhost:9876",
+             "--tunnel-domains",
+             "web-platform.test",
+             "*.web-platform.test"
