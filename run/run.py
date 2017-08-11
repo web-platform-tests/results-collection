@@ -93,7 +93,6 @@ def main(platform_id, platform, args, config):
         verify_os_name(platform)
         verify_or_set_os_version(platform)
 
-
     print('Platform information:')
     print('Browser version: %s' % platform['browser_version'])
     print('OS name: %s' % platform['os_name'])
@@ -360,16 +359,19 @@ def get_config():
 
 
 def patch_wpt(config, platform):
-    # wpt.patch is necessary to keep WPT running on long runs. jeffcarp has
-    # a PR out with this patch: https://github.com/w3c/web-platform-tests/pull/5774
+    # wpt.patch is necessary to keep WPT running on long runs.
+    # jeffcarp has a PR out with this patch:
+    # https://github.com/w3c/web-platform-tests/pull/5774
     # however it needs more work.
     patch_path = '%s/util/wpt.patch' % config['wptd_path']
     with open(patch_path) as f:
         patch = f.read()
 
-    # Hackery since the --sauce-platform command line arg doesn't accept spaces,
-    # but Sauce requires them in the platform name.
-    patch = patch.replace('__platform_hack__', '%s %s' % (platform['os_name'], platform['os_version']))
+    # Hackery since the --sauce-platform command line arg doesn't
+    # accept spaces, but Sauce requires them in the platform name.
+    patch = patch.replace('__platform_hack__', '%s %s' % (
+        platform['os_name'], platform['os_version'])
+    )
 
     cmd = ['git', 'apply', '-']
     p = subprocess.Popen(cmd, cwd=config['wpt_path'], stdin=subprocess.PIPE)
