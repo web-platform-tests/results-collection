@@ -81,7 +81,7 @@ def main(platform_id, platform, args, config):
         assert len(config['secret']) == 64, (
             'Valid secret required to create TestRun')
 
-    if not platform['sauce']:
+    if not platform.get('sauce'):
         if platform['browser_name'] == 'chrome':
             browser_binary = config['chrome_binary']
             webdriver_binary = config['chromedriver_binary']
@@ -144,8 +144,7 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    if platform.get('sauce', False):
-        # '--sauce-browser=%s' % 'MicrosoftEdge', # FIXME do this transformation automatically
+    if platform.get('sauce'):
         command = [
             config['wptrunner_path'],
             '--product', 'sauce',
