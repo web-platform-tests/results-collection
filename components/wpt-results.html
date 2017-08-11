@@ -47,6 +47,7 @@ limitations under the License.
         font-family: monospace;
       }
       a:hover {
+        cursor: pointer;
         color: #226ff3;
       }
       table {
@@ -223,8 +224,6 @@ limitations under the License.
       _refreshDisplayedNodes () {
         /* Recomputes the list of displayed spec directories and their child test results. */
         const displayedNodeDict = {}
-        // FIXME: add back search result matching
-        // const matchesQueryng = (name) => name.toLowerCase().includes(this.query.toLowerCase())
         const currentPathParts = this._splitIntoLinkedParts(this.path)
 
         const updateResults = (testFileName, dirPath, isDir) => {
@@ -242,9 +241,17 @@ limitations under the License.
         }
 
         Object.keys(this.testFiles).forEach(testFileName => {
-          if (!testFileName.startsWith(this.path)) {
+          if (this.path !== '/' && !testFileName.startsWith(this.path + '/')) {
             return
           }
+
+          if (this.query.length > 0) {
+            const matchesQuery = testFileName.toLowerCase().includes(this.query.toLowerCase())
+            if (!matchesQuery) {
+              return
+            }
+          }
+
           let parts = this._splitIntoLinkedParts(testFileName)
 
           // Catch any top-level directories
@@ -267,7 +274,6 @@ limitations under the License.
               dirParts = parts.slice(0, currentPathParts.length + 1)
             }
             let dirPath = dirParts[dirParts.length - 1].path
-            if (testFileName.includes('building-paths')) console.log(testFileName, dirParts, dirPath)
             updateResults(testFileName, dirPath, true)
           }
         })
@@ -289,7 +295,6 @@ limitations under the License.
           return
         }
         this.path = path
-        this.query = ''
         this._refreshDisplayedNodes()
         window.history.pushState({}, '', path)
 
@@ -317,6 +322,12 @@ limitations under the License.
         if (!(testRun.results_url in node.results)) return
         const result = node.results[testRun.results_url]
 
+        if (this.path === '/') {
+          // Do not add color to top-level directories
+          return 'background-color: #eee'
+        }
+
+
         // Need saturation between 65-100, reversed (range 35)
         const passRate = result.passing / result.total
         if (passRate === 1) {
@@ -337,6 +348,11 @@ limitations under the License.
         if (testRun.results_url in node.results) {
           return node.results[testRun.results_url][property]
         }
+      }
+
+      _clearSearch () {
+        this.query = ''
+        this._refreshDisplayedNodes()
       }
 
       /* Function for getting total numbers.
