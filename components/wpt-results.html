@@ -47,6 +47,7 @@ limitations under the License.
         font-family: monospace;
       }
       a:hover {
+        cursor: pointer;
         color: #226ff3;
       }
       table {
@@ -101,35 +102,28 @@ limitations under the License.
         </thead>
         <tbody>
 
-          <template is="dom-repeat" items="{{displayedSpecDirs}}" as="specDir" id="spec_list">
-
-            <tr class="spec">
-              <td><b><a href="/{{specDir.specName}}" on-click="_navigate">{{specDir.specName}}</a></b></td>
-
-              <template is="dom-repeat" items="{{specDir.results}}" as="result">
-                <td>{{ result.passing }} / {{ result.total }}</td>
-              </template>
-            </tr>
-
-            <template is="dom-repeat" items="{{specDir.testFiles}}" as="testFile" class="test_file_list">
-              <tr>
-                <td>
-                  <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testFile.testFile) }}" as="part"><span class="path-separator">/</span><a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a></template>
-                </td>
-
-                <template is="dom-repeat" items="{{testFile.results}}" as="result">
-                  <td style="{{ _testResultStyle(result) }}">
-                    {{ result.passing }}/{{ result.total }}
-                  </td>
+          <template is="dom-repeat" items="{{displayedNodes}}" as="node">
+            <tr>
+              <td>
+                <template is="dom-if" if="{{ node.isDir }}">
+                  <b><a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a></b>
                 </template>
-              </tr>
-            </template>
+                <template is="dom-if" if="{{ !node.isDir }}">
+                  <a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a>
+                </template>
+              </td>
 
-            <template is="dom-if" if="{{ specDir.notAllTestFilesShown }}">
-              <a href="/{{ specDir.specName }}">See all files in the {{ specDir.specName }} spec</a>
-            </template>
+              <template is="dom-repeat" items="{{testRuns}}" as="testRun">
+                <td style="{{ _testResultStyle(node, testRun) }}">
+                  {{ _resultForNode(node, testRun, 'passing') }}
+                  /
+                  {{ _resultForNode(node, testRun, 'total') }}
+                </td>
+              </template>
 
+            </tr>
           </template>
+
         </tbody>
       </table>
     </template>
@@ -147,17 +141,6 @@ limitations under the License.
             value: '',
             observer: '_queryChanged'
           },
-          // An object where the key is a top-level directory in WPT (top-level
-          // directories are spec names) and the value is an object containing
-          // all test files in the spec directory.
-          specDirs: {
-            type: Object,
-            value: {}
-          },
-          displayedSpecDirs: {
-            type: Array,
-            value: []
-          },
           testRuns: {
             type: Array
           },
@@ -168,6 +151,14 @@ limitations under the License.
           pathIsATestFile: {
             type: Boolean,
             computed: '_computePathIsATestFile(path)'
+          },
+          testFiles: {
+            type: Object,
+            value: {}
+          },
+          displayedNodes: {
+            type: Array,
+            value: []
           }
         }
       }
@@ -177,7 +168,7 @@ limitations under the License.
 
         window.onpopstate = (event) => {
           this.path = window.location.pathname
-          this._refreshDisplayedSpecDirs()
+          this._refreshDisplayedNodes()
         }
 
         const testFileResults = await Promise.all(this.testRuns.map(testRun => {
@@ -185,47 +176,26 @@ limitations under the License.
         }))
 
         testFileResults.forEach(result => {
-          const testFiles = result.testFiles
           const resultsURL = result.resultsURL
 
           Object.keys(result.testFiles).forEach(testFileName => {
-            const specName = this._specFromTestPath(testFileName)
-
-            if (!(specName in this.specDirs)) {
-              this.specDirs[specName] = {results: {}, specName: specName, testFiles: {}}
+            if (!(testFileName in this.testFiles)) {
+              this.testFiles[testFileName] = {}
             }
-            if (!(resultsURL in this.specDirs[specName].results)) {
-              this.specDirs[specName].results[resultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
-            }
-            this.specDirs[specName].results[resultsURL].passing += testFiles[testFileName][0]
-            this.specDirs[specName].results[resultsURL].total += testFiles[testFileName][1]
-            if (!(testFileName in this.specDirs[specName].testFiles)) {
-              this.specDirs[specName].testFiles[testFileName] = {testFile: testFileName, results: {}}
-            }
-            if (!(resultsURL in this.specDirs[specName].testFiles[testFileName].results)) {
-              this.specDirs[specName].testFiles[testFileName].results[resultsURL] = {resultsURL: resultsURL, passing: 0, total: 0}
-            }
-            this.specDirs[specName].testFiles[testFileName].results[resultsURL].passing = testFiles[testFileName][0]
-            this.specDirs[specName].testFiles[testFileName].results[resultsURL].total = testFiles[testFileName][1]
+            this.testFiles[testFileName][resultsURL] = result.testFiles[testFileName]
           })
         })
 
-        this._refreshDisplayedSpecDirs()
+        this._refreshDisplayedNodes()
       }
 
       _computePathIsATestFile (path) {
         return path.endsWith('.html') || path.endsWith('.htm')
       }
 
-      _testFileSort (a, b) {
-        if (a.testFile < b.testFile) return -1
-        if (a.testFile > b.testFile) return 1
-        return 0
-      }
-
-      _specDirSort (a, b) {
-        if (a.specName < b.specName) return -1
-        if (a.specName > b.specName) return 1
+      _nodeSort (a, b) {
+        if (a.path < b.path) return -1
+        if (a.path > b.path) return 1
         return 0
       }
 
@@ -248,64 +218,71 @@ limitations under the License.
       }
 
       _queryChanged () {
-        this._refreshDisplayedSpecDirs()
+        this._refreshDisplayedNodes()
       }
 
-      _refreshDisplayedSpecDirs () {
-        /* Recomputes the list of displayed spec directories and their child test results. */
-        const matchesQuery = (tf) => tf.testFile.toLowerCase().includes(this.query.toLowerCase())
-        const displayedSpecDirs = []
+      _refreshDisplayedNodes () {
+        /* Recomputes the list of displayed directories and test files. */
+        const displayedNodeMap = new Map()
+        const currentPathParts = this._splitIntoLinkedParts(this.path)
 
-        for (var key in this.specDirs) {
-          let specDir = this.specDirs[key]
-          let displaySpecDir = {}
-
-          displaySpecDir.specName = specDir.specName
-          displaySpecDir.results = this.testRuns.map(testRun => specDir.results[testRun.results_url])
-
-          if (this.path !== '/') {
-            const inFilteredDir = this.path.startsWith(`/${displaySpecDir.specName}`)
-            if (!inFilteredDir) {
-              continue
+        const updateResults = (testFileName, dirPath, isDir) => {
+          if (!displayedNodeMap.has(dirPath)) {
+            displayedNodeMap.set(dirPath, {isDir: isDir, results: {}})
+          }
+          let results = this.testFiles[testFileName]
+          Object.keys(results).forEach(resultURL => {
+            if (!(resultURL in displayedNodeMap.get(dirPath).results)) {
+              displayedNodeMap.get(dirPath).results[resultURL] = {passing: 0, total: 0}
             }
-          }
-
-          if (this.query.length < 3 && this.path === '/') {
-            displaySpecDir.testFiles = []
-            displayedSpecDirs.push(displaySpecDir)
-            continue
-          }
-
-          let allTestFiles = Object.keys(specDir.testFiles).map(k => {
-            let displayTestFile = {}
-            let originalTestFile = specDir.testFiles[k]
-
-            displayTestFile.testFile = originalTestFile.testFile
-            displayTestFile.results = this.testRuns.map(testRun => originalTestFile.results[testRun.results_url])
-
-            return displayTestFile
+            displayedNodeMap.get(dirPath).results[resultURL].passing += results[resultURL][0]
+            displayedNodeMap.get(dirPath).results[resultURL].total += results[resultURL][1]
           })
-
-          const MAX_RESULTS_PER_SPEC_DIR = 10
-
-          let matchingTestFiles = allTestFiles.filter(matchesQuery)
-          if (matchingTestFiles.length > 0) {
-            if (this.path !== '/') {
-              displaySpecDir.testFiles = matchingTestFiles
-              displaySpecDir.testFiles = displaySpecDir.testFiles.filter(tf => (
-                tf.testFile.startsWith(this.path)
-              ))
-            } else {
-              displaySpecDir.testFiles = matchingTestFiles.slice(0, MAX_RESULTS_PER_SPEC_DIR)
-              displaySpecDir.notAllTestFilesShown = matchingTestFiles.length > MAX_RESULTS_PER_SPEC_DIR
-            }
-
-            displaySpecDir.testFiles.sort(this._testFileSort)
-            displayedSpecDirs.push(displaySpecDir)
-          }
         }
-        displayedSpecDirs.sort(this._specDirSort)
-        this.set('displayedSpecDirs', displayedSpecDirs)
+
+        Object.keys(this.testFiles).forEach(testFileName => {
+          if (this.path !== '/' && !testFileName.startsWith(this.path + '/')) {
+            return
+          }
+
+          if (this.query.length > 0) {
+            const matchesQuery = testFileName.toLowerCase().includes(this.query.toLowerCase())
+            if (!matchesQuery) {
+              return
+            }
+          }
+
+          let parts = this._splitIntoLinkedParts(testFileName)
+
+          // If at the top-level, add all directories
+          if (this.path === '/' && parts.length === 2) {
+            let dirParts = [parts[0]]
+            let dirPath = dirParts[dirParts.length - 1].path
+            updateResults(testFileName, dirPath, true)
+
+          // Add test files in current directory
+          } else if (parts.length === currentPathParts.length + 1) {
+            let path = parts[parts.length - 1].path
+            updateResults(testFileName, path, false)
+
+          // Add subdirectories in current directory
+          } else if (parts.length > currentPathParts.length + 1) {
+            let dirParts
+            if (this.path === '/') {
+              dirParts = [parts[0]]
+            } else {
+              dirParts = parts.slice(0, currentPathParts.length + 1)
+            }
+            let dirPath = dirParts[dirParts.length - 1].path
+            updateResults(testFileName, dirPath, true)
+          }
+        })
+
+        let displayedNodes = Array.from(displayedNodeMap.keys()).map(key => (
+          {path: key, isDir: displayedNodeMap.get(key).isDir, results: displayedNodeMap.get(key).results}
+        ))
+        displayedNodes.sort(this._nodeSort)
+        this.displayedNodes = displayedNodes
       }
 
       _platformID (testRun) {
@@ -319,8 +296,7 @@ limitations under the License.
           return
         }
         this.path = path
-        this.query = ''
-        this._refreshDisplayedSpecDirs()
+        this._refreshDisplayedNodes()
         window.history.pushState({}, '', path)
 
         // Send Google Analytics pageview event
@@ -341,8 +317,16 @@ limitations under the License.
         })
       }
 
-      _testResultStyle (result) {
-        if (!result) return ''
+      _testResultStyle (node, testRun) {
+        if (!node) return
+        if (!testRun) return
+        if (!(testRun.results_url in node.results)) return
+        const result = node.results[testRun.results_url]
+
+        if (this.path === '/') {
+          // Do not add color to top-level directories
+          return 'background-color: #eee'
+        }
 
         // Need saturation between 65-100, reversed (range 35)
         const passRate = result.passing / result.total
@@ -354,6 +338,21 @@ limitations under the License.
           // Some shade of red
           return `background-color: hsl(0, 85%, ${luminance}%)`
         }
+      }
+
+      _relPath (path) {
+        return path.replace(this.path + '/', '')
+      }
+
+      _resultForNode (node, testRun, property) {
+        if (testRun.results_url in node.results) {
+          return node.results[testRun.results_url][property]
+        }
+      }
+
+      _clearSearch () {
+        this.query = ''
+        this._refreshDisplayedNodes()
       }
 
       /* Function for getting total numbers.
