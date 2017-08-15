@@ -222,21 +222,21 @@ limitations under the License.
       }
 
       _refreshDisplayedNodes () {
-        /* Recomputes the list of displayed spec directories and their child test results. */
-        const displayedNodeDict = {}
+        /* Recomputes the list of displayed directories and test files. */
+        const displayedNodeMap = new Map()
         const currentPathParts = this._splitIntoLinkedParts(this.path)
 
         const updateResults = (testFileName, dirPath, isDir) => {
-          if (!(dirPath in displayedNodeDict)) {
-            displayedNodeDict[dirPath] = {isDir: isDir, results: {}}
+          if (!displayedNodeMap.has(dirPath)) {
+            displayedNodeMap.set(dirPath, {isDir: isDir, results: {}})
           }
           let results = this.testFiles[testFileName]
           Object.keys(results).forEach(resultURL => {
-            if (!(resultURL in displayedNodeDict[dirPath].results)) {
-              displayedNodeDict[dirPath].results[resultURL] = {passing: 0, total: 0}
+            if (!(resultURL in displayedNodeMap.get(dirPath).results)) {
+              displayedNodeMap.get(dirPath).results[resultURL] = {passing: 0, total: 0}
             }
-            displayedNodeDict[dirPath].results[resultURL].passing += results[resultURL][0]
-            displayedNodeDict[dirPath].results[resultURL].total += results[resultURL][1]
+            displayedNodeMap.get(dirPath).results[resultURL].passing += results[resultURL][0]
+            displayedNodeMap.get(dirPath).results[resultURL].total += results[resultURL][1]
           })
         }
 
@@ -254,18 +254,18 @@ limitations under the License.
 
           let parts = this._splitIntoLinkedParts(testFileName)
 
-          // Catch any top-level directories
+          // If at the top-level, add all directories
           if (this.path === '/' && parts.length === 2) {
             let dirParts = [parts[0]]
             let dirPath = dirParts[dirParts.length - 1].path
             updateResults(testFileName, dirPath, true)
 
-          // Catch any test files in child directories
+          // Add test files in current directory
           } else if (parts.length === currentPathParts.length + 1) {
             let path = parts[parts.length - 1].path
             updateResults(testFileName, path, false)
 
-          // Catch all subdirectories
+          // Add subdirectories in current directory
           } else if (parts.length > currentPathParts.length + 1) {
             let dirParts
             if (this.path === '/') {
@@ -277,8 +277,9 @@ limitations under the License.
             updateResults(testFileName, dirPath, true)
           }
         })
-        let displayedNodes = Object.keys(displayedNodeDict).map(key => (
-          {path: key, isDir: displayedNodeDict[key].isDir, results: displayedNodeDict[key].results}
+
+        let displayedNodes = Array.from(displayedNodeMap.keys()).map(key => (
+          {path: key, isDir: displayedNodeMap.get(key).isDir, results: displayedNodeMap.get(key).results}
         ))
         displayedNodes.sort(this._nodeSort)
         this.displayedNodes = displayedNodes
