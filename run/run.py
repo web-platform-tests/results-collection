@@ -359,10 +359,12 @@ def get_config():
 
 
 def patch_wpt(config, platform):
-    # wpt.patch is necessary to keep WPT running on long runs.
-    # jeffcarp has a PR out with this patch:
-    # https://github.com/w3c/web-platform-tests/pull/5774
-    # however it needs more work.
+    '''Applies util/wpt.patch to WPT.
+
+    The patch is necessary to keep WPT running on long runs.
+    jeffcarp has a PR out with this patch:
+    https://github.com/w3c/web-platform-tests/pull/5774
+    '''
     patch_path = '%s/util/wpt.patch' % config['wptd_path']
     with open(patch_path) as f:
         patch = f.read()
