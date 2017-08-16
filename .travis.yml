@@ -24,3 +24,8 @@ matrix:
       script:
         - pep8 .
         - python -m unittest discover -p "*_test.py"
+
+    - language: go
+      install: "go get -u github.com/golang/lint/golint"
+      script:
+        - $GOPATH/bin/golint
