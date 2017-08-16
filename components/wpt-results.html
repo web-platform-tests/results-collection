@@ -118,7 +118,7 @@ limitations under the License.
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
-                <td style="{{ _testResultStyle(node, testRun) }}">
+                <td style="{{ _testResultStyle(node, testRun, testRuns) }}">
                   {{ _resultForNode(node, testRun, 'passing') }}
                   /
                   {{ _resultForNode(node, testRun, 'total') }}
@@ -321,31 +321,26 @@ limitations under the License.
         })
       }
 
-      _testResultStyle (node, testRun) {
-
-        // FIXME overriding this for now
-        return 'background-color: #eee'
-
+      _testResultStyle (node, testRun, testRuns) {
         if (!node) return
         if (!testRun) return
         if (!(testRun.results_url in node.results)) return
         const result = node.results[testRun.results_url]
+        const standardDeviation = this._standardDeviationForNode(node, testRuns)
 
+        /*
         if (this.path === '/') {
           // Do not add color to top-level directories
           return 'background-color: #eee'
         }
+        */
 
-        // Need saturation between 65-100, reversed (range 35)
-        const passRate = result.passing / result.total
-        if (passRate === 1) {
-          // Green
-          return 'background-color: hsl(129, 85%, 65%)'
-        } else {
-          const luminance = 65 + passRate * 20
-          // Some shade of red
-          return `background-color: hsl(0, 85%, ${luminance}%)`
-        }
+        // Luminance between 50-95, 50 is 100% passing && stdev == 0
+        const passFactor = 15 - (result.passing / result.total) * 15
+        const stdDevFactor = (standardDeviation / 0.5) * 40
+        const luminance = 95 - passFactor - stdDevFactor
+
+        return `background-color: hsl(204, 100%, ${luminance}%)`
       }
 
       _relPath (path) {
