@@ -144,12 +144,17 @@ def main(platform_id, platform, args, config):
     print('Running WPT')
 
     if platform.get('sauce'):
+        if platform['browser_name'] == 'edge':
+            sauce_browser_name = 'MicrosoftEdge'
+        else:
+            sauce_browser_name = platform['browser_name']
+
         command = [
             config['wptrunner_path'],
             '--product', 'sauce',
             '--meta', config['wpt_path'],
             '--tests', config['wpt_path'],
-            '--sauce-browser=%s' % platform['browser_name'],
+            '--sauce-browser=%s' % sauce_browser_name,
             '--sauce-version=%s' % platform['browser_version'],
             '--sauce-platform=%s' % platform['os_name'],
             '--sauce-key=%s' % config['sauce_key'],
@@ -359,24 +364,23 @@ def get_config():
 
 
 def patch_wpt(config, platform):
-    '''Applies util/wpt.patch to WPT.
+    """Applies util/wpt.patch to WPT.
 
     The patch is necessary to keep WPT running on long runs.
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
-    '''
+    """
     patch_path = '%s/util/wpt.patch' % config['wptd_path']
     with open(patch_path) as f:
         patch = f.read()
 
-    # Hackery since the --sauce-platform command line arg doesn't
+    # The --sauce-platform command line arg doesn't
     # accept spaces, but Sauce requires them in the platform name.
     patch = patch.replace('__platform_hack__', '%s %s' % (
         platform['os_name'], platform['os_version'])
     )
 
-    cmd = ['git', 'apply', '-']
-    p = subprocess.Popen(cmd, cwd=config['wpt_path'], stdin=subprocess.PIPE)
+    p = subprocess.Popen(['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE)
     p.communicate(input=bytes(patch, 'utf-8'))
 
 
