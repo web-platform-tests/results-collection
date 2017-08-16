@@ -376,6 +376,7 @@ def patch_wpt(config, platform):
 
     # The --sauce-platform command line arg doesn't
     # accept spaces, but Sauce requires them in the platform name.
+    # https://github.com/w3c/web-platform-tests/issues/6852
     patch = patch.replace('__platform_hack__', '%s %s' % (
         platform['os_name'], platform['os_version'])
     )
