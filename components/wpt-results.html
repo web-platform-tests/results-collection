@@ -95,6 +95,7 @@ limitations under the License.
         <thead>
           <tr>
             <th>Spec</th>
+            <th>&sigma;</th>
             <template is="dom-repeat" items="{{testRuns}}" as="testRun">
               <th><test-run test-run="[[testRun]]"></test-run></th>
             </template>
@@ -111,6 +112,9 @@ limitations under the License.
                 <template is="dom-if" if="{{ !node.isDir }}">
                   <a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a>
                 </template>
+              </td>
+              <td>
+                {{ _standardDeviationForNode(node, testRuns) }}
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
@@ -350,6 +354,18 @@ limitations under the License.
         }
       }
 
+      _standardDeviationForNode (node, testRuns) {
+        const passingRatios = []
+        for (let testRun of testRuns) {
+          if (testRun.results_url in node.results) {
+            const passing = node.results[testRun.results_url].passing
+            const total = node.results[testRun.results_url].total
+            passingRatios.push(passing / total)
+          }
+        }
+        return this._standardDeviation(passingRatios).toFixed(1)
+      }
+
       _clearSearch () {
         this.query = ''
         this._refreshDisplayedNodes()
@@ -385,6 +401,16 @@ limitations under the License.
         })))
 
         console.log('JSON version:', JSON.stringify(totals))
+      }
+
+
+      _average (arr) {
+        return arr.reduce(((sum, value) => sum + value), 0) / arr.length
+      }
+      _standardDeviation (arr) {
+        const average = this._average(arr)
+        const squareDiffs = arr.map(num => Math.pow(num - average, 2))
+        return Math.sqrt(this._average(squareDiffs))
       }
     }
 
