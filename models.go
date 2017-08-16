@@ -18,6 +18,7 @@ import (
     "time"
 )
 
+// TestRun stores metadata for a test run (produced by run/run.py)
 type TestRun struct {
     // Platform information
     BrowserName     string          `json:"browser_name"`
@@ -34,6 +35,7 @@ type TestRun struct {
     CreatedAt       time.Time       `json:"created_at"`
 }
 
+// Browser holds objects that appear in browsers.json
 type Browser struct {
     InitiallyLoaded bool            `json:"initially_loaded"`
     CurrentlyRun    bool            `json:"currently_run"`
@@ -44,7 +46,7 @@ type Browser struct {
     Sauce           bool            `json:"sauce"`
 }
 
-// This is used for test result uploads.
+// Token is used for test result uploads.
 type Token struct {
     Secret          string          `json:"secret"`
 }
