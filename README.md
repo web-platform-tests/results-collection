@@ -2,10 +2,11 @@
 
 A dashboard of cross-browser results for [web-platform-tests](https://github.com/w3c/web-platform-tests).
 
-It consists of 2 parts:
+It consists of 3 parts:
 
-- An App Engine app for ingesting, organizing, and serving test results - see [`main.go`](main.go)
-- Running infrastructure
+- **Running**: VMs scheduled to [run tests locally and on Sauce](run/run.py) daily
+- **Serving**: An [App Engine app](main.go) for storing test run metadata and serving HTML
+- **Visualizing**: [Polymer elements](components/wpt-results.html) for loading and visualizing test results
 
 ## Running locally
 
@@ -14,6 +15,7 @@ You'll need the [Google App Engine Go SDK](https://cloud.google.com/appengine/do
 ```sh
 # Start the server on localhost:8080
 dev_appserver.py .
+curl http://localhost:8080/tasks/populate-dev-data
 ```
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
