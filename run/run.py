@@ -81,18 +81,17 @@ def main(platform_id, platform, args, config):
         assert len(config['secret']) == 64, (
             'Valid secret required to create TestRun')
 
-    if platform['browser_name'] == 'chrome':
-        browser_binary = config['chrome_binary']
-        webdriver_binary = config['chromedriver_binary']
-    elif platform['browser_name'] == 'firefox':
-        browser_binary = config['firefox_binary']
-        webdriver_binary = config['geckodriver_binary']
-    else:
-        raise 'Unsupported browser'
+    if not platform.get('sauce'):
+        if platform['browser_name'] == 'chrome':
+            browser_binary = config['chrome_binary']
+            webdriver_binary = config['chromedriver_binary']
+        elif platform['browser_name'] == 'firefox':
+            browser_binary = config['firefox_binary']
+            webdriver_binary = config['geckodriver_binary']
 
-    verify_browser_binary_version(platform, browser_binary)
-    verify_os_name(platform)
-    verify_or_set_os_version(platform)
+        verify_browser_binary_version(platform, browser_binary)
+        verify_os_name(platform)
+        verify_or_set_os_version(platform)
 
     print('Platform information:')
     print('Browser version: %s' % platform['browser_version'])
@@ -102,22 +101,19 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Setting up WPT checkout')
 
-    patch_path = '%s/util/keep-wpt-running.patch' % config['wptd_path']
     wpt_setup_commands = [
-        ['git', 'reset', '--hard', 'HEAD'],  # For keep-wpt-running.patch
+        ['git', 'reset', '--hard', 'HEAD'],  # For wpt.patch
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
         ['./wpt', 'manifest', '--work'],
-        # Necessary to keep WPT running on long runs. jeffcarp has a PR out
-        # with this patch: https://github.com/w3c/web-platform-tests/pull/5774
-        # however it needs more work.
-        ['git', 'apply', patch_path],
     ]
     for command in wpt_setup_commands:
         return_code = subprocess.check_call(command, cwd=config['wpt_path'])
         assert return_code == 0, (
             'Got non-0 return code: '
             '%d from command %s' % (return_code, command))
+
+    patch_wpt(config, platform)
 
     # TODO(#40): modify this to test against the first SHA of the day
     CURRENT_WPT_SHA = get_current_wpt_sha(config)
@@ -147,21 +143,43 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    command = [
-        'xvfb-run',
-        config['wptrunner_path'],
-        '--product', platform['browser_name'],
-        '--binary', browser_binary,
-        '--webdriver-binary', webdriver_binary,
-        '--meta', config['wpt_path'],
-        '--tests', config['wpt_path'],
-        '--log-wptreport', LOCAL_REPORT_FILEPATH,
-        '--log-mach=-',
-        '--processes=1',  # TODO(jeffcarp): investigate increasing
-    ]
-    if platform['browser_name'] == 'firefox':
-        command.append('--certutil-binary=certutil')
-        command.append('--prefs-root=%s' % config['firefox_prefs_root'])
+    if platform.get('sauce'):
+        if platform['browser_name'] == 'edge':
+            sauce_browser_name = 'MicrosoftEdge'
+        else:
+            sauce_browser_name = platform['browser_name']
+
+        command = [
+            config['wptrunner_path'],
+            '--product', 'sauce',
+            '--meta', config['wpt_path'],
+            '--tests', config['wpt_path'],
+            '--sauce-browser=%s' % sauce_browser_name,
+            '--sauce-version=%s' % platform['browser_version'],
+            '--sauce-platform=%s' % platform['os_name'],
+            '--sauce-key=%s' % config['sauce_key'],
+            '--sauce-user=%s' % config['sauce_user'],
+            '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+            '--processes=3',
+        ]
+    else:
+        command = [
+            'xvfb-run',
+            config['wptrunner_path'],
+            '--product', platform['browser_name'],
+            '--binary', browser_binary,
+            '--webdriver-binary', webdriver_binary,
+        ]
+        if platform['browser_name'] == 'firefox':
+            command.append('--certutil-binary=certutil')
+            command.append('--prefs-root=%s' % config['firefox_prefs_root'])
+
+    command.append('--log-mach=-')
+    command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
+    command.extend(['--meta', config['wpt_path']])
+    command.extend(['--tests', config['wpt_path']])
+
     if args.path:
         command.append(args.path)
 
@@ -336,13 +354,37 @@ def get_config():
 
     expand_keys = [
         'build_path', 'wpt_path', 'wptd_path', 'firefox_binary',
-        'firefox_prefs_root',
+        'firefox_prefs_root', 'sauce_connect_path',
     ]
     # Expand paths, this is for convenience so you can use $HOME
     for key in expand_keys:
         config.set('default', key, os.path.expandvars(config['default'][key]))
 
     return config['default']
+
+
+def patch_wpt(config, platform):
+    """Applies util/wpt.patch to WPT.
+
+    The patch is necessary to keep WPT running on long runs.
+    jeffcarp has a PR out with this patch:
+    https://github.com/w3c/web-platform-tests/pull/5774
+    """
+    patch_path = '%s/util/wpt.patch' % config['wptd_path']
+    with open(patch_path) as f:
+        patch = f.read()
+
+    # The --sauce-platform command line arg doesn't
+    # accept spaces, but Sauce requires them in the platform name.
+    # https://github.com/w3c/web-platform-tests/issues/6852
+    patch = patch.replace('__platform_hack__', '%s %s' % (
+        platform['os_name'], platform['os_version'])
+    )
+
+    p = subprocess.Popen(
+        ['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE
+    )
+    p.communicate(input=bytes(patch, 'utf-8'))
 
 
 def parse_args():
