@@ -113,7 +113,7 @@ limitations under the License.
                   <a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a>
                 </template>
               </td>
-              <td>
+              <td style="{{ _sigmaStyle(node, testRuns) }}">
                 {{ _standardDeviationForNode(node, testRuns) }}
               </td>
 
@@ -322,6 +322,10 @@ limitations under the License.
       }
 
       _testResultStyle (node, testRun) {
+
+        // FIXME overriding this for now
+        return 'background-color: #eee'
+
         if (!node) return
         if (!testRun) return
         if (!(testRun.results_url in node.results)) return
@@ -364,6 +368,17 @@ limitations under the License.
           }
         }
         return this._standardDeviation(passingRatios).toFixed(1)
+      }
+
+      _sigmaStyle (node, testRuns) {
+        const standardDeviation = this._standardDeviationForNode(node, testRuns)
+        if (standardDeviation == 0) {
+          return 'background-color: hsl(129, 85%, 65%)'
+        }
+
+        const luminance = 65 + (0.5 - standardDeviation) * 20
+        // Some shade of red
+        return `background-color: hsl(0, 85%, ${luminance}%)`
       }
 
       _clearSearch () {
