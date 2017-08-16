@@ -162,6 +162,8 @@ def main(platform_id, platform, args, config):
             '--sauce-connect-binary=%s' % config['sauce_connect_path'],
             '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
             '--processes=3',
+            '--no-restart-on-unexpected',
+            '--run-by-dir=3',
         ]
     else:
         command = [
