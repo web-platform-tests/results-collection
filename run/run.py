@@ -381,7 +381,9 @@ def patch_wpt(config, platform):
         platform['os_name'], platform['os_version'])
     )
 
-    p = subprocess.Popen(['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE)
+    p = subprocess.Popen(
+        ['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE
+    )
     p.communicate(input=bytes(patch, 'utf-8'))
 
 
