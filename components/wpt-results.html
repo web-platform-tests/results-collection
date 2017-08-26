@@ -64,6 +64,12 @@ limitations under the License.
         padding: 0.2em 0.5em;
         border: solid 1px #ccc;
       }
+      table tr td:first-child::after {
+        content: "";
+        display: inline-block;
+        vertical-align: top;
+        min-height: 30px;
+      }
       .path-separator {
         padding: 0 0.1em;
       }
