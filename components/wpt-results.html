@@ -84,6 +84,7 @@ limitations under the License.
     </section>
 
     <template is="dom-if" if="{{ pathIsATestFile }}">
+      <a href$="https://github.com/w3c/web-platform-tests/blob/master/[[path]]" target="_blank">Jump to source file</a>
       <test-file-results
         test-runs="[[testRuns]]"
         test-file="[[path]]">
