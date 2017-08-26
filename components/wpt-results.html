@@ -67,6 +67,9 @@ limitations under the License.
       .path-separator {
         padding: 0 0.1em;
       }
+      .links {
+        margin-bottom: 1em;
+      }
     </style>
 
     <section class="search">
@@ -84,7 +87,13 @@ limitations under the License.
     </section>
 
     <template is="dom-if" if="{{ pathIsATestFile }}">
-      <a href$="https://github.com/w3c/web-platform-tests/blob/master/[[path]]" target="_blank">Jump to source file</a>
+      <div class="links">
+        <ul>
+          <li><a href$="https://github.com/w3c/web-platform-tests/blob/master[[path]]" target="_blank">View source on GitHub</a></li>
+          <li><a href$="https://w3c-test.org[[path]]" target="_blank">Run in your browser on w3c-test.org</a></li>
+        </ul>
+      </div>
+
       <test-file-results
         test-runs="[[testRuns]]"
         test-file="[[path]]">
