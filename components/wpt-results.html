@@ -70,6 +70,12 @@ limitations under the License.
       .links {
         margin-bottom: 1em;
       }
+      .caveat {
+        padding: 0.5em;
+        background-color: #fde2e3;
+        margin-bottom: 1em;
+        border-left: solid 4px #f47477;
+      }
     </style>
 
     <section class="search">
@@ -84,6 +90,10 @@ limitations under the License.
           <a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
         </template>
       </div>
+    </section>
+
+    <section class="caveat">
+      Data below are intended for web platform implementers and do not contain useful metrics for evaluation or comparison of web platform features. Also note that tested Edge and Safari are not pre-release versions (<a href="https://github.com/GoogleChrome/wptdashboard/issues/109">#109</a>, <a href="https://github.com/GoogleChrome/wptdashboard/issues/110">#110</a>).
     </section>
 
     <template is="dom-if" if="{{ pathIsATestFile }}">
