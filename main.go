@@ -23,6 +23,9 @@ var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 func init() {
     http.HandleFunc("/tasks/populate-dev-data", populateDevData)
+    http.HandleFunc("/tasks/update-wpt-revision", updateWPTRevisionHandler)
+    http.HandleFunc("/revisions", revisionsHandler)
+    http.HandleFunc("/revisions.json", revisionsAPIHandler)
     http.HandleFunc("/test-runs", testRunHandler)
     http.HandleFunc("/about", aboutHandler)
     http.HandleFunc("/", testHandler)
