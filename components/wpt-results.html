@@ -166,7 +166,7 @@ limitations under the License.
           },
           path: {
             type: String,
-            value: window.location.pathname
+            value: window.location.pathname.replace(/(.+)(\/)$/, '$1')
           },
           pathIsATestFile: {
             type: Boolean,
@@ -187,7 +187,7 @@ limitations under the License.
         super.connectedCallback()
 
         window.onpopstate = (event) => {
-          this.path = window.location.pathname
+          this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1')
           this._refreshDisplayedNodes()
         }
 
@@ -311,7 +311,7 @@ limitations under the License.
 
       _navigate (event) {
         event.preventDefault()
-        const path = event.target.pathname
+        const path = event.target.pathname.replace(/(.+)(\/)$/, '$1')
         if (path === this.path) {
           return
         }
