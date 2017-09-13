@@ -181,6 +181,7 @@ def main(platform_id, platform, args, config):
     command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
     command.extend(['--meta', config['wpt_path']])
     command.extend(['--tests', config['wpt_path']])
+    command.append('--install-fonts')
 
     if args.path:
         command.append(args.path)
