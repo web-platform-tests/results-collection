@@ -352,8 +352,13 @@ def verify_gsutil_installed(config):
 
 
 def get_config():
+    manifest = "run/running.ini"
     config = configparser.ConfigParser()
-    config.read('run/running.ini')
+    if os.path.isfile(manifest):
+        config.read(manifest)
+    else:
+        print("The manifest {0} does not exist.".format(manifest))
+        sys.exit()
 
     expand_keys = [
         'build_path', 'wpt_path', 'wptd_path', 'firefox_binary',
@@ -361,7 +366,9 @@ def get_config():
     ]
     # Expand paths, this is for convenience so you can use $HOME
     for key in expand_keys:
-        config.set('default', key, os.path.expandvars(config['default'][key]))
+        config.set('default',
+                   key,
+                   os.path.expandvars(config.get('default', key)))
 
     return config['default']
 
