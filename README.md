@@ -20,6 +20,50 @@ curl http://localhost:8080/tasks/populate-dev-data
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
 
+## Running the tests
+
+### Setup
+
+You'll need to make sure that you have Python 2.7 installed. It is recommended that you setup a [virtualenv](https://virtualenv.pypa.io/en/stable/). When you have activated your `virtualenv`
+
+Run the following command
+```sh
+  pip install -r requirements
+```
+
+### Running
+
+Copy the file `run/running.example.ini` and edit the fields to the correct locations for items on your machine.
+If you do not do this you will receive an error.
+
+The script will only accept platform IDs listed in `browsers.json`.
+
+By default this script will not upload anything! To run for production:
+```sh
+    ./run/run.py firefox-56.0-linux --upload --create-testrun
+```
+
+# Filesystem and network output
+
+- This script will only write files under config['build_path']
+- One run will write approximately 111MB to the filesystem
+- If --upload is specified, it will upload that 111MB of results
+- To upload results, you must be logged in with `gcloud` and authorized
+
+The script will only accept platform IDs listed in `browsers.json`.
+
+By default this script will not upload anything! To run for production:
+```sh
+    ./run/run.py firefox-56.0-linux --upload --create-testrun
+```
+
+# Filesystem and network output
+
+- This script will only write files under config['build_path']
+- One run will write approximately 111MB to the filesystem
+- If --upload is specified, it will upload that 111MB of results
+- To upload results, you must be logged in with `gcloud` and authorized
+
 ## Using the data
 
 All test result data is public. There are two types of gzipped JSON data files we store: test run summary files, and individual test result files.
