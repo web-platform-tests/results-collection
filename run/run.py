@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import argparse
-import configparser
+import ConfigParser as configparser
 import gzip
 import json
 import platform as host_platform
@@ -60,7 +60,6 @@ By default this script will not upload anything! To run for production:
 
 
 def main(platform_id, platform, args, config):
-    assert sys.version_info.major == 3, 'This script requires Python 3.'
 
     print('PLATFORM_ID:', platform_id)
     print('PLATFORM INFO:', platform)
@@ -133,7 +132,7 @@ def main(platform_id, platform, args, config):
         config['gs_results_bucket'], SUMMARY_PATH
     )
 
-    if config.getboolean('install_wptrunner'):
+    if config.get('install_wptrunner'):
         print('==================================================')
         print('Installing wptrunner')
         command = ['pip', 'install', '--user', '-e', 'tools/wptrunner']
@@ -185,7 +184,6 @@ def main(platform_id, platform, args, config):
 
     if args.path:
         command.append(args.path)
-
     return_code = subprocess.call(command, cwd=config['wpt_path'])
 
     print('==================================================')
@@ -343,7 +341,7 @@ def write_gzip_json(filepath, payload):
 
     with gzip.open(filepath, 'wb') as f:
         payload_str = json.dumps(payload)
-        f.write(bytes(payload_str, 'UTF-8'))
+        f.write(payload_str, 'UTF-8')
 
 
 def verify_gsutil_installed(config):
@@ -369,8 +367,11 @@ def get_config():
         config.set('default',
                    key,
                    os.path.expandvars(config.get('default', key)))
-
-    return config['default']
+    conf = {}
+    for item in config.items('default'):
+        k, v = item
+        conf[k] = v
+    return conf
 
 
 def patch_wpt(config, platform):
@@ -394,7 +395,7 @@ def patch_wpt(config, platform):
     p = subprocess.Popen(
         ['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE
     )
-    p.communicate(input=bytes(patch, 'utf-8'))
+    p.communicate(input=patch)
 
 
 def parse_args():

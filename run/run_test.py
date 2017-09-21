@@ -14,7 +14,7 @@
 
 import unittest
 
-from run.run import (
+from run import (
     report_to_summary,
     version_string_to_major_minor
 )
