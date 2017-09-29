@@ -120,7 +120,7 @@ Structure:
 
 There is no public API for TestRuns, so if you need to access only the most recent results, looking at
 the main page will give you the latest test SHAs. If you need to access earlier results, an
-exhaustive search is the only way to do that (see issue [#73](https://github.com/GoogleChrome/wptdashboard/issues/73) and [#43](https://github.com/GoogleChrome/wptdashboard/issues/43)).
+exhaustive search is the only way to do that (see issue [#73](https://github.com/w3c/wptdashboard/issues/73) and [#43](https://github.com/w3c/wptdashboard/issues/43)).
 
 ## Miscellaneous
 
