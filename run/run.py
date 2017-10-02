@@ -168,7 +168,6 @@ def main(platform_id, platform, args, config):
         ]
         if platform['browser_name'] == 'firefox':
             command.append('--certutil-binary=certutil')
-            command.append('--prefs-root=%s' % config['firefox_prefs_root'])
 
     command.append('--log-mach=-')
     command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
