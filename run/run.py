@@ -132,13 +132,6 @@ def main(platform_id, platform, args, config):
         config['gs_results_bucket'], SUMMARY_PATH
     )
 
-    if config.get('install_wptrunner'):
-        print('==================================================')
-        print('Installing wptrunner')
-        command = ['pip', 'install', '--user', '-e', 'tools/wptrunner']
-        return_code = subprocess.check_call(command, cwd=config['wpt_path'])
-        assert return_code == 0
-
     print('==================================================')
     print('Running WPT')
 
@@ -167,8 +160,9 @@ def main(platform_id, platform, args, config):
     else:
         command = [
             'xvfb-run',
-            config['wptrunner_path'],
-            '--product', platform['browser_name'],
+            "./wpt",
+            "run",
+            platform['browser_name'],
             '--binary', browser_binary,
             '--webdriver-binary', webdriver_binary,
         ]
@@ -183,7 +177,8 @@ def main(platform_id, platform, args, config):
     command.append('--install-fonts')
 
     if args.path:
-        command.append(args.path)
+        command.insert(4, args.path)
+
     return_code = subprocess.call(command, cwd=config['wpt_path'])
 
     print('==================================================')
