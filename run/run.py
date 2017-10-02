@@ -336,7 +336,7 @@ def write_gzip_json(filepath, payload):
 
     with gzip.open(filepath, 'wb') as f:
         payload_str = json.dumps(payload)
-        f.write(payload_str, 'UTF-8')
+        f.write(payload_str)
 
 
 def verify_gsutil_installed(config):
