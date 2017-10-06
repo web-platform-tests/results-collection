@@ -76,6 +76,15 @@ limitations under the License.
         margin-bottom: 1em;
         border-left: solid 4px #f47477;
       }
+
+      @media (max-width: 800px) {
+        table tr td:first-child::after {
+          content: "";
+          display: inline-block;
+          vertical-align: top;
+          min-height: 30px;
+        }
+      }
     </style>
 
     <section class="search">
