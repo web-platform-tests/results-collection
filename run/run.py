@@ -150,6 +150,7 @@ def main(platform_id, platform, args, config):
             '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
             '--no-restart-on-unexpected',
             '--processes=2',
+            '--run-by-dir=3',
         ]
         if args.path:
             command.insert(3, args.path)
