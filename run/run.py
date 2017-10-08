@@ -142,21 +142,17 @@ def main(platform_id, platform, args, config):
             sauce_browser_name = platform['browser_name']
 
         command = [
-            config['wptrunner_path'],
-            '--product', 'sauce',
-            '--meta', config['wpt_path'],
-            '--tests', config['wpt_path'],
-            '--sauce-browser=%s' % sauce_browser_name,
-            '--sauce-version=%s' % platform['browser_version'],
+            './wpt', 'run', 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version']),
             '--sauce-platform=%s' % platform['os_name'],
             '--sauce-key=%s' % config['sauce_key'],
             '--sauce-user=%s' % config['sauce_user'],
             '--sauce-connect-binary=%s' % config['sauce_connect_path'],
             '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
-            '--processes=3',
             '--no-restart-on-unexpected',
-            '--run-by-dir=3',
+            '--processes=2',
         ]
+        if args.path:
+            command.insert(3, args.path)
     else:
         command = [
             'xvfb-run',
@@ -166,6 +162,8 @@ def main(platform_id, platform, args, config):
             '--binary', browser_binary,
             '--webdriver-binary', webdriver_binary,
         ]
+        if args.path:
+            command.insert(4, args.path)
         if platform['browser_name'] == 'firefox':
             command.append('--certutil-binary=certutil')
 
@@ -174,9 +172,6 @@ def main(platform_id, platform, args, config):
     command.extend(['--meta', config['wpt_path']])
     command.extend(['--tests', config['wpt_path']])
     command.append('--install-fonts')
-
-    if args.path:
-        command.insert(4, args.path)
 
     return_code = subprocess.call(command, cwd=config['wpt_path'])
 
@@ -354,7 +349,7 @@ def get_config():
 
     expand_keys = [
         'build_path', 'wpt_path', 'wptd_path', 'firefox_binary',
-        'firefox_prefs_root', 'sauce_connect_path',
+        'sauce_connect_path',
     ]
     # Expand paths, this is for convenience so you can use $HOME
     for key in expand_keys:
