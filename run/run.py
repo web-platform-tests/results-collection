@@ -142,7 +142,8 @@ def main(platform_id, platform, args, config):
             sauce_browser_name = platform['browser_name']
 
         command = [
-            './wpt', 'run', 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version']),
+            './wpt', 'run', 'sauce:%s:%s' % (
+                sauce_browser_name, platform['browser_version']),
             '--sauce-platform=%s' % platform['os_name'],
             '--sauce-key=%s' % config['sauce_key'],
             '--sauce-user=%s' % config['sauce_user'],
