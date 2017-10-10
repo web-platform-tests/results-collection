@@ -28,7 +28,7 @@ You'll need to make sure that you have Python 2.7 installed. It is recommended t
 
 Run the following command
 ```sh
-  pip install -r requirements
+  pip install -r requirements.txt
 ```
 
 ### Running
