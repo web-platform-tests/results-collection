@@ -83,10 +83,8 @@ def main(platform_id, platform, args, config):
     if not platform.get('sauce'):
         if platform['browser_name'] == 'chrome':
             browser_binary = config['chrome_binary']
-            webdriver_binary = config['chromedriver_binary']
         elif platform['browser_name'] == 'firefox':
             browser_binary = config['firefox_binary']
-            webdriver_binary = config['geckodriver_binary']
 
         verify_browser_binary_version(platform, browser_binary)
         verify_os_name(platform)
@@ -161,7 +159,6 @@ def main(platform_id, platform, args, config):
             './wpt', 'run',
             platform['browser_name'],
             '--binary', browser_binary,
-            '--webdriver-binary', webdriver_binary,
         ]
         if args.path:
             command.insert(4, args.path)
