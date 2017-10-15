@@ -33,36 +33,27 @@ Run the following command
 
 ### Running
 
-Copy the file `run/running.example.ini` and edit the fields to the correct locations for items on your machine.
-If you do not do this you will receive an error.
+Copy the file `run/running.example.ini` to `run/running.ini` and edit the fields to the correct locations for items on your machine. If you do not do this you will receive an error.
 
-The script will only accept platform IDs listed in `browsers.json`.
-
-By default this script will not upload anything! To run for production:
 ```sh
-    ./run/run.py firefox-56.0-linux --upload --create-testrun
+PLATFORM_ID=firefox-56.0-linux
+./run/run.py $PLATFORM_ID --upload --create-testrun
+```
+
+The script will only accept platform IDs listed in `browsers.json` (they're the dictionary keys).
+
+By default this script will not upload anything! To run for production, pass the following arguments.
+
+```sh
+./run/run.py $PLATFORM_ID --upload --create-testrun
 ```
 
 # Filesystem and network output
 
-- This script will only write files under config['build_path']
-- One run will write approximately 111MB to the filesystem
-- If --upload is specified, it will upload that 111MB of results
-- To upload results, you must be logged in with `gcloud` and authorized
-
-The script will only accept platform IDs listed in `browsers.json`.
-
-By default this script will not upload anything! To run for production:
-```sh
-    ./run/run.py firefox-56.0-linux --upload --create-testrun
-```
-
-# Filesystem and network output
-
-- This script will only write files under config['build_path']
-- One run will write approximately 111MB to the filesystem
-- If --upload is specified, it will upload that 111MB of results
-- To upload results, you must be logged in with `gcloud` and authorized
+- This script will only write files under `config['build_path']`.
+- One run will write approximately 111MB to the filesystem.
+- If --upload is specified, it will upload that 111MB of results to GCS.
+- To upload results, you must be logged in with `gcloud` in the `wptdashboard` project.
 
 ## Using the data
 
