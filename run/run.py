@@ -86,7 +86,8 @@ def main(platform_id, platform, args, config):
         elif platform['browser_name'] == 'firefox':
             browser_binary = config['firefox_binary']
 
-        verify_browser_binary_version(platform, browser_binary)
+        if platform['browser_name'] == 'chrome':
+            verify_browser_binary_version(platform, browser_binary)
         verify_os_name(platform)
         verify_or_set_os_version(platform)
 
@@ -158,17 +159,18 @@ def main(platform_id, platform, args, config):
             'xvfb-run', '--auto-servernum',
             './wpt', 'run',
             platform['browser_name'],
-            '--binary', browser_binary,
         ]
+
         if args.path:
-            command.insert(4, args.path)
+            command.insert(5, args.path)
+        if platform['browser_name'] == 'chrome':
+            command.extend(['--binary', browser_binary])
         if platform['browser_name'] == 'firefox':
+            command.extend(['--install-browser', '--yes'])
             command.append('--certutil-binary=certutil')
 
     command.append('--log-mach=-')
     command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
-    command.extend(['--meta', config['wpt_path']])
-    command.extend(['--tests', config['wpt_path']])
     command.append('--install-fonts')
 
     return_code = subprocess.call(command, cwd=config['wpt_path'])
@@ -176,6 +178,11 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Finished WPT run')
     print('Return code from wptrunner: %s' % return_code)
+
+    if platform['browser_name'] == 'firefox':
+        print('Verifying installed firefox matches platform ID')
+        firefox_path = '%s/_venv/firefox/firefox' % config['wpt_path']
+        verify_browser_binary_version(platform, firefox_path)
 
     with open(LOCAL_REPORT_FILEPATH) as f:
         report = json.load(f)
@@ -256,9 +263,6 @@ def version_string_to_major_minor(version):
 
 
 def verify_browser_binary_version(platform, browser_binary):
-    if platform['browser_name'] not in ('chrome', 'firefox'):
-        return
-
     command = [browser_binary, '--version']
     output = subprocess.check_output(command).decode('UTF-8').strip()
     version = version_string_to_major_minor(output)
