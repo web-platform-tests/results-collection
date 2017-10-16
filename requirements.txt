@@ -2,4 +2,4 @@ requests==2.18.1
 pep8==1.7.0
 
 # This is needed to upload results files
-# google-cloud==0.26.1
+google-cloud==0.26.1
