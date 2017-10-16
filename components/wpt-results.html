@@ -219,7 +219,10 @@ limitations under the License.
       }
 
       _computePathIsATestFile (path) {
-        return path.endsWith('.html') || path.endsWith('.htm')
+        return path.endsWith('.html') || path.endsWith('.htm') ||
+               path.endsWith('.py') || path.endsWith('.svg') ||
+               path.endsWith('.xhtml') || path.endsWith('.xht') ||
+               path.endsWith('.xml')
       }
 
       _nodeSort (a, b) {
