@@ -1,4 +1,4 @@
-# [web-platform-tests dashboard](https://wptdashboard.appspot.com/) 📈
+# [web-platform-tests dashboard](https://wpt.fyi/) 📈
 
 A dashboard of cross-browser results for [web-platform-tests](https://github.com/w3c/web-platform-tests).
 
