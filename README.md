@@ -36,7 +36,7 @@ Copy the file `run/running.example.ini` to `run/running.ini` and edit the fields
 
 ### Running
 
-To run a directory of WPT, pass the [platform ID](#platform_id) and a test path:
+To run a directory of WPT, pass the [platform ID](#platform-id) and a test path:
 
 ```sh
 ./run/run.py firefox-56.0-linux --path battery-status
