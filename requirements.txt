@@ -1,5 +1,3 @@
 requests==2.18.1
-pep8==1.7.0
-
-# This is needed to upload results files
+pycodestyle==1.7.0
 google-cloud==0.26.1
