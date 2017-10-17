@@ -3,18 +3,12 @@
 {{ template "_head.html" }}
 <body>
 <div id="content">
-    <header>
-        <h1><a href="/">web-platform-tests dashboard</a></h1>
-        <nav>
-            <a href="/">Root</a>
-            <a href="/about">About</a>
-        </nav>
-    </header>
-    <article>
+    {{ template "_header.html" }}
+    <div>
 
+      <wpt-stuff></wpt-stuff>
 
-
-    </article>
+    </div>
 </div>
 {{ template "_ga.html" }}
 </body>

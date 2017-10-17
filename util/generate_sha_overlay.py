@@ -22,6 +22,8 @@ def main():
         commits.append({
             'api_commit': commit,
             'sha': commit.sha,
+            'message': commit.commit.message,
+            'commit_date': commit.commit.committer.date.isoformat(),
             'testruns': []
         })
 
@@ -37,15 +39,21 @@ def main():
 
         for index, commit in enumerate(commits):
             if commit['api_commit'].sha.startswith(sha):
-                testruns = list_directory(bucket, prefix='%s/' % sha)
-                commits[index]['testruns'].append(testruns)
+                testrun_paths = list_directory(bucket, prefix='%s/' % sha)
+                commits[index]['testruns'].extend([
+                    path[11:-1] for path in testrun_paths
+                ])
 
     # Delete api_commits from commits
     for index, commit in enumerate(commits):
         del commits[index]['api_commit']
 
-    with open('wpt-shas-testruns.json', 'w') as f:
-        json.dump(commits, f)
+    filename = 'wpt-shas-testruns.json'
+    blob = bucket.blob(filename)
+    blob.upload_from_string(json.dumps(commits), content_type='application/json')
+
+    print('Uploaded!')
+    print('https://storage.googleapis.com/wptd/%s' % filename)
 
 
 def list_directory(bucket, prefix=None):
