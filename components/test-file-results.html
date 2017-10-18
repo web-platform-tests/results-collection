@@ -148,7 +148,8 @@ limitations under the License.
         const resultsBase = testRun.results_url.split('/' + testRun.revision)[0]
         // This is currently a hack to extract the platform ID from the summary URL.
         // A platform ID is any valid key from browsers.json.
-        const platformID = testRun.results_url.split('/').pop().replace('-summary.json.gz', '')
+        const re = /(-summary)?\.json(\.gz)?$/  // Formerly foo.json, now foo-summary.json.gz
+        const platformID = testRun.results_url.split('/').pop().replace(re, '')
         // Test file results are currently stored as JSON files with the following scheme:
         // {GS bucket}/{WPT SHA[0:10]}/{platform ID}/{test file path}
 
