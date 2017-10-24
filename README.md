@@ -1,4 +1,4 @@
-# [web-platform-tests dashboard](https://wptdashboard.appspot.com/) 📈
+# [web-platform-tests dashboard](https://wpt.fyi/) 📈
 
 A dashboard of cross-browser results for [web-platform-tests](https://github.com/w3c/web-platform-tests).
 
@@ -22,30 +22,24 @@ See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local developmen
 
 ## Running the tests
 
+We run the tests with a Python script [`run/run.py`](run/run.py) which is a thin wrapper around WPT's [`wpt run`](https://github.com/w3c/web-platform-tests/#running-tests-automatically). If you're triaging test failures, use `wpt run`.
+
 ### Setup
 
-You'll need to make sure that you have Python 2.7 installed. It is recommended that you setup a [virtualenv](https://virtualenv.pypa.io/en/stable/). When you have activated your `virtualenv`
+You'll need to make sure that you have Python 2.7 installed. It is recommended that you setup a [virtualenv](https://virtualenv.pypa.io/en/stable/). When you have activated your `virtualenv`, install the dependencies:
 
-Run the following command
 ```sh
-  pip install -r requirements.txt
+pip install -r requirements.txt
 ```
-
-### Running
 
 Copy the file `run/running.example.ini` to `run/running.ini` and edit the fields to the correct locations for items on your machine. If you do not do this you will receive an error.
 
-```sh
-PLATFORM_ID=firefox-56.0-linux
-./run/run.py $PLATFORM_ID --upload --create-testrun
-```
+### Running
 
-The script will only accept platform IDs listed in `browsers.json` (they're the dictionary keys).
-
-By default this script will not upload anything! To run for production, pass the following arguments.
+To run a directory of WPT, pass the [platform ID](#platform-id) and a test path:
 
 ```sh
-./run/run.py $PLATFORM_ID --upload --create-testrun
+./run/run.py firefox-56.0-linux --path battery-status
 ```
 
 # Filesystem and network output
@@ -141,3 +135,11 @@ This doesn't work with some HTTPS tests. Also be advised that the server is not 
 #### Disclaimer
 
 This is not an official Google product.
+
+# Appendix
+
+## Terminology
+
+### Platform ID
+
+These are the keys in [`browsers.json`](browsers.json). They're used to identify a tuple (browser name, browser version, os name, os version).
