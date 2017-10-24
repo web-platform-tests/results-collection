@@ -18,3 +18,24 @@ indexes:
   - name: BrowserName
   - name: CreatedAt
     direction: desc
+- kind: TestRun
+  properties:
+  - name: BrowserName
+  - name: BrowserVersion
+  - name: CreatedAt
+    direction: desc
+- kind: TestRun
+  properties:
+  - name: BrowserName
+  - name: BrowserVersion
+  - name: OSName
+  - name: CreatedAt
+    direction: desc
+- kind: TestRun
+  properties:
+  - name: BrowserName
+  - name: BrowserVersion
+  - name: OSName
+  - name: OSVersion
+  - name: CreatedAt
+    direction: desc
