@@ -168,6 +168,8 @@ def main(platform_id, platform, args, config):
         if platform['browser_name'] == 'firefox':
             command.extend(['--install-browser', '--yes'])
             command.append('--certutil-binary=certutil')
+            # temporary fix to allow WebRTC tests to call getUserMedia
+            command.extend(['--setpref', 'media.navigator.streams.fake=true'])
 
     command.append('--log-mach=-')
     command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
