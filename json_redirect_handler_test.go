@@ -20,7 +20,7 @@ import (
 
 type Case struct {
   testRun TestRun
-  testFile *string
+  testFile string
   expected string
 }
 
@@ -29,21 +29,7 @@ const resultsURLBase = "https://storage.googleapis.com/wptd/" + sha + "/"
 const platform = "chrome-63.0-linux"
 const resultsURL = resultsURLBase + "/" + platform + "-summary.json.gz"
 
-func TestGetResultsURL_NoTestFile(t *testing.T) {
-    checkResult(
-    t,
-    Case {
-      TestRun {
-        ResultsURL: resultsURL,
-        Revision: sha,
-      },
-      nil,
-      resultsURL,
-    })
-}
-
 func TestGetResultsURL_EmptyFile(t *testing.T) {
-  emptyTestFile := ""
   checkResult(
     t,
     Case {
@@ -51,7 +37,7 @@ func TestGetResultsURL_EmptyFile(t *testing.T) {
         ResultsURL: resultsURL,
         Revision: sha,
       },
-      &emptyTestFile,
+      "",
       resultsURL,
     })
 }
@@ -65,13 +51,12 @@ func TestGetResultsURL_TestFile(t *testing.T) {
         ResultsURL: resultsURL,
         Revision: sha,
       },
-      &file,
+      file,
       resultsURLBase + platform + "/" + file,
     })
 }
 
 func TestGetResultsURL_TrailingSlash(t *testing.T) {
-  trailingSlash := "/"
   checkResult(
     t,
     Case {
@@ -79,7 +64,7 @@ func TestGetResultsURL_TrailingSlash(t *testing.T) {
         ResultsURL: resultsURL,
         Revision: sha,
       },
-      &trailingSlash,
+      "/",
       resultsURL,
     })
 }

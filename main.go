@@ -25,6 +25,6 @@ func init() {
     http.HandleFunc("/tasks/populate-dev-data", populateDevData)
     http.HandleFunc("/test-runs", testRunHandler)
     http.HandleFunc("/about", aboutHandler)
-    http.HandleFunc("/latest/", latestResultsRedirectHandler)
+    http.HandleFunc("/json", jsonRedirectHandler)
     http.HandleFunc("/", testHandler)
 }

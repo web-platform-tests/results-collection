@@ -18,6 +18,7 @@ import (
     "errors"
     "fmt"
     "net/http"
+    "net/url"
     "regexp"
     "strings"
 
@@ -29,33 +30,49 @@ import (
 // JSON blob for the latest TestRun for the given browser.
 //
 // URL format:
-// /latest/{browser}[/{test}]
-func latestResultsRedirectHandler(w http.ResponseWriter, r *http.Request) {
-    remainingPath := strings.Replace(r.URL.Path, "/latest/", "", 1)
-    pathPieces := strings.SplitN(remainingPath, "/", 2)
-    latestRun, err := getLatestRun(r, pathPieces[0])
+// /json
+//
+// Params:
+//   platform: Browser (and OS) of the run, e.g. "chrome-63.0" or "safari"
+//   (optional) run: SHA[0:10] of the test run, or "latest" (latest is the default)
+//   (optional) test: Path of the test, e.g. "/css/css-images-3/gradient-button.html"
+func jsonRedirectHandler(w http.ResponseWriter, r *http.Request) {
+    params, err := url.ParseQuery(r.URL.RawQuery)
+    if err != nil {
+      http.Error(w, "Invalid path", http.StatusBadRequest)
+      return
+    }
 
+    platform := params.Get("platform")
+    if platform == "" {
+      http.Error(w, "Param 'platform' missing", http.StatusBadRequest)
+      return
+    }
+
+    runSHA := params.Get("run")
+    if runSHA == "" {
+      runSHA = "latest"
+    }
+
+    run, err := getRun(r, runSHA, platform)
     if err != nil {
       http.Error(w, err.Error(), http.StatusInternalServerError)
       return
     }
-    if (TestRun{}) == latestRun {
-      http.NotFound(w, r)
+    if (TestRun{}) == run {
+      http.Error(w, fmt.Sprintf("404 - Test run '%s' not found", runSHA), http.StatusNotFound)
       return
     }
 
-    var testFile *string
-    if len(pathPieces) > 1 {
-      testFile = &pathPieces[1]
-    }
-    resultsURL := getResultsURL(latestRun, testFile)
+    test := params.Get("test")
+    resultsURL := getResultsURL(run, test)
 
     http.Redirect(w, r, resultsURL, http.StatusFound)
 }
 
-func getLatestRun(r *http.Request, browser string) (latest TestRun, err error) {
-    browserPieces := strings.Split(browser, "-")
-    if len(browserPieces) < 1 || len(browserPieces) > 4 {
+func getRun(r *http.Request, run string, platform string) (latest TestRun, err error) {
+    platformPieces := strings.Split(platform, "-")
+    if len(platformPieces) < 1 || len(platformPieces) > 4 {
       err = errors.New("Invalid path")
       return
     }
@@ -64,15 +81,18 @@ func getLatestRun(r *http.Request, browser string) (latest TestRun, err error) {
     baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
 
     var testRunResults []TestRun
-    query := baseQuery.Filter("BrowserName =", browserPieces[0])
-    if len(browserPieces) > 1 {
-      query = query.Filter("BrowserVersion =", browserPieces[1])
+    query := baseQuery.Filter("BrowserName =", platformPieces[0])
+    if run != "" && run != "latest" {
+      query = query.Filter("Revision =", run)
     }
-    if len(browserPieces) > 2 {
-      query = query.Filter("OSName =", browserPieces[2])
+    if len(platformPieces) > 1 {
+      query = query.Filter("BrowserVersion =", platformPieces[1])
     }
-    if len(browserPieces) > 3 {
-      query = query.Filter("OSVersion =", browserPieces[3])
+    if len(platformPieces) > 2 {
+      query = query.Filter("OSName =", platformPieces[2])
+    }
+    if len(platformPieces) > 3 {
+      query = query.Filter("OSVersion =", platformPieces[3])
     }
     _, err = query.GetAll(ctx, &testRunResults)
     if err != nil {
@@ -84,15 +104,15 @@ func getLatestRun(r *http.Request, browser string) (latest TestRun, err error) {
     return
 }
 
-func getResultsURL(latestRun TestRun, testFile *string) (resultsURL string) {
-    resultsURL = latestRun.ResultsURL
-    if testFile != nil && *testFile != "" && *testFile != "/" {
+func getResultsURL(run TestRun, testFile string) (resultsURL string) {
+    resultsURL = run.ResultsURL
+    if testFile != "" && testFile != "/" {
         // Assumes that result files are under a directory named SHA[0:10].
-        resultsBase := strings.SplitAfter(resultsURL, "/" + latestRun.Revision)[0];
+        resultsBase := strings.SplitAfter(resultsURL, "/" + run.Revision)[0]
         resultsPieces := strings.Split(resultsURL, "/")
         re := regexp.MustCompile("(-summary)?\\.json\\.gz$")
         platform := re.ReplaceAllString(resultsPieces[len(resultsPieces) - 1], "")
-        resultsURL = fmt.Sprintf("%s/%s/%s", resultsBase, platform, *testFile)
+        resultsURL = fmt.Sprintf("%s/%s/%s", resultsBase, platform, testFile)
     }
     return resultsURL
 }
