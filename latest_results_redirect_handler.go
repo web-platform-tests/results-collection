@@ -21,8 +21,8 @@ import (
     "regexp"
     "strings"
 
-    "appengine"
-    "appengine/datastore"
+    "google.golang.org/appengine"
+    "google.golang.org/appengine/datastore"
 )
 
 // This handler is responsible for redirecting to the Google Cloud Storage API
@@ -33,12 +33,8 @@ import (
 func latestResultsRedirectHandler(w http.ResponseWriter, r *http.Request) {
     remainingPath := strings.Replace(r.URL.Path, "/latest/", "", 1)
     pathPieces := strings.SplitN(remainingPath, "/", 2)
-    if len(pathPieces) > 2 {
-      http.Error(w, "Invalid path", http.StatusBadRequest)
-      return
-    }
-
     latestRun, err := getLatestRun(r, pathPieces[0])
+
     if err != nil {
       http.Error(w, err.Error(), http.StatusInternalServerError)
       return
@@ -90,7 +86,7 @@ func getLatestRun(r *http.Request, browser string) (latest TestRun, err error) {
 
 func getResultsURL(latestRun TestRun, testFile *string) (resultsURL string) {
     resultsURL = latestRun.ResultsURL
-    if testFile != nil {
+    if testFile != nil && *testFile != "" && *testFile != "/" {
         // Assumes that result files are under a directory named SHA[0:10].
         resultsBase := strings.SplitAfter(resultsURL, "/" + latestRun.Revision)[0];
         resultsPieces := strings.Split(resultsURL, "/")

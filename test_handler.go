@@ -20,8 +20,8 @@ import (
     "io/ioutil"
     "sort"
 
-    "appengine"
-    "appengine/datastore"
+    "google.golang.org/appengine"
+    "google.golang.org/appengine/datastore"
 )
 
 // This handler is responsible for all pages that display test results.

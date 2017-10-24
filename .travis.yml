@@ -26,5 +26,9 @@ matrix:
         - python -m unittest discover -p "*_test.py"
 
     - language: go
-      install: go get -u github.com/golang/lint/golint
-      script: $GOPATH/bin/golint -set_exit_status
+      install:
+        - go get -t ./...
+        - go get -u github.com/golang/lint/golint
+      script:
+        - go test -v ./...
+        - $GOPATH/bin/golint -set_exit_status

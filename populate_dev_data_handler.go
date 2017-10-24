@@ -19,8 +19,8 @@ import (
     "time"
     "fmt"
 
-    "appengine"
-    "appengine/datastore"
+    "google.golang.org/appengine"
+    "google.golang.org/appengine/datastore"
 )
 
 // Create TestRun entities for local development and testing.
