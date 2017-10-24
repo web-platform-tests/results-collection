@@ -113,6 +113,11 @@ def main(platform_id, platform, args, config):
 
     patch_wpt(config, platform)
 
+    # TODO(PR): fetch wpt.fyi/revision.json and use the first result
+
+
+
+
     # TODO(#40): modify this to test against the first SHA of the day
     CURRENT_WPT_SHA = get_current_wpt_sha(config)
     print('Current WPT SHA: %s' % CURRENT_WPT_SHA)
