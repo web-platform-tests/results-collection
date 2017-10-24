@@ -15,17 +15,11 @@
 package wptdashboard
 
 import (
-    "html/template"
     "net/http"
 )
 
-var templates = template.Must(template.ParseGlob("templates/*.html"))
-
-func init() {
-    http.HandleFunc("/tasks/populate-dev-data", populateDevData)
-    http.HandleFunc("/test-runs", testRunHandler)
-    http.HandleFunc("/revisions", revisionsHandler)
-    http.HandleFunc("/about", aboutHandler)
-    http.HandleFunc("/latest/", latestResultsRedirectHandler)
-    http.HandleFunc("/", testHandler)
+func revisionsHandler(w http.ResponseWriter, r *http.Request) {
+    if err := templates.ExecuteTemplate(w, "revisions.html", nil); err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 }

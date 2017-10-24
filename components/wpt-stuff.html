@@ -1,0 +1,75 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+
+<dom-module id="wpt-stuff">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-size: 14px;
+        font-family: monospace;
+      }
+      a {
+        text-decoration: none;
+        color: #0d5de6;
+      }
+    </style>
+
+    <table>
+      <thead>
+          <tr>
+            <th>Commit date</th>
+            <th>WPT SHA</th>
+            <th>Test runs</th>
+          </tr>
+      </thead>
+      <tbody>
+        <template is="dom-repeat" items="{{ revisions }}" as="rev">
+          <tr>
+            <td>{{ rev.commit_date }}</td>
+            <td><a href="https://github.com/w3c/web-platform-tests/commit/{{ rev.sha }}">{{ rev.sha }}</a></td>
+            <td>
+              <template is="dom-repeat" items="{{ rev.testruns }}" as="platformID">
+                {{ platformID }} (<a href="https://storage.googleapis.com/wptd/{{ rev.sha }}/{{ platformID }}-summary.json.gz">summary</a>)<br />
+              </template>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+
+  </template>
+
+  <script>
+    class WPTStuff extends window.Polymer.Element {
+      static get is () { return 'wpt-stuff' }
+
+      static get properties () {
+        return {
+          revisions: {
+            type: Array,
+            value: [],
+          }
+        }
+      }
+
+      constructor() {
+        super()
+        this.fetchMapping()
+      }
+
+      async fetchMapping() {
+        const url = 'https://storage.googleapis.com/wptd/wpt-shas-testruns.json?foo=bar5'
+        const response = await fetch(url)
+        let revisionMapping = await response.json()
+        revisionMapping.forEach(rev => {
+          rev.sha = rev.sha.substr(0, 10)
+          rev.commit_date = rev.commit_date.substr(0, 10)
+        })
+        this.revisions = revisionMapping
+      }
+    }
+    window.customElements.define(WPTStuff.is, WPTStuff)
+  </script>
+</dom-module>
