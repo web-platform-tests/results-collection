@@ -15,13 +15,15 @@
 package wptdashboard
 
 import (
-    "encoding/json"
-    "net/http"
-    "io/ioutil"
-    "sort"
+  "encoding/json"
+  "net/http"
+  "io/ioutil"
+  "path"
+  "sort"
 
-    "google.golang.org/appengine"
-    "google.golang.org/appengine/datastore"
+  "google.golang.org/appengine"
+  "google.golang.org/appengine/datastore"
+  "strings"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -32,51 +34,91 @@ import (
 // The browsers initially displayed to the user are defined in browsers.json.
 // The JSON property "initially_loaded" is what controls this.
 func testHandler(w http.ResponseWriter, r *http.Request) {
-    ctx := appengine.NewContext(r)
-    var bytes []byte
-    var err error
-    var browsers map[string]Browser
-
-    if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
+  // Get the SHA for the run being loaded (the first part of the path.)
+  hasSHA := false
+  runSHA := "latest"
+  testDir := ""
+  if r.URL.Path != "" && r.URL.Path != "/" {
+    pathPieces := strings.Split(r.URL.Path, "/")
+    if pathPieces[0] == "" {
+      pathPieces = pathPieces[1:]
     }
-
-    if err = json.Unmarshal(bytes, &browsers); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
+    // NOTE: this will false-match some legacy URLs with 10-letter dirs.
+    if len(pathPieces[0]) == 10 || pathPieces[0] == "latest" {
+      runSHA = pathPieces[0]
+      // Redirect to trailing slash - needed for relative path behaviours.
+      if len(pathPieces) > 1 {
+        hasSHA = true
+        testDir = path.Join(pathPieces[1:]...)
+      }
     }
+  }
 
-    var testRuns []TestRun
-    baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
-    var browserNames []string
-
-    for _, browser := range browsers {
-        if browser.InitiallyLoaded {
-            browserNames = append(browserNames, browser.BrowserName)
-        }
+  if !hasSHA {
+    redirect := "/" + runSHA + "/"
+    if testDir != "" {
+      redirect = path.Join(redirect, r.URL.Path)
     }
-    sort.Strings(browserNames)
+    http.Redirect(w, r, redirect, http.StatusMovedPermanently)
+    return
+  }
 
-    for _, browserName := range browserNames {
-        var testRunResults []TestRun
-        query := baseQuery.Filter("BrowserName =", browserName)
-        if _, err := query.GetAll(ctx, &testRunResults); err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            return
-        }
-        testRuns = append(testRuns, testRunResults...)
-    }
+  // Load the run(s)
+  ctx := appengine.NewContext(r)
+  var bytes []byte
+  var err error
+  var browsers map[string]Browser
 
-    testRunsBytes, err := json.Marshal(testRuns)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    testRunsJSON := string(testRunsBytes)
+  if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
 
-    if err := templates.ExecuteTemplate(w, "index.html", testRunsJSON); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
+  if err = json.Unmarshal(bytes, &browsers); err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  var testRuns []TestRun
+  baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
+  var browserNames []string
+
+  for _, browser := range browsers {
+    if browser.InitiallyLoaded {
+      browserNames = append(browserNames, browser.BrowserName)
     }
+  }
+  sort.Strings(browserNames)
+
+  for _, browserName := range browserNames {
+    var testRunResults []TestRun
+    query := baseQuery.Filter("BrowserName =", browserName)
+    if runSHA != "latest" {
+      query = query.Filter("Revision =", runSHA)
+    }
+    if _, err := query.GetAll(ctx, &testRunResults); err != nil {
+      http.Error(w, err.Error(), http.StatusInternalServerError)
+      return
+    }
+    testRuns = append(testRuns, testRunResults...)
+  }
+
+  // Serialize the data + pipe through the index.html template.
+  testRunsBytes, err := json.Marshal(testRuns)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+  data := struct {
+    TestRuns string
+    SHA string
+  }{
+    string(testRunsBytes),
+    runSHA,
+  }
+
+  if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
 }

@@ -76,6 +76,12 @@ limitations under the License.
         margin-bottom: 1em;
         border-left: solid 4px #f47477;
       }
+      .info {
+        padding: 0.5em;
+        background-color: #e2e3fd;
+        margin-bottom: 1em;
+        border-left: solid 4px #7477f4;
+      }
 
       @media (max-width: 800px) {
         table tr td:first-child::after {
@@ -93,12 +99,20 @@ limitations under the License.
         class="query"
         placeholder="Search test files, like cors/allow-headers.htm">
       <div class="path">
-        <a href="/" on-click="_navigate">WPT</a>
-        <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
+        <a href="/{{ sha }}/" on-click="_navigate">WPT</a>
+        <template is="dom-repeat" items="{{ _splitIntoLinkedParts(testDir) }}" as="part">
           <span class="path-separator">/</span>
-          <a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
+          <a href="/{{ sha }}{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
         </template>
       </div>
+
+      <template is="dom-if" if="{{ !isLatest }}">
+        <br />
+        <section class="info">
+          Showing results for run <b>{{ sha }}</b>.
+          <small style='float: right;'><a href='/latest/'>View latest run</a></small>
+        </section>
+      </template>
     </section>
 
     <section class="caveat">
@@ -115,7 +129,7 @@ limitations under the License.
 
       <test-file-results
         test-runs="[[testRuns]]"
-        test-file="[[path]]">
+        test-file="[[testDir]]">
       </test-file-results>
     </template>
 
@@ -170,12 +184,27 @@ limitations under the License.
             value: '',
             observer: '_queryChanged'
           },
+          sha: {
+            type: String
+          },
+          isLatest: {
+            type: Boolean,
+            computed: '_computeIsLatest(sha)'
+          },
           testRuns: {
             type: Array
           },
           path: {
             type: String,
-            value: window.location.pathname.replace(/(.+)(\/)$/, '$1')
+            value: window.location.pathname
+          },
+          testDir: {
+            type: String,
+            computed: '_computeTestDir(path)'
+          },
+          testDirIsEmpty: {
+            type: Boolean,
+            computed: '_computeTestDirIsEmpty(testDir)'
           },
           pathIsATestFile: {
             type: Boolean,
@@ -196,7 +225,7 @@ limitations under the License.
         super.connectedCallback()
 
         window.onpopstate = (event) => {
-          this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1')
+          this.path = window.location.pathname
           this._refreshDisplayedNodes()
         }
 
@@ -216,6 +245,23 @@ limitations under the License.
         })
 
         this._refreshDisplayedNodes()
+      }
+
+      _computeIsLatest (sha) {
+        return sha === "latest"
+      }
+
+      _computeTestDir (path) {
+        let testDir = path
+        if (testDir.startsWith('/' + this.sha))
+          testDir = testDir.substr(1 + this.sha.length)
+        if (!this._computePathIsATestFile(testDir) && !testDir.endsWith('/'))
+          return testDir + '/'
+        return testDir
+      }
+
+      _computeTestDirIsEmpty (testDir) {
+        return testDir === "/"
       }
 
       _computePathIsATestFile (path) {
@@ -256,7 +302,7 @@ limitations under the License.
       _refreshDisplayedNodes () {
         /* Recomputes the list of displayed directories and test files. */
         const displayedNodeMap = new Map()
-        const currentPathParts = this._splitIntoLinkedParts(this.path)
+        const currentPathParts = this._splitIntoLinkedParts(this.testDir)
 
         const updateResults = (testFileName, dirPath, isDir) => {
           if (!displayedNodeMap.has(dirPath)) {
@@ -273,7 +319,7 @@ limitations under the License.
         }
 
         Object.keys(this.testFiles).forEach(testFileName => {
-          if (this.path !== '/' && !testFileName.startsWith(this.path + '/')) {
+          if (!this.testDirIsEmpty && !testFileName.startsWith(this.testDir)) {
             return
           }
 
@@ -287,7 +333,7 @@ limitations under the License.
           let parts = this._splitIntoLinkedParts(testFileName)
 
           // If at the top-level, add all directories
-          if (this.path === '/' && parts.length === 2) {
+          if (this.testDirIsEmpty && parts.length === 2) {
             let dirParts = [parts[0]]
             let dirPath = dirParts[dirParts.length - 1].path
             updateResults(testFileName, dirPath, true)
@@ -300,7 +346,7 @@ limitations under the License.
           // Add subdirectories in current directory
           } else if (parts.length > currentPathParts.length + 1) {
             let dirParts
-            if (this.path === '/') {
+            if (this.testDirIsEmpty) {
               dirParts = [parts[0]]
             } else {
               dirParts = parts.slice(0, currentPathParts.length + 1)
@@ -323,7 +369,7 @@ limitations under the License.
 
       _navigate (event) {
         event.preventDefault()
-        const path = event.target.pathname.replace(/(.+)(\/)$/, '$1')
+        const path = event.target.pathname
         if (path === this.path) {
           return
         }
@@ -337,16 +383,25 @@ limitations under the License.
         }
       }
 
-      _splitIntoLinkedParts (path) {
-        const parts = path.split('/').slice(1)
-        let pathSoFar = ''
-        return parts.map(part => {
-          pathSoFar += '/' + part
-          return {
-            name: part,
-            path: pathSoFar
-          }
-        })
+      _splitIntoLinkedParts (testPath) {
+        let parts = testPath.split('/')
+        if (testPath.startsWith('/')) parts = parts.slice(1)
+        if (testPath.endsWith('/')) parts = parts.slice(0, parts.length - 1)
+        const isFile = this._computePathIsATestFile(testPath)
+        let partsSoFar = '/'
+        let result = parts
+            .map(part => {
+              partsSoFar += part + '/'
+              return {
+                name: part,
+                path: this._relPath(partsSoFar)
+              }
+            })
+        if (isFile) {
+          let last = result[result.length - 1]
+          last.path = last.path.substr(0, last.path.length - 1)
+        } 
+        return result
       }
 
       _testResultStyle (node, testRun) {
@@ -355,7 +410,7 @@ limitations under the License.
         if (!(testRun.results_url in node.results)) return
         const result = node.results[testRun.results_url]
 
-        if (this.path === '/') {
+        if (this.testDirIsEmpty) {
           // Do not add color to top-level directories
           return 'background-color: #eee'
         }
@@ -372,8 +427,15 @@ limitations under the License.
         }
       }
 
-      _relPath (path) {
-        return path.replace(this.path + '/', '')
+      _relPath (testPath) {
+        if (!testPath.startsWith(this.testDir) || testPath == this.testDir)
+          return testPath
+
+        var relPath = testPath.substr(this.testDir.length)
+        if (!this._computePathIsATestFile(testPath) && !relPath.endsWith('/')) {
+          relPath += '/'
+        }
+        return relPath;
       }
 
       _resultForNode (node, testRun, property) {
