@@ -25,3 +25,6 @@ install:
 
 script:
   - sh/ci_script.sh
+
+after_script:
+  - sh/ci_after_script.sh

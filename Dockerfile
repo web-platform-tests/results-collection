@@ -45,3 +45,5 @@ RUN git clone "https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema.git" 
   chmod a+rx "/usr/local/bin/protoc-gen-bq-schema"
 
 RUN mkdir -p "/wptdashboard"
+RUN ln -s "/wptdashboard" "/go/src/wptdashboard"
+WORKDIR /wptdashboard
