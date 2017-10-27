@@ -9,6 +9,7 @@ ENV PROTOS="/wptdashboard/protos"
 ENV BQ_OUT="/wptdashboard/bq-schema"
 ENV PY_OUT="/wptdashboard/run/protos"
 
+RUN go get github.com/golang/lint/golint
 RUN apt-get update && apt-get install --assume-yes --no-install-suggests --no-install-recommends unzip inotify-tools
 
 RUN mkdir /protobuf-fetch
