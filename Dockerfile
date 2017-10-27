@@ -3,10 +3,9 @@ FROM golang:1.8-jessie
 ARG PB_VERSION=3.4.0
 
 # Used by dev server shell script
-ENV WATCH_DIR="/protos"
 ENV PB_LIB="/protobuf/src"
-ENV PROTOS="/wptdashboard/protos"
 ENV BQ_LIB="/protoc-gen-bq-schema"
+ENV PROTOS="/wptdashboard/protos"
 ENV BQ_OUT="/wptdashboard/bq-schema"
 ENV PY_OUT="/wptdashboard/run/protos"
 
@@ -24,7 +23,7 @@ RUN mkdir /pip
 WORKDIR /pip
 RUN curl -o "get-pip.py" "https://bootstrap.pypa.io/get-pip.py" && \
   python "get-pip.py" "pip===9.0.1" && \
-  rm "get-pip.py" && \
+  pip install requests==2.18.1 pycodestyle==2.3.1 google-cloud==0.26.1 protobuf==${PB_VERSION} && \
   cd /  && \
   rm -rf /pip
 
@@ -40,12 +39,6 @@ WORKDIR /
 RUN git clone "https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema.git" && \
   cd "protoc-gen-bq-schema" && \
   make && \
-  make install
+  cp bin/protoc-gen-bq-schema /usr/local/bin/
 
-# Mount code and install dependencies that it specifies
-# Assume client will bind mound code to /wptdashboard
-ADD . /wptdashboard
-WORKDIR /wptdashboard
-RUN pip install -r requirements.txt
-
-RUN mkdir "${WATCH_DIR}"
+RUN mkdir -p "/wptdashboard"
