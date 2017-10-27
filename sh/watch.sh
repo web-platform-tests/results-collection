@@ -6,7 +6,7 @@ SH_DIR=$(readlink -f $(dirname "$0"))
 source "${SH_DIR}/logging.sh"
 
 function stop() {
-  warn "Recieved interrupt. Exiting..."
+  warn "watch.sh: Recieved interrupt. Exiting..."
 }
 
 trap stop INT
