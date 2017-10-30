@@ -22,6 +22,8 @@ import (
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
+    "net/url"
+    "regexp"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -32,9 +34,14 @@ import (
 // The browsers initially displayed to the user are defined in browsers.json.
 // The JSON property "initially_loaded" is what controls this.
 func testHandler(w http.ResponseWriter, r *http.Request) {
+    runSHA, err := getRunSHA(r)
+    if err != nil {
+        http.Error(w, "Invalid query params", http.StatusBadRequest)
+        return
+    }
+
     ctx := appengine.NewContext(r)
     var bytes []byte
-    var err error
     var browsers map[string]Browser
 
     if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
@@ -61,6 +68,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
     for _, browserName := range browserNames {
         var testRunResults []TestRun
         query := baseQuery.Filter("BrowserName =", browserName)
+        if runSHA != "" && runSHA != "latest" {
+            query = query.Filter("Revision =", runSHA)
+        }
         if _, err := query.GetAll(ctx, &testRunResults); err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
@@ -73,10 +83,33 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
-    testRunsJSON := string(testRunsBytes)
 
-    if err := templates.ExecuteTemplate(w, "index.html", testRunsJSON); err != nil {
+    data := struct {
+        TestRuns string
+        SHA      string
+    }{
+        string(testRunsBytes),
+        runSHA,
+    }
+
+    if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
+}
+
+func getRunSHA(r *http.Request) (runSHA string, err error) {
+    // Get the SHA for the run being loaded (the first part of the path.)
+    runSHA = "latest"
+    params, err := url.ParseQuery(r.URL.RawQuery)
+    if err != nil {
+        return
+    }
+
+    runParam := params.Get("sha")
+    regex := regexp.MustCompile("[0-f]{10}")
+    if regex.MatchString(runParam) {
+        runSHA = runParam
+    }
+    return
 }
