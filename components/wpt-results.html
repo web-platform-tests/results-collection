@@ -76,6 +76,16 @@ limitations under the License.
         margin-bottom: 1em;
         border-left: solid 4px #f47477;
       }
+      .info {
+        padding: 0.5em;
+        background-color: #e2e3fd;
+        margin-bottom: 1em;
+        margin-top: 2em;
+        border-left: solid 4px #7477f4;
+      }
+      .info small {
+        float: right;
+      }
 
       @media (max-width: 800px) {
         table tr td:first-child::after {
@@ -97,6 +107,13 @@ limitations under the License.
         <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
           <span class="path-separator">/</span>
           <a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
+        </template>
+
+        <template is="dom-if" if="{{ !isLatest }}">
+          <section class="info">
+            Showing results for run <b>{{ sha }}</b>.
+            <small><a href='?sha=latest'>View latest run</a></small>
+          </section>
         </template>
       </div>
     </section>
@@ -170,6 +187,13 @@ limitations under the License.
             value: '',
             observer: '_queryChanged'
           },
+          sha: {
+            type: String
+          },
+          isLatest: {
+            type: Boolean,
+            computed: '_computeIsLatest(sha)'
+          },
           testRuns: {
             type: Array
           },
@@ -216,6 +240,10 @@ limitations under the License.
         })
 
         this._refreshDisplayedNodes()
+      }
+
+      _computeIsLatest (sha) {
+        return !sha || sha === 'latest'
       }
 
       _computePathIsATestFile (path) {
@@ -323,12 +351,18 @@ limitations under the License.
 
       _navigate (event) {
         event.preventDefault()
-        const path = event.target.pathname.replace(/(.+)(\/)$/, '$1')
+        let path = event.target.pathname.replace(/(.+)(\/)$/, '$1')
         if (path === this.path) {
           return
         }
         this.path = path
         this._refreshDisplayedNodes()
+        if (this.sha && this.sha !== '' && this.sha !== 'latest') {
+          path += path.indexOf('?') < 0
+              ? '?'
+              : '&'
+          path += 'sha=' + this.sha
+        }
         window.history.pushState({}, '', path)
 
         // Send Google Analytics pageview event

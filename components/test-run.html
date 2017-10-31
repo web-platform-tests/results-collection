@@ -50,7 +50,7 @@ See models.go for more details.
       <div><img src="/static/{{testRun.browser_name}}_64x64.png" /></div>
       <div>{{testRun.browser_name}} {{testRun.browser_version}}</div>
       <div>{{testRun.os_name}} {{testRun.os_version}}</div>
-      <div>@{{testRun.revision}}</div>
+      <div>@<a href="?sha={{testRun.revision}}">{{testRun.revision}}</a></div>
       <div>{{dateFormat(testRun.created_at)}}</div>
     </div>
   </template>
