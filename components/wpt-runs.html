@@ -129,10 +129,10 @@ limitations under the License.
           },
           // Array({ sha, Array({ platform, run, sum }))
           testResults: {
-            type: Array,
+            type: Array
           },
           browsers: {
-            type: Array,
+            type: Array
           },
           displayedNodes: {
             type: Array,
@@ -169,24 +169,24 @@ limitations under the License.
                 }
               }
 
-              let sums = [0,0]
+              let sums = [0, 0]
               Object
                   .values(results.results)
                   .forEach(result => {
                     sums[0] += result[0]
                     sums[1] += result[1]
                   })
-              testRuns[run.revision][run.browser_name]["sums"] = sums
+              testRuns[run.revision][run.browser_name]['sums'] = sums
             })
 
         // We flatten into an array of objects so Polymer can deal with them.
-        const flattened = Object.entries(testRuns).map(entry => ({ sha: entry[0], runs: entry[1]}))
+        const flattened = Object.entries(testRuns).map(entry => ({ sha: entry[0], runs: entry[1] }))
         this.testResults = flattened
         this.browsers = Array.from(browsers)
       }
 
       async _fetchResults (testRun) {
-         let resultFetch = window.fetch(
+        let resultFetch = window.fetch(
           testRun.results_url,
           {
             redirect: 'follow'  // Can be a wpt.fyi/json?run=latest URL.
@@ -196,7 +196,7 @@ limitations under the License.
         const testFiles = await response.json()
         return {
           run: testRun,
-          results: testFiles,
+          results: testFiles
         }
       }
 
