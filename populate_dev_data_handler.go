@@ -71,7 +71,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
     }
 
     // Get the redirects, but don't follow them.
-    var errUseLastResponse = errors.New("Hey... don't redirect.")
+    var errUseLastResponse = errors.New("hey... don't redirect")
     client := urlfetch.Client(ctx)
     client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
         return errUseLastResponse
@@ -84,16 +84,16 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
         "firefox",
     }) {
         resp, err := client.Head("https://wpt.fyi/json?platform=" + platform)
-        latestUrl, err := resp.Location()
+        latestURL, err := resp.Location()
         if err != nil {
             continue
         }
         devData["prod-latest-" + platform] = &TestRun{
-            BrowserName: platform,
+            BrowserName:    platform,
             BrowserVersion: "latest",
-            Revision: "latest",
-            ResultsURL: latestUrl.String(),
-            CreatedAt: time.Now(),
+            Revision:       "latest",
+            ResultsURL:     latestURL.String(),
+            CreatedAt:      time.Now(),
         }
     }
 
