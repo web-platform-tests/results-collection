@@ -21,6 +21,8 @@ import (
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
+    "errors"
+    "google.golang.org/appengine/urlfetch"
 )
 
 // Create TestRun entities for local development and testing.
@@ -66,6 +68,33 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
             ResultsURL: "/static/b952881825/safari-10-macos-10.12-sauce-summary.json.gz",
             CreatedAt: time.Now(),
         },
+    }
+
+    // Get the redirects, but don't follow them.
+    var errUseLastResponse = errors.New("Hey... don't redirect.")
+    client := urlfetch.Client(ctx)
+    client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+        return errUseLastResponse
+    }
+
+    for _, platform := range([]string {
+        "chrome",
+        "safari",
+        "edge",
+        "firefox",
+    }) {
+        resp, err := client.Head("https://wpt.fyi/json?platform=" + platform)
+        latestUrl, err := resp.Location()
+        if err != nil {
+            continue
+        }
+        devData["prod-latest-" + platform] = &TestRun{
+            BrowserName: platform,
+            BrowserVersion: "latest",
+            Revision: "latest",
+            ResultsURL: latestUrl.String(),
+            CreatedAt: time.Now(),
+        }
     }
 
     for key, testRun := range devData {
