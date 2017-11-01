@@ -23,16 +23,22 @@ import (
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
+    "sort"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == "POST" {
+        handlePost(w, r)
+    } else if r.Method == "GET" {
+        handleGet(w, r)
+    } else {
+        http.Error(w, "This endpoint only supports GET and POST.", http.StatusMethodNotAllowed)
+    }
+}
+
+func handlePost(w http.ResponseWriter, r *http.Request) {
     ctx := appengine.NewContext(r)
     var err error
-
-    if r.Method != "POST" {
-        http.Error(w, "This endpoint only supports POST.", http.StatusMethodNotAllowed)
-        return
-    }
 
     // Fetch pre-uploaded Token entity.
     suppliedSecret := r.URL.Query().Get("secret")
@@ -72,4 +78,65 @@ func testRunHandler(w http.ResponseWriter, r *http.Request) {
 
     fmt.Fprintf(w, "Successfully created TestRun... %v", testRun)
     w.WriteHeader(http.StatusCreated)
+}
+
+func handleGet(w http.ResponseWriter, r *http.Request) {
+    ctx := appengine.NewContext(r)
+    var bytes []byte
+    var err error
+    var browsers map[string]Browser
+
+    if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if err = json.Unmarshal(bytes, &browsers); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(10)
+    var browserNames []string
+
+    for _, browser := range browsers {
+        if browser.InitiallyLoaded {
+            browserNames = append(browserNames, browser.BrowserName)
+        }
+    }
+    sort.Strings(browserNames)
+
+
+    runs := make(map[string][]TestRun)
+    for _, browserName := range browserNames {
+        var testRunResults []TestRun
+        query := baseQuery.Filter("BrowserName =", browserName)
+        if _, err := query.GetAll(ctx, &testRunResults); err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        for _, r := range testRunResults {
+            if _, ok := runs[r.Revision]; !ok {
+                runs[r.Revision] = make([]TestRun, 0)
+            }
+            runs[r.Revision] = append(runs[r.Revision], r)
+        }
+    }
+
+    // Serialize the data + pipe through the test-runs.html template.
+    testRunsBytes, err := json.Marshal(runs)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    data := struct {
+        TestRuns string
+    }{
+        string(testRunsBytes),
+    }
+
+    if err := templates.ExecuteTemplate(w, "test-runs.html", data); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 }
