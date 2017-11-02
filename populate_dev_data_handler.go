@@ -15,13 +15,12 @@
 package wptdashboard
 
 import (
+    "fmt"
     "net/http"
     "time"
-    "fmt"
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
-    "errors"
     "google.golang.org/appengine/urlfetch"
 )
 
@@ -71,25 +70,30 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
     }
 
     // Get the redirects, but don't follow them.
-    var errUseLastResponse = errors.New("hey... don't redirect")
     client := urlfetch.Client(ctx)
     client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-        return errUseLastResponse
+        return http.ErrUseLastResponse
     }
 
-    for _, platform := range([]string {
+    for _, browserName := range([]string {
         "chrome",
-        "safari",
         "edge",
         "firefox",
+        "safari",
     }) {
-        resp, err := client.Head("https://wpt.fyi/json?platform=" + platform)
-        latestURL, err := resp.Location()
-        if err != nil {
+        jsonURL := "https://wpt.fyi/json?platform=" + browserName
+        resp, err := client.Head(jsonURL)
+        if err != http.ErrUseLastResponse {
+            fmt.Fprintln(w, "Failed to fetch latest run for %s: %s", browserName, err.Error())
             continue
         }
-        devData["prod-latest-" + platform] = &TestRun{
-            BrowserName:    platform,
+        latestURL, err := resp.Location()
+        if err != nil {
+            fmt.Fprintln(w, "Failed to read redirected location for %s: %s", jsonURL, err.Error())
+            continue
+        }
+        devData["prod-latest-" + browserName] = &TestRun{
+            BrowserName:    browserName,
             BrowserVersion: "latest",
             Revision:       "latest",
             ResultsURL:     latestURL.String(),
