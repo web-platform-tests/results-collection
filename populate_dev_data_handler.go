@@ -66,15 +66,6 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
             ResultsURL: "/static/b952881825/safari-10-macos-10.12-sauce-summary.json.gz",
             CreatedAt: time.Now(),
         },
-        "dev-testrun-chrome-latest": &TestRun{
-            BrowserName: "chrome",
-            BrowserVersion: "latest",
-            OSName: "linux",
-            OSVersion: "latest",
-            Revision: "latest",
-            ResultsURL: "https://wpt.fyi/json?run=latest&platform=chrome",
-            CreatedAt: time.Now(),
-        },
     }
 
     for key, testRun := range devData {
