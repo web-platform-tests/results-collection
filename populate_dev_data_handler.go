@@ -15,13 +15,12 @@
 package wptdashboard
 
 import (
-    "fmt"
     "net/http"
     "time"
+    "fmt"
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
-    "google.golang.org/appengine/urlfetch"
 )
 
 // Create TestRun entities for local development and testing.
@@ -67,38 +66,6 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
             ResultsURL: "/static/b952881825/safari-10-macos-10.12-sauce-summary.json.gz",
             CreatedAt: time.Now(),
         },
-    }
-
-    // Get the redirects, but don't follow them.
-    client := urlfetch.Client(ctx)
-    client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-        return http.ErrUseLastResponse
-    }
-
-    for _, browserName := range([]string {
-        "chrome",
-        "edge",
-        "firefox",
-        "safari",
-    }) {
-        jsonURL := "https://wpt.fyi/json?platform=" + browserName
-        resp, err := client.Head(jsonURL)
-        if err != http.ErrUseLastResponse {
-            fmt.Fprintln(w, "Failed to fetch latest run for %s: %s", browserName, err.Error())
-            continue
-        }
-        latestURL, err := resp.Location()
-        if err != nil {
-            fmt.Fprintln(w, "Failed to read redirected location for %s: %s", jsonURL, err.Error())
-            continue
-        }
-        devData["prod-latest-" + browserName] = &TestRun{
-            BrowserName:    browserName,
-            BrowserVersion: "latest",
-            Revision:       "latest",
-            ResultsURL:     latestURL.String(),
-            CreatedAt:      time.Now(),
-        }
     }
 
     for key, testRun := range devData {
