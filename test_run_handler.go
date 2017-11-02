@@ -106,7 +106,6 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
     }
     sort.Strings(browserNames)
 
-
     runs := make(map[string][]TestRun)
     for _, browserName := range browserNames {
         var testRunResults []TestRun

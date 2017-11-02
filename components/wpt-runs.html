@@ -21,64 +21,15 @@ limitations under the License.
 <dom-module id="wpt-runs">
   <template>
     <style>
-      :host {
-        display: block;
-        font-size: 15px;
-      }
-      section.search {
-        border-bottom: solid 1px #ccc;
-        padding-bottom: 1em;
-        margin-bottom: 1em;
-      }
-      section.search .path {
-        margin-top: 1em;
-      }
-      input.query {
-        font-size: 16px;
-        display: block;
-        padding: 0.5em 0;
-        width: 100%;
-      }
-      a {
-        text-decoration: none;
-        color: #0d5de6;
-        font-family: monospace;
-      }
-      a:hover {
-        cursor: pointer;
-        color: #226ff3;
-      }
       table {
         width: 100%;
         border-collapse: collapse;
       }
-      tr.spec {
-        background-color: #eee;
-      }
       tr td {
         padding: 0 0.5em;
       }
-      tr.spec td {
-        padding: 0.2em 0.5em;
-        border: solid 1px #ccc;
-      }
-      .path-separator {
-        padding: 0 0.1em;
-      }
-      .links {
-        margin-bottom: 1em;
-      }
-      .caveat {
-        padding: 0.5em;
-        background-color: #fde2e3;
-        margin-bottom: 1em;
-        border-left: solid 4px #f47477;
-      }
-      .info {
-        padding: 0.5em;
-        background-color: #e2e3fd;
-        margin-bottom: 1em;
-        border-left: solid 4px #7477f4;
+      .pass-rate {
+        text-align: center;
       }
 
       @media (max-width: 800px) {
@@ -108,7 +59,7 @@ limitations under the License.
             <a href="/?run={{ results.sha }}">{{ results.sha }}</a>
           </td>
           <template is="dom-repeat" items="{{ browsers }}" as="browser">
-            <td>{{ _resultForBrowser(results.runs, browser) }}</td>
+            <td class="pass-rate">{{ _resultForBrowser(results.runs, browser) }}</td>
           </template>
         </tr>
       </template>
