@@ -23,13 +23,24 @@ limitations under the License.
     <style>
       table {
         width: 100%;
-        border-collapse: collapse;
       }
       tr td {
         padding: 0 0.5em;
+        margin: 2px;
       }
-      .pass-rate {
-        text-align: center;
+
+      .info {
+        padding: 0.5em;
+        background-color: #e2e3fd;
+        margin-bottom: 1em;
+        margin-top: 2em;
+        border-left: solid 4px #7477f4;
+      }
+      .missing {
+        background-color: #e2e3fd;
+      }
+      .present {
+        background-color: #e3fde2;
       }
 
       @media (max-width: 800px) {
@@ -41,6 +52,10 @@ limitations under the License.
         }
       }
     </style>
+
+    <section class="info">
+      Showing the last 10 runs.
+    </section>
 
     <table>
       <thead>
@@ -59,7 +74,7 @@ limitations under the License.
             <a href="/?run={{ results.sha }}">{{ results.sha }}</a>
           </td>
           <template is="dom-repeat" items="{{ browsers }}" as="browser">
-            <td class="pass-rate">{{ _resultForBrowser(results.runs, browser) }}</td>
+            <td class$="{{ _runClass(results.runs, browser) }}"></td>
           </template>
         </tr>
       </template>
@@ -95,39 +110,20 @@ limitations under the License.
       async connectedCallback () {
         super.connectedCallback()
 
-        const testFileResults = await Promise.all(
-            Object
-                .values(this.testRuns)
-                .map(testRuns => {
-                  return Promise.all(
-                    testRuns.map(testRun => { return this._fetchResults(testRun) })
-                  )
-                }))
-
         let browsers = new Set()
         let testRuns = {}
-        testFileResults
+        Object.values(this.testRuns)
             .reduce((sum, value) => sum.concat(value))
             .forEach(results => {
-              const run = results.run
-              browsers.add(run.browser_name)
-              if (!testRuns[run.revision]) {
-                testRuns[run.revision] = {}
+              browsers.add(results.browser_name)
+              if (!testRuns[results.revision]) {
+                testRuns[results.revision] = {}
               }
-              if (!testRuns[run.revision][run.browser_name]) {
-                testRuns[run.revision][run.browser_name] = {
-                  run: run
+              if (!testRuns[results.revision][results.browser_name]) {
+                testRuns[results.revision][results.browser_name] = {
+                  run: results
                 }
               }
-
-              let sums = [0, 0]
-              Object
-                  .values(results.results)
-                  .forEach(result => {
-                    sums[0] += result[0]
-                    sums[1] += result[1]
-                  })
-              testRuns[run.revision][run.browser_name]['sums'] = sums
             })
 
         // We flatten into an array of objects so Polymer can deal with them.
@@ -136,27 +132,12 @@ limitations under the License.
         this.browsers = Array.from(browsers)
       }
 
-      async _fetchResults (testRun) {
-        let resultFetch = window.fetch(
-          testRun.results_url,
-          {
-            redirect: 'follow'  // Can be a wpt.fyi/json?run=latest URL.
-          })
-        const response = await resultFetch
-        console.log({url: testRun.results_url, response: response})
-        const testFiles = await response.json()
-        return {
-          run: testRun,
-          results: testFiles
-        }
-      }
-
-      _resultForBrowser (testRuns, browser) {
+      _runClass (testRuns, browser) {
         let testRun = testRuns[browser]
         if (!testRun) {
-          return
+          return 'missing'
         }
-        return Math.floor(testRun.sums[0] * 100 / testRun.sums[1]) + '%'
+        return 'present'
       }
     }
 
