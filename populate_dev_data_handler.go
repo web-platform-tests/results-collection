@@ -26,7 +26,7 @@ import (
     "google.golang.org/appengine/urlfetch"
 )
 
-var ErrUseLastResponse = errors.New("net/http: use last response")
+var errUseLastResponse = errors.New("net/http: use last response")
 
 // Create TestRun entities for local development and testing.
 // These point to JSON files stored in /static/.
@@ -76,7 +76,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
     // Get the redirects, but don't follow them. Mimics http.ErrUseLastResponse (golang v1.7)
     client := urlfetch.Client(ctx)
     client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-        return ErrUseLastResponse
+        return errUseLastResponse
     }
 
     for _, browserName := range([]string {
@@ -88,7 +88,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
         jsonURL := "https://wpt.fyi/json?platform=" + browserName
         resp, err := client.Head(jsonURL)
 
-		if urlError, ok := err.(*url.Error); !ok || urlError.Err != ErrUseLastResponse {
+		if urlError, ok := err.(*url.Error); !ok || urlError.Err != errUseLastResponse {
 			fmt.Fprintf(w, "Failed to fetch latest run for %s: %s\n", browserName, urlError.Error())
 			continue
 		}
