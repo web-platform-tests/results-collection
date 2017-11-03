@@ -54,6 +54,12 @@ article ul {
 }
 </style>
 
+{{if .TestRuns}}
+  {{range .TestRuns}}
+    <link rel="preload" href="{{ .ResultsURL }}" as="fetch">
+  {{end}}
+{{end}}
+
 <script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 <link rel="import" href="/components/wpt-results.html">
 </head>
