@@ -6,6 +6,8 @@ export WPT_PATH=/web-platform-tests
 
 git clone --depth 1 https://github.com/w3c/web-platform-tests $WPT_PATH
 
+sudo chown -R $(whoami):$(whoami) $HOME
+
 source $WPT_PATH/tools/ci/lib.sh
 hosts_fixup
 
