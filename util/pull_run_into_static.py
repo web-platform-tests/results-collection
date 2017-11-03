@@ -33,10 +33,9 @@ import argparse
 import inspect
 import json
 import logging
-
 import os
 import shutil
-
+from urllib.parse import urlencode
 import urllib3
 
 here = os.path.dirname(__file__)
@@ -64,8 +63,8 @@ def main():
 
     pool = urllib3.PoolManager()  # type: urllib3.PoolManager
     for platform in args.platforms: # type: str
-        url = 'https://wpt.fyi/json?sha=%s&platform=%s' % (sha, platform)
-        loadedUrl = url
+        encodedArgs = urlencode({ 'sha': sha, 'platform': platform })
+        url = 'https://wpt.fyi/json?' + encodedArgs
         response = pool.request('GET', url, redirect=False)  # type: urllib3.response.HTTPResponse
 
         if response.status // 100 != 3:
@@ -90,7 +89,8 @@ def main():
 
         # Let the requests rain down.
         for key in tests.keys():
-            testUrl = 'https://wpt.fyi/json?sha=%s&platform=%s&test=%s' % (sha, platform, key[1:])
+            encodedArgs = urlencode({ 'sha': sha, 'platform': platform, 'test': key[1:] })
+            testUrl = 'https://wpt.fyi/json?' + encodedArgs
             try:
                 filename = os.path.join(staticFilePath, platform, key[1:])
                 if os.path.exists(filename):
