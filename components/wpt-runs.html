@@ -21,6 +21,11 @@ limitations under the License.
 <dom-module id="wpt-runs">
   <template>
     <style>
+      a {
+        text-decoration: none;
+        color: #0d5de6;
+        font-family: monospace;
+      }
       table {
         width: 100%;
       }
@@ -37,10 +42,10 @@ limitations under the License.
         border-left: solid 4px #7477f4;
       }
       .missing {
-        background-color: #e2e3fd;
+        background-color: #e3edfd;
       }
       .present {
-        background-color: #e3fde2;
+        background-color: #337af3;
       }
 
       @media (max-width: 800px) {
@@ -71,7 +76,7 @@ limitations under the License.
       <template is="dom-repeat" items="{{ testResults }}" as="results">
         <tr>
           <td>
-            <a href="/?run={{ results.sha }}">{{ results.sha }}</a>
+            <a href="/?sha={{ results.sha }}">{{ results.sha }}</a>
           </td>
           <template is="dom-repeat" items="{{ browsers }}" as="browser">
             <td class$="{{ _runClass(results.runs, browser) }}"></td>
