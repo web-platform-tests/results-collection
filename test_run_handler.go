@@ -96,7 +96,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(10)
+    baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(100)
     var browserNames []string
 
     for _, browser := range browsers {
