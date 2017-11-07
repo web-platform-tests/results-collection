@@ -2,9 +2,9 @@
 
 set -e
 
-SH_DIR=$(readlink -f $(dirname "$0"))
-source "${SH_DIR}/logging.sh"
-WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-$(readlink -f "${SH_DIR}/..")}
+TRAVIS_DIR=$(readlink -f $(dirname "$0"))
+source "${TRAVIS_DIR}/../logging.sh"
+WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-$(readlink -f "${TRAVIS_DIR}/../..")}
 
 cd "${WPTDASHBOARD_DIR}"
 

@@ -1,9 +1,17 @@
 #!/bin/bash
 
+#
+# File-watching development server script that run inside Docker development
+# image.
+#
+# Presumed working directory in Docker instance is "/wptdashboard" mapped to
+# source repository root directory.
+#
+
 set -e
 
-SH_DIR=$(readlink -f $(dirname "$0"))
-source "${SH_DIR}/logging.sh"
+DOCKER_INNER_DIR=$(readlink -f $(dirname "$0"))
+source "${DOCKER_INNER_DIR}/../../logging.sh"
 
 function stop() {
   warn "watch.sh: Recieved interrupt. Exiting..."
