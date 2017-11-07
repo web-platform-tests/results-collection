@@ -1,8 +1,8 @@
 {
   "name": "wptdashboard",
   "devDependencies": {
-    "eslint-plugin-html": "*",
-    "standard": "^10.0.3"
+    "standard": "*",
+    "eslint-plugin-html": "*"
   },
   "scripts": {
     "test": "standard --plugin html 'components/*.html'"
