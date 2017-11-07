@@ -8,20 +8,21 @@ import time
 import re
 
 
+# For making instance-internal network requests for metadata.
+# See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
 METADATA_URL = 'http://metadata.google.internal/computeMetadata/v1'
 
 
 def main():
     # TODO after --install-browser verify browser
-    # version or change platform ID to correct browser version
-    # This can be done by running `wpt install firefox` and then verifying
+    #      version or change platform ID to correct browser version
+    #      This can be done by running `wpt install firefox` and then verifying
     # TODO report OS version when creating TestRun
     # TODO check out correct WPT revision
-
     # TODO convert these back into command line args. They're currently
-    # env vars due to an earlier change. They should be converted back.
-
+    #      env vars due to an earlier change. They should be converted back.
     # TODO break this file up into smaller, unit tested modules.
+    # TODO document how we use metadata
     args = {
         'prod_run': bool(os.environ.get('PROD_RUN', False)),
         'prod_wet_run': bool(os.environ.get('PROD_WET_RUN', False)),
@@ -180,7 +181,7 @@ def main():
     print('==================================================')
     print('Uploading results to gs://%s' % GS_RESULTS_BUCKET)
 
-    # TODO: change this from rsync to cp
+    # TODO(#80): change this from rsync to cp
     command = ['gsutil', '-m', '-h', 'Content-Encoding:gzip',
                'rsync', '-r', args['SHA'], 'gs://wptd/%s' % args['SHA']]
     return_code = subprocess.check_call(command, cwd=args['output_path'])
