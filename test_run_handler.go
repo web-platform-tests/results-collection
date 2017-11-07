@@ -15,17 +15,17 @@
 package wptdashboard
 
 import (
+    "bytes"
+    "context"
     "encoding/json"
     "fmt"
     "io/ioutil"
     "net/http"
+    "sort"
     "time"
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
-    "sort"
-    "context"
-    "bytes"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
