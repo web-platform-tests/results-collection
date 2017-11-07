@@ -16,3 +16,7 @@ Execute a command as root in the context of `wptd-dev-instance`.
 ## jenkins_container.sh
 
 Launch container used by Jenkins CI to perform WPT test runs.
+
+## travis_(step).sh
+
+Docker-based script for completing `(step)` in Travis CI.

@@ -18,13 +18,13 @@ services:
   - docker
 
 before_install:
-  - util/travis/travis_before_install.sh
+  - util/docker/travis_before_install.sh
 
 install:
-  - util/travis/travis_install.sh
+  - util/docker/travis_install.sh
 
 script:
-  - util/travis/travis_script.sh
+  - util/docker/travis_script.sh
 
 after_script:
-  - util/travis/travis_after_script.sh
+  - util/docker/travis_after_script.sh
