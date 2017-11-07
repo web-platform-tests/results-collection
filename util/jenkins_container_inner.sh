@@ -1,6 +1,6 @@
 : '
-This file runs inside the testrun container
-in the context of CI.
+This file runs inside a WPT testrun container
+in the context of Jenkins CI.
 '
 export WPT_PATH=/web-platform-tests
 

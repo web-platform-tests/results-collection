@@ -2,9 +2,6 @@ FROM gcr.io/cloud-solutions-images/jenkins-k8s-slave
 
 USER root
 
-# Expose Sauce Connect port
-EXPOSE 4445
-
 RUN apt-get update
 
 # wpt run dependencies
@@ -27,6 +24,3 @@ RUN apt-get install -y \
     libdbus-glib-1-2
 
 RUN mkdir /wptdashboard
-ADD . /wptdashboard
-
-RUN chown -R jenkins:jenkins /wptdashboard

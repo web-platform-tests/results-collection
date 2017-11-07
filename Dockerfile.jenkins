@@ -1,0 +1,8 @@
+FROM wptd-base
+
+ADD . /wptdashboard
+
+RUN chown -R jenkins:jenkins /wptdashboard
+
+# Expose Sauce Connect port
+EXPOSE 4445
