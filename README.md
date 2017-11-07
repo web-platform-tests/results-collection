@@ -13,17 +13,24 @@ It consists of 3 parts:
 You'll need [Docker](https://www.docker.com/). With Docker installed, build the base image and development image, and start a development server instance:
 
 ```sh
-docker build -t wptd-base .
+docker build -t wptd-base -f Dockerfile.base .
 docker build -t wptd-dev -f Dockerfile.dev .
 ./util/docker/dev.sh
 ```
 
 ## Running locally
 
+In one terminal, start the web server:
+
 ```sh
-# Run the web server inside the instance and populate data
-./util/docker/exec.sh dev_appserver.py "."
-./util/docker/exec.sh curl http://localhost:8080/tasks/populate-dev-data
+# Install local golang dependencies, and golint
+./util/docker/web_server.sh
+```
+
+In another terminal, populate the app with data:
+
+```sh
+curl http://localhost:8080/tasks/populate-dev-data
 ```
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
