@@ -29,7 +29,9 @@ matrix:
       python: 2.7
       services:
         - docker
-      script: ./ci_container.sh
+      script:
+	- docker build -t wptfyi .
+	- docker run -p 4445:4445 --entrypoint "/bin/python" wptfyi /wptdashboard/run/entrypoint.py firefox-57.0-linux --path battery-status
 
     - language: go
       install:
