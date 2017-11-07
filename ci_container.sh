@@ -7,7 +7,7 @@ to production for test runners to pull.
 '
 IMAGE_NAME=wptd-testrun-jenkins
 
-docker build -t "${IMAGE_NAME}" .
+docker build -t "${IMAGE_NAME}" -f Dockerfile.jenkins .
 
 docker run \
   -p 4445:4445 \
