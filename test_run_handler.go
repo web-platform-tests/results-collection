@@ -15,15 +15,17 @@
 package wptdashboard
 
 import (
+    "bytes"
+    "context"
     "encoding/json"
     "fmt"
     "io/ioutil"
     "net/http"
+    "sort"
     "time"
 
     "google.golang.org/appengine"
     "google.golang.org/appengine/datastore"
-    "sort"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,9 +98,12 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(100)
-    var browserNames []string
+    baseQuery := datastore.
+        NewQuery("TestRun").
+        Order("-CreatedAt").
+        Limit(100)
 
+    var browserNames []string
     for _, browser := range browsers {
         if browser.InitiallyLoaded {
             browserNames = append(browserNames, browser.BrowserName)
@@ -107,6 +112,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
     sort.Strings(browserNames)
 
     runs := make(map[string][]TestRun)
+    createdAtLimit := time.Now()
     for _, browserName := range browserNames {
         var testRunResults []TestRun
         query := baseQuery.Filter("BrowserName =", browserName)
@@ -119,11 +125,21 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
                 runs[r.Revision] = make([]TestRun, 0)
             }
             runs[r.Revision] = append(runs[r.Revision], r)
+            if r.CreatedAt.Before(createdAtLimit) {
+                createdAtLimit = r.CreatedAt
+            }
         }
     }
 
+    var orderedSHAs []string
+    orderedSHAs, err = getOrderedSHAs(ctx, createdAtLimit)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
     // Serialize the data + pipe through the test-runs.html template.
-    testRunsBytes, err := json.Marshal(runs)
+    testRunsBytes, err := marshalInOrder(runs, orderedSHAs)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -138,4 +154,65 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
+}
+
+// getOrderedSHAs loads SHAs in descending chronological order. This allows us to preserve the ordering of the SHAs,
+// in spite of appending runs by loading each browsers runs separately.
+func getOrderedSHAs(ctx context.Context, createdAtLimit time.Time) (shas []string, err error) {
+    it := datastore.
+        NewQuery("TestRun").
+        Project("CreatedAt", "Revision").Distinct().
+        Filter("CreatedAt >= ", createdAtLimit).
+        Order("-CreatedAt").
+        Run(ctx)
+    shas = make([]string, 0)
+    last := ""
+    for {
+        var testRun TestRun
+        _, err := it.Next(&testRun)
+        if err == datastore.Done {
+            break
+        }
+        if err != nil {
+            return nil, err
+        }
+        if last == testRun.Revision {
+            continue
+        }
+        shas = append(shas, testRun.Revision)
+    }
+    return shas, nil
+}
+
+// marshalInOrder produces a marshaled JSON map for the given map which follows
+// the ordering of the given keys array. By default, json.Marshal sorts the keys.
+func marshalInOrder(runs map[string][]TestRun, keys []string) ([]byte, error) {
+    var output bytes.Buffer
+    output.WriteByte('{')
+    first := true
+    for _, key := range keys {
+        if _, ok := runs[key]; !ok {
+            continue
+        }
+        if !first {
+            output.WriteByte(',')
+        } else {
+            first = false
+        }
+        // Key
+        serialized, err := json.Marshal(key)
+        if err != nil {
+            return nil, err
+        }
+        output.Write(serialized)
+        output.WriteByte(':')
+        // Value
+        serialized, err = json.Marshal(runs[key])
+        if err != nil {
+            return nil, err
+        }
+        output.Write(serialized)
+    }
+    output.WriteByte('}')
+    return output.Bytes(), nil
 }
