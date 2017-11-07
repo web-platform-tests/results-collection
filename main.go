@@ -26,5 +26,7 @@ func init() {
     http.HandleFunc("/test-runs", testRunHandler)
     http.HandleFunc("/about", aboutHandler)
     http.HandleFunc("/json", jsonRedirectHandler)
+    http.HandleFunc("/api/runs", apiTestRunsHandler)
+    http.HandleFunc("/api/run", apiTestRunHandler)
     http.HandleFunc("/", testHandler)
 }

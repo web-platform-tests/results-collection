@@ -194,6 +194,11 @@ limitations under the License.
             type: Boolean,
             computed: '_computeIsLatest(sha)'
           },
+          // ['browser@sha] spec for the runs to load
+          testRunSpecs: {
+            type: Array
+          },
+          // JSON blobs for the runs loaded (by their specs)
           testRuns: {
             type: Array
           },
@@ -224,9 +229,22 @@ limitations under the License.
           this._refreshDisplayedNodes()
         }
 
-        const testFileResults = await Promise.all(this.testRuns.map(testRun => {
-          return this._fetchResults(testRun.results_url)
-        }))
+        const testRuns = await Promise.all(
+          this.testRunSpecs
+            .map(async testRun => {
+              const pieces = testRun.split('@')
+              const browser = pieces[0]
+              const sha = pieces.length > 1 ? pieces[1] : 'latest'
+              const url = `/api/run?browser=${browser}&sha=${sha}`
+              const response = await window.fetch(url)
+              return response.json()
+            }))
+
+        const testFileResults = await Promise.all(
+          testRuns
+            .map(async json => {
+              return this._fetchResults(json.results_url)
+            }))
 
         testFileResults.forEach(result => {
           const resultsURL = result.resultsURL
@@ -239,6 +257,7 @@ limitations under the License.
           })
         })
 
+        this.testRuns = testRuns
         this._refreshDisplayedNodes()
       }
 
@@ -429,7 +448,7 @@ limitations under the License.
       generateTotalPassNumbers () {
         const totals = {}
 
-        this.testRuns.forEach(testRun => {
+        this.testRunSpecs.forEach(testRun => {
           const testRunID = this._platformID(testRun)
           totals[testRunID] = {passing: 0, total: 0}
 
