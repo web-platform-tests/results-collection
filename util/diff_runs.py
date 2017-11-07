@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2017 Google Inc.
 #
@@ -24,14 +24,16 @@ Example usage:
 """
 
 import argparse
+import certifi
 import inspect
 import json
 import logging
 import math
 import os
 import urllib3
+import sys
 
-from urllib import urlencode
+from urllib.parse import urlencode
 from typing import List
 
 
@@ -44,6 +46,10 @@ def main():
     loggingLevel = getattr(logging, args.log.upper(), None)
     logging.basicConfig(level=loggingLevel)
     logger = logging.getLogger()
+
+    if sys.version_info < (3,):
+        logger.fatal('python3 required')
+        return
 
     differ = RunDiffer(args, logger, Fetcher())
     differ.diff()
@@ -199,7 +205,9 @@ class Fetcher(object):
     '''Placeholder for stubbing 'fetchResults' for the unit tests.'''
 
     def __init__(self):
-        self.pool = urllib3.PoolManager()
+        self.pool = urllib3.PoolManager(
+            cert_reqs='CERT_REQUIRED',
+            ca_certs=certifi.where())
 
     def fetchResults(self, sha, platform):
         '''Fetch a python object representing the test run results JSON for the
@@ -209,7 +217,11 @@ class Fetcher(object):
         encodedArgs = urlencode({'sha': sha, 'platform': platform})
         url = 'https://wpt.fyi/json?' + encodedArgs
 
-        response = self.pool.request('GET', url, redirect=False)
+        try:
+            response = self.pool.request('GET', url, redirect=False)
+        except urllib3.exceptions.SSLError as e:
+            logging.warning('SSL error fetching %s: %s' % (url, e.message))
+            return None
 
         if response.status // 100 != 3:
             logging.warning(
