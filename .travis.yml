@@ -12,29 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-matrix:
-  include:
-    - language: node_js
-      node_js:
-        - "node"
+sudo: required
 
-    - language: python
-      python: 2.7
-      install: "pip install -r requirements.txt"
-      script:
-        - pycodestyle .
-        - python -m unittest discover -p "*_test.py"
+services:
+  - docker
 
-    - language: python
-      python: 2.7
-      services:
-        - docker
-      script: ./ci_container.sh
+before_install:
+  - sh/travis_before_install.sh
 
-    - language: go
-      install:
-        - go get -t ./...
-        - go get -u github.com/golang/lint/golint
-      script:
-        - go test -v ./...
-        - $GOPATH/bin/golint -set_exit_status
+install:
+  - sh/travis_install.sh
+
+script:
+  - sh/travis_script.sh
+
+after_script:
+  - sh/travis_after_script.sh
