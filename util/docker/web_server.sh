@@ -19,7 +19,7 @@ WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-"${DOCKER_DIR}/../.."}
 # /bin/bash -C "..."                       Setup and run web server
 
 info "Installing web server code dependencies"
-"${DOCKER_DIR}/su_exec.sh" /bin/bash -c "cd /go/src/wptdashboard && go get -t ./..."
+"${DOCKER_DIR}/su_exec.sh" /bin/bash -c "pip install -r /wptdashboard/requirements.txt && cd /go/src/wptdashboard && go get -t ./..."
 DOCKER_STATUS="${?}"
 if [ "${DOCKER_STATUS}" != "0" ]; then
   error "Failed to install web server code dependencies"
