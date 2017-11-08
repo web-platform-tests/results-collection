@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DOCKER_DIR=$(readlink -f $(dirname "$0"))
+DOCKER_DIR=$(dirname "$0")
 source "${DOCKER_DIR}/../logging.sh"
-WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-$(readlink -f "${DOCKER_DIR}/../..")}
+WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-"${DOCKER_DIR}/../.."}
 
 # Create a docker instance:
 #

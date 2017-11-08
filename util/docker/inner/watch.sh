@@ -10,7 +10,7 @@
 
 set -e
 
-DOCKER_INNER_DIR=$(readlink -f $(dirname "$0"))
+DOCKER_INNER_DIR=$(dirname "$0")
 source "${DOCKER_INNER_DIR}/../../logging.sh"
 
 function stop() {
