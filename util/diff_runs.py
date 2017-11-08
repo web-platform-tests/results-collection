@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # Copyright 2017 Google Inc.
 #
@@ -30,15 +30,13 @@ import json
 import logging
 import math
 import os
-import urllib3
 import sys
+import urllib3
 
-from urllib.parse import urlencode
+from urllib import urlencode
 from typing import List
 
-
 here = os.path.dirname(__file__)
-
 
 def main():
     args = parse_flags()  # type: argparse.Namespace
@@ -47,8 +45,9 @@ def main():
     logging.basicConfig(level=loggingLevel)
     logger = logging.getLogger()
 
-    if sys.version_info < (3,):
-        logger.fatal('python3 required')
+    if sys.version_info < (2, 7, 11):
+        # SSL requests fail for earlier versions (e.g. 2.7.6)
+        logger.fatal('python version 2.7.11 or greater required')
         return
 
     differ = RunDiffer(args, logger, Fetcher())
@@ -62,7 +61,10 @@ def parse_flags():  # type: () -> argparse.Namespace
     desc = (
         '{platform(s)}@{sha} where platform(s) is a comma separated list of '
         'platforms, e.g. \'chrome,safari\', and sha is SHA[0:10] of the run '
-        'to compare against the initial run'
+        'to compare against the initial run.'
+        'Note that order is important, e.g.'
+        '--before=foo,bar --after=baz,qux'
+        'will compare foo:baz, and bar:qux.'
     )
     parser.add_argument(
         '--before',
@@ -141,6 +143,8 @@ class RunDiffer(object):
             runAfter = self.fetcher.fetchResults(
                 afterSHA, self.args.after.platforms[i])
 
+            self.logger.info('Diffing %s and %s...' % (specBefore, specAfter))
+
             if runBefore is None:
                 self.logger.warning('Failed to fetch %s' % specBefore)
             if runAfter is None:
@@ -202,7 +206,8 @@ class RunDiffer(object):
 
 
 class Fetcher(object):
-    '''Placeholder for stubbing 'fetchResults' for the unit tests.'''
+    '''Fetcher is a placeholder class which wraps request-logic, for stubbing
+    'fetchResults' output for the unit tests.'''
 
     def __init__(self):
         self.pool = urllib3.PoolManager(
@@ -213,6 +218,9 @@ class Fetcher(object):
         '''Fetch a python object representing the test run results JSON for the
         given sha/platform spec. '''
         # type: (str, str) -> object
+        # Note that the object's keys are the test paths, and values are an
+        # array of [pass_count, total_test_count].
+        # For example JSON output, see https://wpt.fyi/json?platform=chrome
 
         encodedArgs = urlencode({'sha': sha, 'platform': platform})
         url = 'https://wpt.fyi/json?' + encodedArgs
