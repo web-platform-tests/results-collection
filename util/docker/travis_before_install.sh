@@ -3,7 +3,8 @@
 set -e
 
 DOCKER_DIR=$(dirname "$0")
-WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-"${DOCKER_DIR}/../.."}
+source "${DOCKER_DIR}/../path.sh"
+WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-$(absdir "${DOCKER_DIR}/../..")}
 
 cd "${WPTDASHBOARD_DIR}"
 

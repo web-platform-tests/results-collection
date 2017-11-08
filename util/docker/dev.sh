@@ -2,7 +2,8 @@
 
 DOCKER_DIR=$(dirname "$0")
 source "${DOCKER_DIR}/../logging.sh"
-WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-"${DOCKER_DIR}/../.."}
+source "${DOCKER_DIR}/../path.sh"
+WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-$(absdir "${DOCKER_DIR}/../..")}
 
 WPTDASHBOARD_HOST_WEB_PORT=${WPTDASHBOARD_HOST_WEB_PORT:-"8080"}
 
