@@ -26,6 +26,8 @@ class DiffRunTestCase(unittest.TestCase):
 
     def setUp(self):
         self.mock_args = mock.Mock(spec=argparse.Namespace)
+        self.mock_args.tests = []
+
         self.mock_fetcher = mock.Mock(spec=Fetcher)
         self.mock_logger = mock.Mock(spec=logging.Logger)
 
@@ -77,6 +79,28 @@ class DiffRunTestCase(unittest.TestCase):
         logged = self.mock_logger.info.call_args[0][0]
         self.assertIn('1 differences', logged)
         self.assertIn('1 tests', logged)
+
+    def test_cull_ignored_tests_dir(self):
+        results = {
+            '/css/foo.html': [1, 1],
+            '/css/bar.html': [1, 1],
+            '/html/baz.html': [0, 1]
+        }
+        tests = ['/css/']
+        self.differ.cull_ignored_tests(results, tests)
+        self.assertIn('/css/foo.html', results)
+        self.assertIn('/css/bar.html', results)
+        self.assertNotIn('/html/baz.html', results)
+
+    def test_cull_ignored_tests_specific_test(self):
+        results = {
+            '/css/foo.html': [1, 1],
+            '/css/bar.html': [1, 1],
+        }
+        tests = ['/css/foo.html']
+        self.differ.cull_ignored_tests(results, tests)
+        self.assertIn('/css/foo.html', results)
+        self.assertNotIn('/css/bar.html', results)
 
 
 if __name__ == '__main__':
