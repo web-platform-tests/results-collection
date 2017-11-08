@@ -125,14 +125,15 @@ limitations under the License.
                 testRuns[results.revision] = {}
               }
               if (!testRuns[results.revision][results.browser_name]) {
-                testRuns[results.revision][results.browser_name] = {
-                  run: results
-                }
+                testRuns[results.revision][results.browser_name] = results
               }
             })
 
         // We flatten into an array of objects so Polymer can deal with them.
-        const flattened = Object.entries(testRuns).map(entry => ({ sha: entry[0], runs: entry[1] }))
+        const firstRunTime = x => Object.values(x.runs)[0].created_at
+        const flattened = Object.entries(testRuns)
+            .map(entry => ({ sha: entry[0], runs: entry[1] }))
+            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)
         this.testResults = flattened
         this.browsers = Array.from(browsers)
       }
