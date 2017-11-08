@@ -7,6 +7,10 @@ WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-$(readlink -f "${DOCKER_DIR}/../..")}
 
 cd "${WPTDASHBOARD_DIR}"
 
+echo "ls ${WPTDASHBOARD_DIR}"
+ls
+
+docker build -t wptd-base -f Dockefile.base .
 docker build -t wptd-dev -f Dockefile.dev .
 docker run -d -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro \
     -v "$(pwd)":/wptdashboard -u $(id -u $USER):$(id -g $USER) \
