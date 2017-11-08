@@ -32,11 +32,11 @@ import math
 import os
 import sys
 import urllib3
-
 from urllib import urlencode
 from typing import List
 
 here = os.path.dirname(__file__)
+
 
 def main():
     args = parse_flags()  # type: argparse.Namespace
