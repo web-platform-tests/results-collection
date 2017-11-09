@@ -241,10 +241,8 @@ limitations under the License.
           }))
 
         const testFileResults = await Promise.all(
-          testRuns
-            .map(async json => {
-              return this._fetchResults(json.results_url)
-            }))
+          testRuns.map(async json => { return this._fetchResults(json.results_url) })
+        )
 
         testFileResults.forEach(result => {
           const resultsURL = result.resultsURL

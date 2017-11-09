@@ -90,6 +90,7 @@ func GetRunSHA(r *http.Request) (runSHA string, err error) {
 
 // GetBrowserNames loads, parses and returns the set of names of browsers
 // which are to be included (flagged as initially_loaded in the JSON).
+// TODO(lukebjerring): Persist in memory.
 func GetBrowserNames() (browserNames []string, err error) {
     var bytes []byte
     if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
