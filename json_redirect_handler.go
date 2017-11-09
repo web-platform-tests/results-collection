@@ -49,7 +49,11 @@ func jsonRedirectHandler(w http.ResponseWriter, r *http.Request) {
       return
     }
 
-    runSHA := params.Get("run")
+    runSHA := params.Get("sha")
+    if runSHA == "" {
+        // Legacy name, in case still present in scripts/local stores.
+        runSHA = params.Get("run")
+    }
     if runSHA == "" {
       runSHA = "latest"
     }
