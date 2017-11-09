@@ -23,7 +23,6 @@ docker build -t wptd-dev -f Dockerfile.dev .
 In one terminal, start the web server:
 
 ```sh
-# Install local golang dependencies, and golint
 ./util/docker/web_server.sh
 ```
 
