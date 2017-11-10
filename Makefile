@@ -33,10 +33,10 @@ lint: py_lint go_lint
 
 proto: bq_proto py_proto
 
-py_lint: py_proto
+py_lint: py_proto py_deps
 	pycodestyle --exclude=*_pb2.py .
 
-py_test: py_proto
+py_test: py_proto py_deps
 	python -m unittest discover -p '*_test.py'
 
 go_lint: go_deps
@@ -50,6 +50,9 @@ bq_proto: $(PROTOS)
 
 py_proto: $(PROTOS)
 	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) --python_out=$(PB_PY_OUT_DIR) $(PROTOS)
+
+py_deps: $(find . -type f | grep '\.py$' | grep -v '\_pb.py$')
+	pip install -r requirements.txt
 
 go_deps: $(find .  -type f | grep '\.go$' | grep -v '\.pb.go$')
 	cd $(GOPATH)/src/wptdashboard; go get -t ./...
