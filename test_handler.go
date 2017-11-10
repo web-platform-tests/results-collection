@@ -16,14 +16,12 @@ package wptdashboard
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sort"
-
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 	"net/url"
 	"regexp"
+	"sort"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -40,55 +38,29 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := appengine.NewContext(r)
-	var bytes []byte
-	var browsers map[string]Browser
-
-	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err = json.Unmarshal(bytes, &browsers); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var testRuns []TestRun
-	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
+	var testRunSpecs []string
 	var browserNames []string
-
-	for _, browser := range browsers {
-		if browser.InitiallyLoaded {
-			browserNames = append(browserNames, browser.BrowserName)
-		}
+	browserNames, err = GetBrowserNames()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	sort.Strings(browserNames)
 
 	for _, browserName := range browserNames {
-		var testRunResults []TestRun
-		query := baseQuery.Filter("BrowserName =", browserName)
-		if runSHA != "" && runSHA != "latest" {
-			query = query.Filter("Revision =", runSHA)
-		}
-		if _, err := query.GetAll(ctx, &testRunResults); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		testRuns = append(testRuns, testRunResults...)
+		testRunSpecs = append(testRunSpecs, fmt.Sprintf("%s@%s", browserName, runSHA))
 	}
 
-	testRunsBytes, err := json.Marshal(testRuns)
+	testRunSpecsBytes, err := json.Marshal(testRunSpecs)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := struct {
-		TestRuns string
-		SHA      string
+		TestRunSpecs string
+		SHA          string
 	}{
-		string(testRunsBytes),
+		string(testRunSpecsBytes),
 		runSHA,
 	}
 
@@ -114,4 +86,27 @@ func GetRunSHA(r *http.Request) (runSHA string, err error) {
 		runSHA = runParam
 	}
 	return runSHA, err
+}
+
+// GetBrowserNames loads, parses and returns the set of names of browsers
+// which are to be included (flagged as initially_loaded in the JSON).
+// TODO(lukebjerring): Persist in memory.
+func GetBrowserNames() (browserNames []string, err error) {
+	var bytes []byte
+	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
+		return nil, err
+	}
+
+	var browsers map[string]Browser
+	if err = json.Unmarshal(bytes, &browsers); err != nil {
+		return nil, err
+	}
+
+	for _, browser := range browsers {
+		if browser.InitiallyLoaded {
+			browserNames = append(browserNames, browser.BrowserName)
+		}
+	}
+	sort.Strings(browserNames)
+	return browserNames, nil
 }

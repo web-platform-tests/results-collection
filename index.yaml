@@ -25,6 +25,12 @@ indexes:
     direction: desc
 - kind: TestRun
   properties:
+  - name: Browser
+  - name: Revision
+  - name: CreatedAt
+    direction: desc
+- kind: TestRun
+  properties:
   - name: BrowserName
   - name: BrowserVersion
   - name: CreatedAt
