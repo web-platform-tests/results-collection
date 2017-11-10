@@ -3,7 +3,7 @@ This file runs inside a WPT testrun container
 in the context of Travis CI.
 '
 
-set -e
+set -evh
 
 git clone --depth 1 https://github.com/w3c/web-platform-tests
 mv $(find web-platform-tests -maxdepth 1 ! -path web-platform-tests) "${WPT_DIR}"
