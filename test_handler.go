@@ -17,11 +17,9 @@ package wptdashboard
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
-	"sort"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -86,27 +84,4 @@ func GetRunSHA(r *http.Request) (runSHA string, err error) {
 		runSHA = runParam
 	}
 	return runSHA, err
-}
-
-// GetBrowserNames loads, parses and returns the set of names of browsers
-// which are to be included (flagged as initially_loaded in the JSON).
-// TODO(lukebjerring): Persist in memory.
-func GetBrowserNames() (browserNames []string, err error) {
-	var bytes []byte
-	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-		return nil, err
-	}
-
-	var browsers map[string]Browser
-	if err = json.Unmarshal(bytes, &browsers); err != nil {
-		return nil, err
-	}
-
-	for _, browser := range browsers {
-		if browser.InitiallyLoaded {
-			browserNames = append(browserNames, browser.BrowserName)
-		}
-	}
-	sort.Strings(browserNames)
-	return browserNames, nil
 }

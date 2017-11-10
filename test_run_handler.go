@@ -23,7 +23,6 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"sort"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,30 +81,14 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	var bytes []byte
 	var err error
-	var browsers map[string]Browser
-
-	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err = json.Unmarshal(bytes, &browsers); err != nil {
+	var browserNames []string
+	if browserNames, err = GetBrowserNames(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(100)
-	var browserNames []string
-
-	for _, browser := range browsers {
-		if browser.InitiallyLoaded {
-			browserNames = append(browserNames, browser.BrowserName)
-		}
-	}
-	sort.Strings(browserNames)
-
 	runs := make(map[string][]TestRun)
 	for _, browserName := range browserNames {
 		var testRunResults []TestRun
