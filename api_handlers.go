@@ -17,10 +17,10 @@ package wptdashboard
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"net/url"
 )
 
 // apiTestRunsHandler is responsible for emitting test-run JSON for all the runs at a given SHA.
