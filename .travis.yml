@@ -36,5 +36,6 @@ matrix:
         - go get -t ./...
         - go get -u github.com/golang/lint/golint
       script:
+        - cd go/wptdashboard
         - go test -v ./...
         - $GOPATH/bin/golint -set_exit_status
