@@ -17,9 +17,7 @@ RUN apt-get install --assume-yes --no-install-suggests \
     libgtk-3-common \
     libdbus-glib-1-2
 
-ADD . /wptdashboard
-
-RUN chown -R jenkins:jenkins /wptdashboard
+ADD . "${WPTDASHBOARD_DIR}"
 
 # Expose Sauce Connect port
 EXPOSE 4445

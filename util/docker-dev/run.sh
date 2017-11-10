@@ -25,16 +25,13 @@ info "Creating docker instance for dev server. Instance name: wptd-dev-instance"
 docker run -t -d --entrypoint /bin/bash \
     -v /etc/group:/etc/group:ro \
     -v /etc/passwd:/etc/passwd:ro \
-    -v "${WPTDASHBOARD_DIR}":/wptdashboard -u $(id -u $USER):$(id -g $USER) \
+    -v "${WPTDASHBOARD_DIR}":/home/jenkins/wptdashboard \
+    -u $(id -u $USER):$(id -g $USER) \
     -p "${WPTDASHBOARD_HOST_WEB_PORT}:8080" \
     --name wptd-dev-instance wptd-dev
 
 docker exec -u 0:0 wptd-dev-instance \
-    chown -R $(id -u $USER):$(id -g $USER) /go
-docker exec -u 0:0 wptd-dev-instance \
     chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
-docker exec -u 0:0 wptd-dev-instance \
-    chown -R $(id -u $USER):$(id -g $USER) /wptdashboard
 
 docker exec -ti -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
     /wptdashboard/util/docker-dev/inner/watch.sh

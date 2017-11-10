@@ -51,10 +51,7 @@ before_install:
   - docker run -t -d --entrypoint /bin/bash -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v "$(pwd)":/wptdashboard -u $(id -u $USER):$(id -g $USER) --name "${DOCKER_INSTANCE}" "${DOCKER_IMAGE}"
 
 install:
-  - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /go
   - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
-  - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /wptdashboard
-  - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /web-platform-tests
 
 script:
   - docker exec -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"

@@ -5,8 +5,9 @@ USER root
 ARG PB_VERSION=3.4.0
 ARG GO_VERSION=1.8.5
 
-ENV WPTDASHBOARD_DIR=/wptdashboard
-ENV WPT_DIR=/web-platform-tests
+ENV USER_HOME="/home/jenkins"
+ENV WPTDASHBOARD_DIR="${USER_HOME}/wptdashboard"
+ENV WPT_DIR="${USER_HOME}/web-platform-tests"
 
 RUN apt-get update
 
@@ -27,8 +28,8 @@ RUN curl -L -o "go.tar.gz" "https://redirector.gvt1.com/edgedl/go/go${GO_VERSION
     rm -rf /go-fetch
 
 # Setup go environment
-RUN mkdir /go
-ENV GOPATH=/go
+RUN mkdir "${USER_HOME}/go"
+ENV GOPATH="${USER_HOME}/go"
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 # Install go dependencies
