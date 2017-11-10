@@ -52,6 +52,7 @@ before_install:
 
 install:
   - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
+  - docker exec -u 0:0 "${DOCKER_INSTANCE}" bash -c "echo \"#$(id -u $USER) ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers"
 
 script:
   - docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
