@@ -12,6 +12,7 @@ set -e
 
 DOCKER_INNER_DIR=$(dirname "$0")
 source "${DOCKER_INNER_DIR}/../../logging.sh"
+WPTDASHBOARD_DIR="${DOCKER_INNER_DIR}/../../.."
 
 function stop() {
   warn "watch.sh: Recieved interrupt. Exiting..."
@@ -29,16 +30,13 @@ mkdir -p "${BQ_OUT}"
 mkdir -p "${PY_OUT}"
 
 function compile_protos() {
-  if protoc -I"${PB_LIB}" -I"${BQ_LIB}" -I"${PROTOS}" \
-      --bq-schema_out="${BQ_OUT}" \
-      "${PROTOS}"/*.proto && \
-      protoc -I"${PB_LIB}" -I"${BQ_LIB}" -I"${PROTOS}" \
-      --python_out="${PY_OUT}" \
-      "${BQ_LIB}"/*.proto "${PROTOS}"/*.proto; then
+  pushd "${WPTDASHBOARD_DIR}" > /dev/null
+  if make proto; then
     info "SUCCESS: Regen from protos"
   else
     error "FAILURE: Regen from protos failed"
   fi
+  popd > /dev/null
 }
 
 compile_protos
