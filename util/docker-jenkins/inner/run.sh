@@ -2,16 +2,17 @@
 This file runs inside a WPT testrun container
 in the context of Travis CI.
 '
-export WPT_PATH=/web-platform-tests
 
-sudo git clone --depth 1 https://github.com/w3c/web-platform-tests $WPT_PATH
+set -e
 
-sudo chown -R $(id -u $USER):$(id -g $USER) $WPT_PATH
+git clone --depth 1 https://github.com/w3c/web-platform-tests
+mv web-platform-tests/* "${WPT_DIR}"
+rmdir web-platform-tests
 
-source $WPT_PATH/tools/ci/lib.sh
+source "${WPT_DIR}/tools/ci/lib.sh"
 hosts_fixup
 
-export BUILD_PATH=/wptdashboard
+export BUILD_PATH="${WPTDASHBOARD_DIR}"
 # Run a small directory (4 tests)
 export RUN_PATH=battery-status
 export WPT_SHA=$(cd $WPT_PATH && git rev-parse HEAD | head -c 10)
