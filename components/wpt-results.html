@@ -237,7 +237,7 @@ limitations under the License.
             const sha = pieces.length > 1 ? pieces[1] : 'latest'
             const url = `/api/run?browser=${browser}&sha=${sha}`
             const response = await window.fetch(url)
-            if (response.status != 200) {
+            if (response.status !== 200) {
               return Promise.resolve()
             }
             return response.json()
