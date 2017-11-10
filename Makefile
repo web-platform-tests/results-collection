@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+WPTDASHBOARD_DIR ?= /wptdashboard
+
 PB_LIB_DIR ?= ../protobuf/src
 PB_BQ_LIB_DIR ?= ../protoc-gen-bq-schema
 PB_LOCAL_LIB_DIR ?= protos
@@ -23,6 +25,9 @@ PROTOS=$(wildcard $(PB_LOCAL_LIB_DIR)/*.proto)
 build: go_deps proto
 
 test: py_test go_test
+
+jenkins_test: proto
+	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/run.sh
 
 lint: py_lint go_lint
 
