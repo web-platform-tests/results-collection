@@ -24,3 +24,5 @@ RUN apt-get install -y \
     libdbus-glib-1-2
 
 RUN mkdir /wptdashboard
+
+WORKDIR /wptdashboard
