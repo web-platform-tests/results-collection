@@ -43,6 +43,7 @@ matrix:
       - DOCKER_FILE=Dockerfile.jenkins
       - DOCKER_IMAGE=wptd-testrun-jenkins
       - DOCKER_INSTANCE=wptd-testrun-jenkins-${RANDOM}
+      - INSTALL_TARGET=jenkins_install
       - TEST_TARGET=jenkins_test
 
 before_install:
