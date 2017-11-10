@@ -33,13 +33,11 @@ matrix:
       - DOCKER_FILE=Dockerfile.dev
       - DOCKER_IMAGE=wptd-dev
       - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-      - INSTALL_TARGET=go_deps
       - TEST_TARGET=go_lint
     env:
       - DOCKER_FILE=Dockerfile.dev
       - DOCKER_IMAGE=wptd-dev
       - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-      - INSTALL_TARGET=go_deps
       - TEST_TARGET=go_test
     env:
       - DOCKER_FILE=Dockerfile.jenkins
@@ -53,7 +51,9 @@ before_install:
   - docker run -t -d --entrypoint /bin/bash -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v "$(pwd)":/wptdashboard -u $(id -u $USER):$(id -g $USER) --name "${DOCKER_INSTANCE}" "${DOCKER_IMAGE}"
 
 install:
-  - if [ "${INSTALL_TARGET}" != "" ]; then docker exec -u 0:0 "${DOCKER_INSTANCE}" make "${INSTALL_TARGET}"; fi
+  - docker exec -u 0:0 wptd-dev-instance chown -R $(id -u $USER):$(id -g $USER) /go
+  - docker exec -u 0:0 wptd-dev-instance chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
+  - docker exec -u 0:0 wptd-dev-instance chown -R $(id -u $USER):$(id -g $USER) /wptdashboard
 
 script:
   - docker exec -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
