@@ -25,7 +25,7 @@ import (
 
 // apiTestRunsHandler is responsible for emitting test-run JSON for all the runs at a given SHA.
 //
-// Params:
+// URL Params:
 //     sha: SHA[0:10] of the repo when the tests were executed (or 'latest')
 func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	runSHA, err := GetRunSHA(r)
@@ -70,7 +70,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 // apiTestRunHandler is responsible for emitting the test-run JSON a specific run,
 // identified by a named browser (platform) at a given SHA.
 //
-// Params:
+// URL Params:
 //     sha: SHA[0:10] of the repo when the test was executed (or 'latest')
 //     browser: Browser for the run (e.g. 'chrome', 'safari-10')
 func apiTestRunHandler(w http.ResponseWriter, r *http.Request) {
