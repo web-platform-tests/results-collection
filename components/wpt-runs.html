@@ -117,8 +117,7 @@ limitations under the License.
 
         let browsers = new Set()
         let testRuns = {}
-        Object.values(this.testRuns)
-            .reduce((sum, value) => sum.concat(value))
+        this.testRuns
             .forEach(results => {
               browsers.add(results.browser_name)
               if (!testRuns[results.revision]) {

@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"sort"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,21 +106,17 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Strings(browserNames)
 
-	runs := make(map[string][]TestRun)
+	var runs []TestRun
 	for _, browserName := range browserNames {
-		var testRunResults []TestRun
+		var queryResults []TestRun
 		query := baseQuery.Filter("BrowserName =", browserName)
-		if _, err := query.GetAll(ctx, &testRunResults); err != nil {
+		if _, err := query.GetAll(ctx, &queryResults); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		for _, r := range testRunResults {
-			if _, ok := runs[r.Revision]; !ok {
-				runs[r.Revision] = make([]TestRun, 0)
-			}
-			runs[r.Revision] = append(runs[r.Revision], r)
-		}
+		runs = append(runs, queryResults...)
 	}
+	sort.Sort(ByCreatedAtDesc(runs))
 
 	// Serialize the data + pipe through the test-runs.html template.
 	testRunsBytes, err := json.Marshal(runs)
@@ -139,3 +135,9 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+type ByCreatedAtDesc []TestRun
+
+func (a ByCreatedAtDesc) Len() int           { return len(a) }
+func (a ByCreatedAtDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCreatedAtDesc) Less(i, j int) bool { return a[i].CreatedAt.Before(a[j].CreatedAt) }
