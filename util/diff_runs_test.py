@@ -59,6 +59,26 @@ class DiffRunTestCase(unittest.TestCase):
         self.assertIn('0 differences', logged)
         self.assertIn('2 tests', logged)
 
+    def test_removes_all(self):
+        self.mock_args.after = PlatformsAtRevision.parse("chrome@latest")
+        self.mock_args.before = PlatformsAtRevision.parse("chrome@0123456789")
+
+        def results(sha, platform):
+            if sha == 'latest':
+                return {}
+            if sha == '0123456789':
+                return {
+                    '/mock/path.html': [1, 1],
+                    '/mock/path2.html': [1, 2]
+                }
+        self.mock_fetcher.fetchResults.side_effect = results
+
+        self.differ.diff()
+
+        logged = self.mock_logger.info.call_args[0][0]
+        self.assertIn('2 tests ran in', logged)
+        self.assertIn('but not in', logged)
+
     def test_one_difference(self):
         self.mock_args.after = PlatformsAtRevision.parse("chrome@latest")
         self.mock_args.before = PlatformsAtRevision.parse("chrome@0123456789")
