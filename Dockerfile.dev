@@ -3,7 +3,7 @@ FROM wptd-base
 USER root
 
 # Install inotify-tools for dev server scripts
-RUN apt-get update && apt-get install --assume-yes --no-install-suggests \
+RUN apt-get install --assume-yes --no-install-suggests \
     --no-install-recommends \
     inotify-tools
 
