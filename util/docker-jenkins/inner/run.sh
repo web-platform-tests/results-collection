@@ -6,7 +6,7 @@ in the context of Travis CI.
 set -e
 
 git clone --depth 1 https://github.com/w3c/web-platform-tests
-mv web-platform-tests/* "${WPT_DIR}"
+mv $(find web-platform-tests -maxdepth 1 ! -path web-platform-tests) "${WPT_DIR}"
 rmdir web-platform-tests
 
 source "${WPT_DIR}/tools/ci/lib.sh"
