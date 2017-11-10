@@ -116,7 +116,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		}
 		runs = append(runs, queryResults...)
 	}
-	sort.Sort(ByCreatedAtDesc(runs))
+	sort.Sort(byCreatedAtDesc(runs))
 
 	// Serialize the data + pipe through the test-runs.html template.
 	testRunsBytes, err := json.Marshal(runs)
@@ -136,8 +136,8 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type ByCreatedAtDesc []TestRun
+type byCreatedAtDesc []TestRun
 
-func (a ByCreatedAtDesc) Len() int           { return len(a) }
-func (a ByCreatedAtDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByCreatedAtDesc) Less(i, j int) bool { return a[i].CreatedAt.Before(a[j].CreatedAt) }
+func (a byCreatedAtDesc) Len() int           { return len(a) }
+func (a byCreatedAtDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byCreatedAtDesc) Less(i, j int) bool { return a[i].CreatedAt.Before(a[j].CreatedAt) }
