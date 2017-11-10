@@ -46,10 +46,14 @@ go_test: go_deps
 	go test -v ./...
 
 bq_proto: $(PROTOS)
-	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) --bq-schema_out=$(PB_BQ_OUT_DIR) $(PROTOS)
+	mkdir -p $(PB_BQ_OUT_DIR)
+	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) \
+		--bq-schema_out=$(PB_BQ_OUT_DIR) $(PROTOS)
 
 py_proto: $(PROTOS)
-	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) --python_out=$(PB_PY_OUT_DIR) $(PROTOS)
+	mkdir -p $(PB_PY_OUT_DIR)
+	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) \
+		--python_out=$(PB_PY_OUT_DIR) $(PROTOS)
 
 py_deps: $(find . -type f | grep '\.py$' | grep -v '\_pb.py$')
 	pip install -r requirements.txt
