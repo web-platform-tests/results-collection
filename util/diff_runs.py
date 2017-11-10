@@ -220,10 +220,10 @@ class Fetcher(object):
         # type: (str, str) -> object
         # Note that the object's keys are the test paths, and values are an
         # array of [pass_count, total_test_count].
-        # For example JSON output, see https://wpt.fyi/json?platform=chrome
+        # For example JSON output, see https://wpt.fyi/results?platform=chrome
 
         encodedArgs = urlencode({'sha': sha, 'platform': platform})
-        url = 'https://wpt.fyi/json?' + encodedArgs
+        url = 'https://wpt.fyi/results?' + encodedArgs
 
         try:
             response = self.pool.request('GET', url, redirect=False)

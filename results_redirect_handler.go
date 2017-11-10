@@ -26,17 +26,17 @@ import (
     "google.golang.org/appengine/datastore"
 )
 
-// This handler is responsible for redirecting to the Google Cloud Storage API
-// JSON blob for the latest TestRun for the given browser.
+// resultsRedirectHandler is responsible for redirecting to the Google Cloud Storage API
+// JSON blob for the given SHA (or latest) TestRun for the given browser.
 //
 // URL format:
-// /json
+// /results
 //
 // Params:
 //   platform: Browser (and OS) of the run, e.g. "chrome-63.0" or "safari"
 //   (optional) run: SHA[0:10] of the test run, or "latest" (latest is the default)
 //   (optional) test: Path of the test, e.g. "/css/css-images-3/gradient-button.html"
-func jsonRedirectHandler(w http.ResponseWriter, r *http.Request) {
+func resultsRedirectHandler(w http.ResponseWriter, r *http.Request) {
     params, err := url.ParseQuery(r.URL.RawQuery)
     if err != nil {
       http.Error(w, "Invalid path", http.StatusBadRequest)
