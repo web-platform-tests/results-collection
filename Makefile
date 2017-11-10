@@ -26,8 +26,12 @@ build: go_deps proto
 
 test: py_test go_test
 
+# Note: Do not depend on jenkins_install; it should run as root
 jenkins_test: proto
 	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/run.sh
+
+jenkins_install:
+	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/install.sh
 
 lint: py_lint go_lint
 
