@@ -54,7 +54,7 @@ install:
   - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
 
 script:
-  - docker exec -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
+  - docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
 
 after_script:
   - docker stop "${DOCKER_INSTANCE}"
