@@ -17,4 +17,4 @@ docker build -t "${JENKINS_IMAGE_NAME}" -f "${JENKINS_DOCKERFILE}" "${WPTDASHBOA
 docker run \
   -p 4445:4445 \
   --entrypoint "/bin/bash" "${JENKINS_IMAGE_NAME}" \
-  /wptdashboard/util/docker/inner/jenkins_run.sh
+  /wptdashboard/util/docker-jenkins/inner/run.sh

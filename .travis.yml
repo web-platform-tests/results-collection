@@ -17,14 +17,47 @@ sudo: required
 services:
   - docker
 
+matrix:
+  include:
+    env:
+      - DOCKER_FILE=Dockerfile.dev
+      - DOCKER_IMAGE=wptd-dev
+      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+      - TEST_TARGET=py_lint
+    env:
+      - DOCKER_FILE=Dockerfile.dev
+      - DOCKER_IMAGE=wptd-dev
+      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+      - TEST_TARGET=py_test
+    env:
+      - DOCKER_FILE=Dockerfile.dev
+      - DOCKER_IMAGE=wptd-dev
+      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+      - INSTALL_TARGET=go_deps
+      - TEST_TARGET=go_lint
+    env:
+      - DOCKER_FILE=Dockerfile.dev
+      - DOCKER_IMAGE=wptd-dev
+      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+      - INSTALL_TARGET=go_deps
+      - TEST_TARGET=go_test
+    env:
+      - DOCKER_FILE=Dockerfile.jenkins
+      - DOCKER_IMAGE=wptd-testrun-jenkins
+      - DOCKER_INSTANCE=wptd-testrun-jenkins-${RANDOM}
+      - TEST_TARGET=jenkins_test
+
 before_install:
-  - util/docker/travis_before_install.sh
+  - docker build -t wptd-base -f Dockerfile.base .
+  - docker build -t "${DOCKER_IMAGE}" -f "${DOCKER_FILE}" .
+  - docker run -t -d --entrypoint /bin/bash -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v "$(pwd)":/wptdashboard -u $(id -u $USER):$(id -g $USER) --name "${DOCKER_INSTANCE}" "${DOCKER_IMAGE}"
 
 install:
-  - util/docker/travis_install.sh
+  - if [ "${INSTALL_TARGET}" != "" ]; then docker exec -u 0:0 "${DOCKER_INSTANCE}" make "${INSTALL_TARGET}"; fi
 
 script:
-  - util/docker/travis_script.sh
+  - docker exec -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
 
 after_script:
-  - util/docker/travis_after_script.sh
+  - docker stop "${DOCKER_INSTANCE}"
+  - docker rm "${DOCKER_INSTANCE}"

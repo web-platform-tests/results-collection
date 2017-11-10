@@ -25,4 +25,4 @@ info "Creating docker instance for dev server. Instance name: wptd-dev-instance"
 docker run --rm -it -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro \
     -v "${WPTDASHBOARD_DIR}":/wptdashboard -u $(id -u $USER):$(id -g $USER) \
     -p "${WPTDASHBOARD_HOST_WEB_PORT}:8080" \
-    --name wptd-dev-instance wptd-dev /wptdashboard/util/docker/inner/watch.sh
+    --name wptd-dev-instance wptd-dev /wptdashboard/util/docker-dev/inner/watch.sh
