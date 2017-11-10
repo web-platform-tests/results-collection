@@ -4,9 +4,9 @@ in the context of Travis CI.
 '
 export WPT_PATH=/web-platform-tests
 
-git clone --depth 1 https://github.com/w3c/web-platform-tests $WPT_PATH
+sudo git clone --depth 1 https://github.com/w3c/web-platform-tests $WPT_PATH
 
-sudo chown -R $(id -u $USER):$(id -g $USER) $HOME
+sudo chown -R $(id -u $USER):$(id -g $USER) $WPT_PATH
 
 source $WPT_PATH/tools/ci/lib.sh
 hosts_fixup
