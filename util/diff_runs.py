@@ -32,6 +32,7 @@ import math
 import os
 import sys
 import urllib3
+from itertools import ifilter
 from urllib import urlencode
 from typing import List
 
@@ -81,6 +82,12 @@ def parse_flags():  # type: () -> argparse.Namespace
         type=str,
         default='INFO',
         help='Log level to output')
+    parser.add_argument(
+        'tests',
+        type=str,
+        nargs='*',
+        metavar='test',
+        help='Test paths to filter by')
     namespace = parser.parse_args()
 
     # Check the before and after platform lists have the same length.
@@ -143,6 +150,9 @@ class RunDiffer(object):
             runAfter = self.fetcher.fetchResults(
                 afterSHA, self.args.after.platforms[i])
 
+            self.cull_ignored_tests(runBefore, self.args.tests)
+            self.cull_ignored_tests(runAfter, self.args.tests)
+
             self.logger.info('Diffing %s and %s...' % (specBefore, specAfter))
 
             if runBefore is None:
@@ -177,7 +187,8 @@ class RunDiffer(object):
                     self.logger.info('%s has %d new tests (total)'
                                      % (test, totalDelta))
                 elif totalDelta < 0:
-                    self.logger.info('%s has %d removed tests (total)')
+                    self.logger.info('%s has %d removed tests (total)'
+                                     % (test, math.fabs(totalDelta)))
 
                 if passingDelta < 0:
                     self.logger.warning('%s has %d new failures'
@@ -204,6 +215,22 @@ class RunDiffer(object):
                 self.logger.info('%d tests ran in %s but not in %s'
                                  % (removed, specBefore, specAfter))
 
+    def cull_ignored_tests(self, results, testWhitelist):
+        if testWhitelist is None or len(testWhitelist) < 1:
+            return
+
+        # Cull tests that aren't whitelisted.
+        culled = 0
+        keys = results.keys()
+        tests = len(keys)
+        for key in keys:
+            def match(x): return key.startswith(x)
+            if next(ifilter(match, testWhitelist), None) is None:
+                culled += 1
+                del results[key]
+        self.logger.debug(
+            'Culled %d ignored tests of %d total' % (culled, tests))
+
 
 class Fetcher(object):
     '''Fetcher is a placeholder class which wraps request-logic, for stubbing
@@ -217,8 +244,8 @@ class Fetcher(object):
     def fetchResults(self, sha, platform):
         '''Fetch a python object representing the test run results JSON for the
         given sha/platform spec. '''
-        # type: (str, str) -> object
-        # Note that the object's keys are the test paths, and values are an
+        # type: (str, str) -> dict
+        # Note that the dict's keys are the test paths, and values are an
         # array of [pass_count, total_test_count].
         # For example JSON output, see https://wpt.fyi/results?platform=chrome
 

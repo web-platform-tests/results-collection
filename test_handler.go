@@ -15,13 +15,13 @@
 package wptdashboard
 
 import (
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "net/url"
-    "io/ioutil"
-    "regexp"
-    "sort"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"regexp"
+	"sort"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -32,81 +32,81 @@ import (
 // The browsers initially displayed to the user are defined in browsers.json.
 // The JSON property "initially_loaded" is what controls this.
 func testHandler(w http.ResponseWriter, r *http.Request) {
-    runSHA, err := GetRunSHA(r)
-    if err != nil {
-        http.Error(w, "Invalid query params", http.StatusBadRequest)
-        return
-    }
+	runSHA, err := GetRunSHA(r)
+	if err != nil {
+		http.Error(w, "Invalid query params", http.StatusBadRequest)
+		return
+	}
 
-    var testRunSpecs []string
-    var browserNames []string
-    browserNames, err = GetBrowserNames()
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	var testRunSpecs []string
+	var browserNames []string
+	browserNames, err = GetBrowserNames()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    for _, browserName := range browserNames {
-        testRunSpecs = append(testRunSpecs, fmt.Sprintf("%s@%s", browserName, runSHA))
-    }
+	for _, browserName := range browserNames {
+		testRunSpecs = append(testRunSpecs, fmt.Sprintf("%s@%s", browserName, runSHA))
+	}
 
-    testRunSpecsBytes, err := json.Marshal(testRunSpecs)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	testRunSpecsBytes, err := json.Marshal(testRunSpecs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    data := struct {
-        TestRunSpecs string
-        SHA      string
-    }{
-        string(testRunSpecsBytes),
-        runSHA,
-    }
+	data := struct {
+		TestRunSpecs string
+		SHA          string
+	}{
+		string(testRunSpecsBytes),
+		runSHA,
+	}
 
-    if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetRunSHA parses and validates the 'sha' param for the request.
 // It returns "latest" by default (and in error cases).
 func GetRunSHA(r *http.Request) (runSHA string, err error) {
-    // Get the SHA for the run being loaded (the first part of the path.)
-    runSHA = "latest"
-    params, err := url.ParseQuery(r.URL.RawQuery)
-    if err != nil {
-        return runSHA, err
-    }
+	// Get the SHA for the run being loaded (the first part of the path.)
+	runSHA = "latest"
+	params, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return runSHA, err
+	}
 
-    runParam := params.Get("sha")
-    regex := regexp.MustCompile("[0-9a-fA-F]{10}")
-    if regex.MatchString(runParam) {
-        runSHA = runParam
-    }
-    return runSHA, err
+	runParam := params.Get("sha")
+	regex := regexp.MustCompile("[0-9a-fA-F]{10}")
+	if regex.MatchString(runParam) {
+		runSHA = runParam
+	}
+	return runSHA, err
 }
 
 // GetBrowserNames loads, parses and returns the set of names of browsers
 // which are to be included (flagged as initially_loaded in the JSON).
 // TODO(lukebjerring): Persist in memory.
 func GetBrowserNames() (browserNames []string, err error) {
-    var bytes []byte
-    if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-        return nil, err
-    }
+	var bytes []byte
+	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
+		return nil, err
+	}
 
-    var browsers map[string]Browser
-    if err = json.Unmarshal(bytes, &browsers); err != nil {
-        return nil, err
-    }
+	var browsers map[string]Browser
+	if err = json.Unmarshal(bytes, &browsers); err != nil {
+		return nil, err
+	}
 
-    for _, browser := range browsers {
-        if browser.InitiallyLoaded {
-            browserNames = append(browserNames, browser.BrowserName)
-        }
-    }
-    sort.Strings(browserNames)
-    return browserNames, nil
+	for _, browser := range browsers {
+		if browser.InitiallyLoaded {
+			browserNames = append(browserNames, browser.BrowserName)
+		}
+	}
+	sort.Strings(browserNames)
+	return browserNames, nil
 }
