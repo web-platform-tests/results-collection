@@ -2,26 +2,61 @@ FROM gcr.io/cloud-solutions-images/jenkins-k8s-slave
 
 USER root
 
+ARG PB_VERSION=3.4.0
+ARG GO_VERSION=1.8.5
+
 RUN apt-get update
 
-# wpt run dependencies
-RUN apt-get install -y python-pip
-RUN pip install virtualenv
-RUN pip install 'requests==2.13.0'
+# Install git, python-pip, and unzip for setup below
+RUN apt-get install --assume-yes --no-install-suggests \
+    --no-install-recommends \
+    git \
+    make \
+    python-pip \
+    unzip
 
-RUN apt-get install -y git
+# Install golang
+RUN mkdir /go-fetch
+WORKDIR /go-fetch
+RUN curl -L -o "go.tar.gz" "https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    tar -C /usr/local -xzf "go.tar.gz" && \
+    cd / && \
+    rm -rf /go-fetch
 
-# Needed for hosts_fixup
-RUN apt-get install -y sudo
+# Setup go environment
+RUN mkdir /go
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
-# Used for running FF and Chrome
-RUN apt-get install -y xvfb
+# Install go dependencies
+RUN go get github.com/golang/lint/golint
 
-# Used for running FF
-RUN apt-get install -y \
-    libnss3-tools \
-    libgtk-3-common \
-    libdbus-glib-1-2
+# Install protobuf libraries
+RUN mkdir /protobuf-fetch
+WORKDIR /protobuf-fetch
+RUN curl -L -o "protobuf.zip" "https://github.com/google/protobuf/archive/v${PB_VERSION}.zip" && \
+    unzip "protobuf.zip" -d / && \
+    mv "/protobuf-${PB_VERSION}" "/protobuf" && \
+    cd /  && \
+    rm -rf /protobuf-fetch
+
+# Install protobuf compiler
+RUN mkdir /protoc
+WORKDIR /protoc
+RUN curl -L -o "protoc.zip" "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protoc-${PB_VERSION}-linux-x86_64.zip" && \
+    unzip "protoc.zip" && \
+    cp "bin/protoc" /usr/local/bin/ && \
+    chmod a+rx "/usr/local/bin/protoc" && \
+    cd /  && \
+    rm -rf /protoc
+
+# Install protobuf BigQuery schema generator
+WORKDIR /
+RUN git clone "https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema.git" && \
+    cd "protoc-gen-bq-schema" && \
+    make && \
+    cp "bin/protoc-gen-bq-schema" /usr/local/bin/ && \
+    chmod a+rx "/usr/local/bin/protoc-gen-bq-schema"
 
 RUN mkdir /wptdashboard
 
