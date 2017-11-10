@@ -15,33 +15,33 @@
 package wptdashboard
 
 import (
-  "encoding/json"
-  "io/ioutil"
-  "sort"
+	"encoding/json"
+	"io/ioutil"
+	"sort"
 )
 
 func getBrowsers() (browsers map[string]Browser, err error) {
-  var bytes []byte
-  if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-    return nil, err
-  }
-  if err = json.Unmarshal(bytes, &browsers); err != nil {
-    return nil, err
-  }
-  return browsers, nil
+	var bytes []byte
+	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal(bytes, &browsers); err != nil {
+		return nil, err
+	}
+	return browsers, nil
 }
 
 func getBrowserNames() (browserNames []string, err error) {
-  var browsers map[string]Browser
-  if browsers, err = getBrowsers(); err != nil {
-    return nil, err
-  }
+	var browsers map[string]Browser
+	if browsers, err = getBrowsers(); err != nil {
+		return nil, err
+	}
 
-  for _, browser := range browsers {
-    if browser.InitiallyLoaded {
-      browserNames = append(browserNames, browser.BrowserName)
-    }
-  }
-  sort.Strings(browserNames)
-  return browserNames, nil
+	for _, browser := range browsers {
+		if browser.InitiallyLoaded {
+			browserNames = append(browserNames, browser.BrowserName)
+		}
+	}
+	sort.Strings(browserNames)
+	return browserNames, nil
 }
