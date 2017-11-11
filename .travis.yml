@@ -24,24 +24,28 @@ matrix:
         - DOCKER_FILE=Dockerfile.dev
         - DOCKER_IMAGE=wptd-dev
         - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=py_deps
         - TEST_TARGET=py_lint
     - language: python
       env:
         - DOCKER_FILE=Dockerfile.dev
         - DOCKER_IMAGE=wptd-dev
         - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=py_
         - TEST_TARGET=py_test
     - language: go
       env:
         - DOCKER_FILE=Dockerfile.dev
         - DOCKER_IMAGE=wptd-dev
         - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=go_deps
         - TEST_TARGET=go_lint
     - language: go
       env:
         - DOCKER_FILE=Dockerfile.dev
         - DOCKER_IMAGE=wptd-dev
         - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=go_deps
         - TEST_TARGET=go_test
     - language: python
       env:
