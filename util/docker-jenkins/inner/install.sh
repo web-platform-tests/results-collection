@@ -3,7 +3,7 @@
 # This file installs for WPT testrun in a container
 # in the context of Travis CI.
 
-set -ex
+set -x
 
 pushd "${WPT_DIR}/.."
 git clone --depth 1 https://github.com/w3c/web-platform-tests
