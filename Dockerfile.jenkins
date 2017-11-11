@@ -8,6 +8,7 @@ RUN apt-get install --assume-yes --no-install-suggests \
 # Used for running FF and Chrome
 RUN apt-get install --assume-yes --no-install-suggests \
     --no-install-recommends \
+    xauth \
     xvfb
 
 # Used for running FF
