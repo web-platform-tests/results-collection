@@ -53,7 +53,7 @@ matrix:
 before_install:
   - docker build -t wptd-base -f Dockerfile.base .
   - docker build -t "${DOCKER_IMAGE}" -f "${DOCKER_FILE}" .
-  - docker run -t -d --entrypoint /bin/bash -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v "$(pwd)":/wptdashboard -u $(id -u $USER):$(id -g $USER) --name "${DOCKER_INSTANCE}" "${DOCKER_IMAGE}"
+  - docker run -t -d --entrypoint /bin/bash -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v "$(pwd)":/home/jenkins/wptdashboard -u $(id -u $USER):$(id -g $USER) --name "${DOCKER_INSTANCE}" "${DOCKER_IMAGE}"
 
 install:
   - if [ "${INSTALL_TARGET}" != "" ]; then docker exec -t -u 0:0 "${DOCKER_INSTANCE}" make "${INSTALL_TARGET}"; fi
