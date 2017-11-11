@@ -19,36 +19,37 @@ services:
 
 matrix:
   include:
-    env:
-      - DOCKER_FILE=Dockerfile.dev
-      - DOCKER_IMAGE=wptd-dev
-      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-      - TEST_TARGET=py_lint
-    env:
-      - DOCKER_FILE=Dockerfile.dev
-      - DOCKER_IMAGE=wptd-dev
-      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-      - TEST_TARGET=py_test
-    env:
-      - DOCKER_FILE=Dockerfile.dev
-      - DOCKER_IMAGE=wptd-dev
-      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-      - TEST_TARGET=go_lint
-    env:
-      - DOCKER_FILE=Dockerfile.dev
-      - DOCKER_IMAGE=wptd-dev
-      - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-      - TEST_TARGET=go_test
-  # TODO: Include Jenkins test once
-  # https://github.com/w3c/wptdashboard/issues/230
-  # is resolved
-  exclude:
-    env:
-      - DOCKER_FILE=Dockerfile.jenkins
-      - DOCKER_IMAGE=wptd-testrun-jenkins
-      - DOCKER_INSTANCE=wptd-testrun-jenkins-${RANDOM}
-      - INSTALL_TARGET=jenkins_install
-      - TEST_TARGET=jenkins_test
+    - language: python
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - TEST_TARGET=py_lint
+    - language: python
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - TEST_TARGET=py_test
+    - language: go
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - TEST_TARGET=go_lint
+    - language: go
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - TEST_TARGET=go_test
+    - language: python
+      env:
+        - DOCKER_FILE=Dockerfile.jenkins
+        - DOCKER_IMAGE=wptd-testrun-jenkins
+        - DOCKER_INSTANCE=wptd-testrun-jenkins-${RANDOM}
+        - INSTALL_TARGET=jenkins_install
+        - TEST_TARGET=jenkins_test
 
 before_install:
   - docker build -t wptd-base -f Dockerfile.base .
