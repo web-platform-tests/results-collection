@@ -17,6 +17,7 @@ RUN apt-get install --assume-yes --no-install-suggests \
     git \
     make \
     python-pip \
+    python-setuptools \
     unzip
 
 # Install golang
