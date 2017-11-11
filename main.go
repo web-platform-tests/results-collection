@@ -19,7 +19,7 @@ import (
 	"net/http"
 )
 
-var templates = template.Must(template.ParseGlob("../../templates/*.html"))
+var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 func init() {
 	http.HandleFunc("/tasks/populate-dev-data", populateDevData)
