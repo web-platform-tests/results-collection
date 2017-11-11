@@ -6,13 +6,13 @@ This script must pass in order for an image to be pushed
 to production for test runners to pull.
 '
 DOCKER_DIR=$(dirname "$0")
-WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-"${DOCKER_DIR}/../.."}
+WPTD_PATH=${WPTD_PATH:-"${DOCKER_DIR}/../.."}
 BASE_IMAGE_NAME="wptd-base"
 JENKINS_IMAGE_NAME="wptd-testrun-jenkins"
-JENKINS_DOCKERFILE="${WPTDASHBOARD_DIR}/Dockerfile.jenkins"
+JENKINS_DOCKERFILE="${WPTD_PATH}/Dockerfile.jenkins"
 
-docker build -t "${BASE_IMAGE_NAME}" "${WPTDASHBOARD_DIR}"
-docker build -t "${JENKINS_IMAGE_NAME}" -f "${JENKINS_DOCKERFILE}" "${WPTDASHBOARD_DIR}"
+docker build -t "${BASE_IMAGE_NAME}" "${WPTD_PATH}"
+docker build -t "${JENKINS_IMAGE_NAME}" -f "${JENKINS_DOCKERFILE}" "${WPTD_PATH}"
 
 docker run \
   -p 4445:4445 \

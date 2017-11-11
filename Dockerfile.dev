@@ -17,7 +17,7 @@ RUN gcloud components install \
     kubectl
 
 # Put wptdashboard code in GOPATH
-RUN ln -s "${WPTDASHBOARD_DIR}" "${GOPATH}/src/wptdashboard"
+RUN ln -s "${WPTD_PATH}" "${GOPATH}/src/wptdashboard"
 
 # Drop dev environment into source path
-WORKDIR "${WPTDASHBOARD_DIR}"
+WORKDIR "${WPTD_PATH}"

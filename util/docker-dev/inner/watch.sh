@@ -12,7 +12,7 @@ set -e
 
 DOCKER_INNER_DIR=$(dirname "$0")
 source "${DOCKER_INNER_DIR}/../../logging.sh"
-WPTDASHBOARD_DIR="${DOCKER_INNER_DIR}/../../.."
+WPTD_PATH="${DOCKER_INNER_DIR}/../../.."
 
 function stop() {
   warn "watch.sh: Recieved interrupt. Exiting..."
@@ -30,7 +30,7 @@ mkdir -p "${BQ_OUT}"
 mkdir -p "${PY_OUT}"
 
 function compile_protos() {
-  pushd "${WPTDASHBOARD_DIR}" > /dev/null
+  pushd "${WPTD_PATH}" > /dev/null
   if make proto; then
     info "SUCCESS: Regen from protos"
   else

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-WPTDASHBOARD_DIR ?= /home/jenkins/wptdashboard
+WPTD_PATH ?= /home/jenkins/wptdashboard
 
 PB_LIB_DIR ?= ../protobuf/src
 PB_BQ_LIB_DIR ?= ../protoc-gen-bq-schema
@@ -28,10 +28,10 @@ test: py_test go_test
 
 # Note: Do not depend on jenkins_install; it should run as root
 jenkins_test: proto
-	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/run.sh
+	$(WPTD_PATH)/util/docker-jenkins/inner/run.sh
 
 jenkins_install: py_deps
-	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/install.sh
+	$(WPTD_PATH)/util/docker-jenkins/inner/install.sh
 
 lint: py_lint go_lint
 

@@ -5,10 +5,10 @@
 
 set -ex
 
-export BUILD_PATH="${WPTDASHBOARD_DIR}"
+export BUILD_PATH="${WPTD_PATH}"
 # Run a small directory (4 tests)
 export RUN_PATH=battery-status
 export WPT_SHA=$(cd $WPT_PATH && git rev-parse HEAD | head -c 10)
 
 export PLATFORM_ID=firefox-57.0-linux
-python "${WPTDASHBOARD_DIR}/run/jenkins.py"
+python "${WPTD_PATH}/run/jenkins.py"

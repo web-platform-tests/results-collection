@@ -2,7 +2,7 @@
 
 DOCKER_DIR=$(dirname "$0")
 source "${DOCKER_DIR}/../logging.sh"
-WPTDASHBOARD_DIR=${WPTDASHBOARD_DIR:-"${DOCKER_DIR}/../.."}
+WPTD_PATH=${WPTD_PATH:-"${DOCKER_DIR}/../.."}
 
 info "Installing web server code dependencies"
 docker exec -u $(id -u $USER):$(id -g $USER) wptd-dev-instance make build

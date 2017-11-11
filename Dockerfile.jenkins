@@ -17,7 +17,7 @@ RUN apt-get install --assume-yes --no-install-suggests \
     libgtk-3-common \
     libdbus-glib-1-2
 
-ADD . "${WPTDASHBOARD_DIR}"
+ADD . "${WPTD_PATH}"
 
 # Expose Sauce Connect port
 EXPOSE 4445
