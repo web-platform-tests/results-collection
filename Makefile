@@ -30,7 +30,7 @@ test: py_test go_test
 jenkins_test: proto
 	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/run.sh
 
-jenkins_install:
+jenkins_install: py_deps
 	$(WPTDASHBOARD_DIR)/util/docker-jenkins/inner/install.sh
 
 lint: py_lint go_lint
