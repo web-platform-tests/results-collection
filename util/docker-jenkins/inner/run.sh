@@ -3,7 +3,7 @@
 # This file runs inside a WPT testrun container
 # in the context of Travis CI.
 
-set -ex
+set -x
 
 export BUILD_PATH="${WPTDASHBOARD_DIR}"
 # Run a small directory (4 tests)
