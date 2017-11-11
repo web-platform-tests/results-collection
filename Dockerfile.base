@@ -8,6 +8,7 @@ ARG GO_VERSION=1.8.5
 ENV USER_HOME="/home/jenkins"
 ENV WPTD_PATH="${USER_HOME}/wptdashboard"
 ENV WPT_PATH="${USER_HOME}/web-platform-tests"
+ENV WPTD_OUT_PATH="${USER_HOME}/wptdout"
 
 RUN apt-get update
 

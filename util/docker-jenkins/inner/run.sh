@@ -11,4 +11,6 @@ export RUN_PATH=battery-status
 export WPT_SHA=$(cd $WPT_PATH && git rev-parse HEAD | head -c 10)
 
 export PLATFORM_ID=firefox-57.0-linux
+
+mkdir -p "${WPTD_OUT_PATH}"
 python "${WPTD_PATH}/run/jenkins.py"
