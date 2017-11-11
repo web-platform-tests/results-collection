@@ -7,7 +7,7 @@ ARG GO_VERSION=1.8.5
 
 ENV USER_HOME="/home/jenkins"
 ENV WPTDASHBOARD_DIR="${USER_HOME}/wptdashboard"
-ENV WPT_DIR="${USER_HOME}/web-platform-tests"
+ENV WPT_PATH="${USER_HOME}/web-platform-tests"
 
 RUN apt-get update
 
@@ -41,7 +41,7 @@ RUN mkdir /protobuf-fetch
 WORKDIR /protobuf-fetch
 RUN curl -L -o "protobuf.zip" "https://github.com/google/protobuf/archive/v${PB_VERSION}.zip" && \
     unzip "protobuf.zip" -d / && \
-    mv "/protobuf-${PB_VERSION}" "/protobuf" && \
+    mv "/protobuf-${PB_VERSION}" "${USER_HOME}/protobuf" && \
     cd /  && \
     rm -rf /protobuf-fetch
 
@@ -61,9 +61,11 @@ RUN git clone "https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema.git" 
     cd "protoc-gen-bq-schema" && \
     make && \
     cp "bin/protoc-gen-bq-schema" /usr/local/bin/ && \
+    cd / && \
+    mv "/protoc-gen-bq-schema" "${USER_HOME}/protoc-gen-bq-schema" && \
     chmod a+rx "/usr/local/bin/protoc-gen-bq-schema"
 
 RUN mkdir "${WPTDASHBOARD_DIR}"
-RUN mkdir "${WPT_DIR}"
+RUN mkdir "${WPT_PATH}"
 
 WORKDIR "${WPTDASHBOARD_DIR}"

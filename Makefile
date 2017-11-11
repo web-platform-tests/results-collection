@@ -14,8 +14,8 @@
 
 WPTDASHBOARD_DIR ?= /home/jenkins/wptdashboard
 
-PB_LIB_DIR ?= /protobuf/src
-PB_BQ_LIB_DIR ?= /protoc-gen-bq-schema
+PB_LIB_DIR ?= ../protobuf/src
+PB_BQ_LIB_DIR ?= ../protoc-gen-bq-schema
 PB_LOCAL_LIB_DIR ?= protos
 PB_BQ_OUT_DIR ?= bq-schema
 PB_PY_OUT_DIR ?= run/protos

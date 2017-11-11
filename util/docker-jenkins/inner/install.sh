@@ -5,9 +5,9 @@
 
 set -x
 
-pushd "${WPT_DIR}/.."
+pushd "${WPT_PATH}/.."
 git clone --depth 1 https://github.com/w3c/web-platform-tests
 popd
 
-source "${WPT_DIR}/tools/ci/lib.sh"
+source "${WPT_PATH}/tools/ci/lib.sh"
 hosts_fixup
