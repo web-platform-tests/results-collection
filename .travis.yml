@@ -31,7 +31,7 @@ matrix:
         - DOCKER_FILE=Dockerfile.dev
         - DOCKER_IMAGE=wptd-dev
         - DOCKER_INSTANCE=wptd-dev-${RANDOM}
-        - INSTALL_TARGET=py_
+        - INSTALL_TARGET=py_deps
         - TEST_TARGET=py_test
     - language: go
       env:
