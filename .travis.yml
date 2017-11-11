@@ -47,6 +47,10 @@ matrix:
         - DOCKER_INSTANCE=wptd-dev-${RANDOM}
         - INSTALL_TARGET=go_deps
         - TEST_TARGET=go_test
+  # TODO: Include after
+  # https://github.com/w3c/wptdashboard/issues/230
+  # is resolved
+  exclude:
     - language: python
       env:
         - DOCKER_FILE=Dockerfile.jenkins
