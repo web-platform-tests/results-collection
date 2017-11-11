@@ -39,6 +39,10 @@ matrix:
       - DOCKER_IMAGE=wptd-dev
       - DOCKER_INSTANCE=wptd-dev-${RANDOM}
       - TEST_TARGET=go_test
+  # TODO: Include Jenkins test once
+  # https://github.com/w3c/wptdashboard/issues/230
+  # is resolved
+  exclude:
     env:
       - DOCKER_FILE=Dockerfile.jenkins
       - DOCKER_IMAGE=wptd-testrun-jenkins
