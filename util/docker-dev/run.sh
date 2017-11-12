@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Start Docker-based development server as `wptd-dev-instance` in the
+# foreground.
+
 DOCKER_DIR=$(dirname "$0")
 source "${DOCKER_DIR}/../logging.sh"
 source "${DOCKER_DIR}/../path.sh"

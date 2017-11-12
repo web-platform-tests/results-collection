@@ -15,18 +15,21 @@ You'll need [Docker](https://www.docker.com/). With Docker installed, build the 
 ```sh
 docker build -t wptd-base -f Dockerfile.base .
 docker build -t wptd-dev -f Dockerfile.dev .
-./util/docker/dev.sh
+./util/docker-dev/run.sh
 ```
+
+This starts a Docker instance named `wptd-dev-instance`.
 
 ## Running locally
 
 In one terminal, start the web server:
 
 ```sh
-./util/docker/web_server.sh
+./util/docker-dev/web_server.sh
 ```
 
-In another terminal, populate the app with data:
+This will build dependencies and start the Google Cloud development server
+inside `wptd-dev-instance`. In another terminal, populate the app with data:
 
 ```sh
 curl http://localhost:8080/tasks/populate-dev-data
@@ -43,7 +46,8 @@ We run the tests in the development environment with a Python script [`run/run.p
 Ensure that the Docker development image is running (`./util/docker/dev.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
 
 ```sh
-./util/docker/exec.sh run/run.py firefox-56.0-linux --path battery-status
+docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
+    run/run.py firefox-56.0-linux --path battery-status
 ```
 
 # Filesystem and network output

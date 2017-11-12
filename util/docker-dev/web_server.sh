@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Start the Google Cloud web development server in `wptd-dev-instance`
+# (started using ./run.sh).
+
 DOCKER_DIR=$(dirname "$0")
 source "${DOCKER_DIR}/../logging.sh"
 WPTD_PATH=${WPTD_PATH:-"${DOCKER_DIR}/../.."}
