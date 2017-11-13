@@ -133,7 +133,7 @@ limitations under the License.
 
       <test-file-results
         test-runs="[[testRuns]]"
-        test-run-specs="[[testRunSpecs]]"
+        test-run-resources="[[testRunResources]]"
         test-file="[[path]]">
       </test-file-results>
     </template>
@@ -224,6 +224,7 @@ limitations under the License.
           this._refreshDisplayedNodes()
         }
 
+        // Fetch the results JSON for the TestRuns
         const testFileResults = await Promise.all(
           this.testRuns.map(async json => this._fetchResults(json.results_url))
         )
@@ -429,7 +430,7 @@ limitations under the License.
       generateTotalPassNumbers () {
         const totals = {}
 
-        this.testRunSpecs.forEach(testRun => {
+        this.testRuns.forEach(testRun => {
           const testRunID = this._platformID(testRun)
           totals[testRunID] = {passing: 0, total: 0}
 

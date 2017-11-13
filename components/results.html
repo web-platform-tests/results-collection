@@ -27,12 +27,11 @@ limitations under the License.
 
         static get properties () {
           return {
-            // ['browser@sha', ...] specs for the runs to load using /api/run
-            // e.g. ['chrome@latest', 'edge@latest', 'firefox@latest', 'safari@latest']
-            testRunSpecs: {
+            // URLs for TestRuns to load.
+            testRunResources: {
               type: Array
             },
-            // Fetched + parsed JSON blobs for the runs loaded (by their specs, above)
+            // Fetched + parsed JSON blobs for the runs
             testRuns: {
               type: Array
             }
@@ -44,11 +43,7 @@ limitations under the License.
 
           if (!this.testRuns) {
             const fetches = await Promise.all(
-              this.testRunSpecs.map(async testRun => {
-                const pieces = testRun.split('@')
-                const browser = pieces[0]
-                const sha = pieces.length > 1 ? pieces[1] : 'latest'
-                const url = `/api/run?browser=${browser}&sha=${sha}`
+              this.testRunResources.map(async url => {
                 const response = await window.fetch(url)
                 if (response.status !== 200) {
                   return Promise.resolve()
