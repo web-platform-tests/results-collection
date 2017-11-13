@@ -18,6 +18,10 @@ limitations under the License.
 
 <dom-module id="wpt-results-base">
     <script>
+      /**
+       * Base class for re-use of results-fetching behaviour, between
+       * multi-item (wpt-results) and single-test (test-file-results) views.
+       */
       class ResultsBase extends window.Polymer.Element {
         static get is () { return 'wpt-results-base' }
 
@@ -37,17 +41,22 @@ limitations under the License.
 
         async connectedCallback () {
           super.connectedCallback()
+
           if (!this.testRuns) {
-            this.testRuns = await Promise.all(
+            const fetches = await Promise.all(
               this.testRunSpecs.map(async testRun => {
                 const pieces = testRun.split('@')
                 const browser = pieces[0]
                 const sha = pieces.length > 1 ? pieces[1] : 'latest'
                 const url = `/api/run?browser=${browser}&sha=${sha}`
                 const response = await window.fetch(url)
+                if (response.status !== 200) {
+                  return Promise.resolve()
+                }
                 return response.json()
               })
             )
+            this.testRuns = fetches.filter(e => e)  // Filter unresolved fetches.
           }
         }
       }
