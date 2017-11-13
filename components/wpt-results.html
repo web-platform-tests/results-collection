@@ -17,6 +17,7 @@ limitations under the License.
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="results.html">
 <link rel="import" href="test-file-results.html">
 <link rel="import" href="test-run.html">
 
@@ -132,6 +133,7 @@ limitations under the License.
 
       <test-file-results
         test-runs="[[testRuns]]"
+        test-run-specs="[[testRunSpecs]]"
         test-file="[[path]]">
       </test-file-results>
     </template>
@@ -177,7 +179,7 @@ limitations under the License.
   </template>
 
   <script>
-    class WPTResults extends window.Polymer.Element {
+    class WPTResults extends ResultsBase {
       static get is () { return 'wpt-results' }
 
       static get properties () {
@@ -193,15 +195,6 @@ limitations under the License.
           isLatest: {
             type: Boolean,
             computed: '_computeIsLatest(sha)'
-          },
-          // ['browser@sha', ...] specs for the runs to load using /api/run
-          // e.g. ['chrome@latest', 'edge@latest', 'firefox@latest', 'safari@latest']
-          testRunSpecs: {
-            type: Array
-          },
-          // Fetched + parsed JSON blobs for the runs loaded (by their specs, above)
-          testRuns: {
-            type: Array
           },
           path: {
             type: String,
@@ -223,25 +216,15 @@ limitations under the License.
       }
 
       async connectedCallback () {
-        super.connectedCallback()
+        await super.connectedCallback()
 
         window.onpopstate = (event) => {
           this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1')
           this._refreshDisplayedNodes()
         }
 
-        const testRuns = await Promise.all(
-          this.testRunSpecs.map(async testRun => {
-            const pieces = testRun.split('@')
-            const browser = pieces[0]
-            const sha = pieces.length > 1 ? pieces[1] : 'latest'
-            const url = `/api/run?browser=${browser}&sha=${sha}`
-            const response = await window.fetch(url)
-            return response.json()
-          }))
-
         const testFileResults = await Promise.all(
-          testRuns.map(async json => this._fetchResults(json.results_url))
+          this.testRuns.map(async json => this._fetchResults(json.results_url))
         )
 
         testFileResults.forEach(result => {
@@ -255,7 +238,6 @@ limitations under the License.
           })
         })
 
-        this.testRuns = testRuns
         this._refreshDisplayedNodes()
       }
 
