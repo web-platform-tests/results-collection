@@ -28,8 +28,7 @@ In one terminal, start the web server:
 ./util/docker-dev/web_server.sh
 ```
 
-This will build dependencies and start the Google Cloud development server
-inside `wptd-dev-instance`. In another terminal, populate the app with data:
+This will build dependencies and start the Google App Engine development server inside `wptd-dev-instance`. In another terminal, populate the app with data:
 
 ```sh
 curl http://localhost:8080/tasks/populate-dev-data

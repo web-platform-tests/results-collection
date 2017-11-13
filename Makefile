@@ -28,10 +28,10 @@ test: py_test go_test
 
 # Note: Do not depend on jenkins_install; it should run as root
 jenkins_test: proto
-	$(WPTD_PATH)/util/docker-jenkins/inner/run.sh
+	$(WPTD_PATH)/util/docker-jenkins/inner/travis_ci_run.sh
 
 jenkins_install: py_deps
-	$(WPTD_PATH)/util/docker-jenkins/inner/install.sh
+	$(WPTD_PATH)/util/docker-jenkins/inner/travis_ci_install.sh
 
 lint: py_lint go_lint
 
