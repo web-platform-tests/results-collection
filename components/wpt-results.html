@@ -17,6 +17,7 @@ limitations under the License.
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="results.html">
 <link rel="import" href="test-file-results.html">
 <link rel="import" href="test-run.html">
 
@@ -132,6 +133,7 @@ limitations under the License.
 
       <test-file-results
         test-runs="[[testRuns]]"
+        test-run-resources="[[testRunResources]]"
         test-file="[[path]]">
       </test-file-results>
     </template>
@@ -177,7 +179,8 @@ limitations under the License.
   </template>
 
   <script>
-    class WPTResults extends window.Polymer.Element {
+    /* global ResultsBase */
+    class WPTResults extends ResultsBase {
       static get is () { return 'wpt-results' }
 
       static get properties () {
@@ -193,15 +196,6 @@ limitations under the License.
           isLatest: {
             type: Boolean,
             computed: '_computeIsLatest(sha)'
-          },
-          // URLs to load to get the TestRun JSON
-          testRunResources: {
-            type: Array
-          },
-          // TestRuns JSON objects, either fetched + parsed (from their source URLs, above),
-          // or initially dumped inline in the test-runs attribute.
-          testRuns: {
-            type: Array
           },
           path: {
             type: String,
@@ -223,21 +217,11 @@ limitations under the License.
       }
 
       async connectedCallback () {
-        super.connectedCallback()
+        await super.connectedCallback()
 
         window.onpopstate = (event) => {
           this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1')
           this._refreshDisplayedNodes()
-        }
-
-        // Fetch the TestRun JSON if it's not dumped inline.
-        if (!this.testRuns) {
-          const testRuns = await Promise.all(
-            this.testRunResources.map(async url => {
-              const response = await window.fetch(url)
-              return response.json()
-            }))
-          this.testRuns = testRuns
         }
 
         // Fetch the results JSON for the TestRuns
@@ -446,7 +430,7 @@ limitations under the License.
       generateTotalPassNumbers () {
         const totals = {}
 
-        this.testRunSpecs.forEach(testRun => {
+        this.testRuns.forEach(testRun => {
           const testRunID = this._platformID(testRun)
           totals[testRunID] = {passing: 0, total: 0}
 
