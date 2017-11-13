@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Make targets in this file are intended to be run inside the Docker container
+# environment.
+
+# Make targets can be run in a host environment, but that requires ensuring
+# the correct version of tools are installed and environment variables are
+# set appropriately.
+
 WPTD_PATH ?= /home/jenkins/wptdashboard
 
 PB_LIB_DIR ?= ../protobuf/src
