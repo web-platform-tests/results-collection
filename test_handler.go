@@ -60,9 +60,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	const sourceUrl = `/api/run?browser=%s&sha=%s`
+	const sourceURL = `/api/run?browser=%s&sha=%s`
 	for _, browserName := range browserNames {
-		testRunSources = append(testRunSources, fmt.Sprintf(sourceUrl, browserName, runSHA))
+		testRunSources = append(testRunSources, fmt.Sprintf(sourceURL, browserName, runSHA))
 	}
 
 	testRunSourcesBytes, err := json.Marshal(testRunSources)
