@@ -42,7 +42,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var testRunSpecs []string
+	var testRunSources []string
 	var browserNames []string
 	browserNames, err = GetBrowserNames()
 	if err != nil {
@@ -60,21 +60,22 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	const sourceUrl = `/api/run?browser=%s&sha=%s`
 	for _, browserName := range browserNames {
-		testRunSpecs = append(testRunSpecs, fmt.Sprintf("%s@%s", browserName, runSHA))
+		testRunSources = append(testRunSources, fmt.Sprintf(sourceUrl, browserName, runSHA))
 	}
 
-	testRunSpecsBytes, err := json.Marshal(testRunSpecs)
+	testRunSourcesBytes, err := json.Marshal(testRunSources)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := struct {
-		TestRunSpecs string
-		SHA          string
+		TestRunSources string
+		SHA            string
 	}{
-		string(testRunSpecsBytes),
+		string(testRunSourcesBytes),
 		runSHA,
 	}
 
