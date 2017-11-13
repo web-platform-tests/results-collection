@@ -37,7 +37,7 @@ docker exec -u 0:0 wptd-dev-instance \
     chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
 
 docker exec -ti -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
-    /wptdashboard/util/docker-dev/inner/watch.sh
+    /home/jenkins/wptdashboard/util/docker-dev/inner/watch.sh
 
 docker stop wptd-dev-instance
 docker rm wptd-dev-instance

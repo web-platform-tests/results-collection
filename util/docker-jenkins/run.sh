@@ -15,6 +15,6 @@ docker build -t "${BASE_IMAGE_NAME}" "${WPTD_PATH}"
 docker build -t "${JENKINS_IMAGE_NAME}" -f "${JENKINS_DOCKERFILE}" "${WPTD_PATH}"
 
 docker run \
-  -p 4445:4445 \
-  --entrypoint "/bin/bash" "${JENKINS_IMAGE_NAME}" \
-  /wptdashboard/util/docker-jenkins/inner/run.sh
+    -p 4445:4445 \
+    --entrypoint "/bin/bash" "${JENKINS_IMAGE_NAME}" \
+    /home/jenkins/wptdashboard/util/docker-jenkins/inner/run.sh
