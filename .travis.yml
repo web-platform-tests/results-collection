@@ -12,29 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+sudo: required
+
+services:
+  - docker
+
 matrix:
   include:
-    - language: node_js
-      node_js:
-        - "node"
-
     - language: python
-      python: 2.7
-      install: "pip install -r requirements.txt"
-      script:
-        - pycodestyle .
-        - python -m unittest discover -p "*_test.py"
-
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=py_deps
+        - TEST_TARGET=py_lint
     - language: python
-      python: 2.7
-      services:
-        - docker
-      script: ./ci_container.sh
-
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=py_deps
+        - TEST_TARGET=py_test
     - language: go
-      install:
-        - go get -t ./...
-        - go get -u github.com/golang/lint/golint
-      script:
-        - go test -v ./...
-        - $GOPATH/bin/golint -set_exit_status
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=go_deps
+        - TEST_TARGET=go_lint
+    - language: go
+      env:
+        - DOCKER_FILE=Dockerfile.dev
+        - DOCKER_IMAGE=wptd-dev
+        - DOCKER_INSTANCE=wptd-dev-${RANDOM}
+        - INSTALL_TARGET=go_deps
+        - TEST_TARGET=go_test
+    - language: python
+      env:
+        - DOCKER_FILE=Dockerfile.jenkins
+        - DOCKER_IMAGE=wptd-testrun-jenkins
+        - DOCKER_INSTANCE=wptd-testrun-jenkins-${RANDOM}
+        - INSTALL_TARGET=jenkins_install
+        - TEST_TARGET=jenkins_test
+
+before_install:
+  - docker build -t wptd-base -f Dockerfile.base .
+  - docker build -t "${DOCKER_IMAGE}" -f "${DOCKER_FILE}" .
+  - docker run -t -d --entrypoint /bin/bash -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v "$(pwd)":/home/jenkins/wptdashboard -u $(id -u $USER):$(id -g $USER) --name "${DOCKER_INSTANCE}" "${DOCKER_IMAGE}"
+
+install:
+  - if [ "${INSTALL_TARGET}" != "" ]; then docker exec -t -u 0:0 "${DOCKER_INSTANCE}" make "${INSTALL_TARGET}"; fi
+  - docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
+
+script:
+  - docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
+
+after_script:
+  - docker stop "${DOCKER_INSTANCE}"
+  - docker rm "${DOCKER_INSTANCE}"

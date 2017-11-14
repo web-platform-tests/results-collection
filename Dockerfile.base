@@ -1,0 +1,72 @@
+FROM gcr.io/cloud-solutions-images/jenkins-k8s-slave
+
+USER root
+
+ARG PB_VERSION=3.4.0
+ARG GO_VERSION=1.8.5
+
+ENV USER_HOME="/home/jenkins"
+ENV WPTD_PATH="${USER_HOME}/wptdashboard"
+ENV WPT_PATH="${USER_HOME}/web-platform-tests"
+ENV WPTD_OUT_PATH="${USER_HOME}/wptdout"
+
+RUN apt-get update
+
+# Install git, python-pip, and unzip for setup below
+RUN apt-get install --assume-yes --no-install-suggests \
+    --no-install-recommends \
+    git \
+    make \
+    python-pip \
+    python-setuptools \
+    unzip
+
+# Install golang
+RUN mkdir /go-fetch
+WORKDIR /go-fetch
+RUN curl -L -o "go.tar.gz" "https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    tar -C /usr/local -xzf "go.tar.gz" && \
+    cd / && \
+    rm -rf /go-fetch
+
+# Setup go environment
+RUN mkdir "${USER_HOME}/go"
+ENV GOPATH="${USER_HOME}/go"
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# Install go dependencies
+RUN go get github.com/golang/lint/golint
+
+# Install protobuf libraries
+RUN mkdir /protobuf-fetch
+WORKDIR /protobuf-fetch
+RUN curl -L -o "protobuf.zip" "https://github.com/google/protobuf/archive/v${PB_VERSION}.zip" && \
+    unzip "protobuf.zip" -d / && \
+    mv "/protobuf-${PB_VERSION}" "${USER_HOME}/protobuf" && \
+    cd /  && \
+    rm -rf /protobuf-fetch
+
+# Install protobuf compiler
+RUN mkdir /protoc
+WORKDIR /protoc
+RUN curl -L -o "protoc.zip" "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protoc-${PB_VERSION}-linux-x86_64.zip" && \
+    unzip "protoc.zip" && \
+    cp "bin/protoc" /usr/local/bin/ && \
+    chmod a+rx "/usr/local/bin/protoc" && \
+    cd /  && \
+    rm -rf /protoc
+
+# Install protobuf BigQuery schema generator
+WORKDIR /
+RUN git clone "https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema.git" && \
+    cd "protoc-gen-bq-schema" && \
+    make && \
+    cp "bin/protoc-gen-bq-schema" /usr/local/bin/ && \
+    cd / && \
+    mv "/protoc-gen-bq-schema" "${USER_HOME}/protoc-gen-bq-schema" && \
+    chmod a+rx "/usr/local/bin/protoc-gen-bq-schema"
+
+RUN mkdir "${WPTD_PATH}"
+RUN mkdir "${WPT_PATH}"
+
+WORKDIR "${WPTD_PATH}"
