@@ -28,7 +28,7 @@ import (
 // URL Params:
 //     sha: SHA[0:10] of the repo when the tests were executed (or 'latest')
 func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
-	runSHA, err := GetRunSHA(r)
+	runSHA, err := ParseSHAParam(r)
 	if err != nil {
 		http.Error(w, "Invalid query params", http.StatusBadRequest)
 		return
@@ -73,7 +73,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 //     sha: SHA[0:10] of the repo when the test was executed (or 'latest')
 //     browser: Browser for the run (e.g. 'chrome', 'safari-10')
 func apiTestRunHandler(w http.ResponseWriter, r *http.Request) {
-	runSHA, err := GetRunSHA(r)
+	runSHA, err := ParseSHAParam(r)
 	if err != nil {
 		http.Error(w, "Invalid query params", http.StatusBadRequest)
 		return
