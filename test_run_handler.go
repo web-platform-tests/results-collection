@@ -23,6 +23,7 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+  "net/url"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,19 +38,25 @@ func testRunHandler(w http.ResponseWriter, r *http.Request) {
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	var err error
 
 	// Fetch pre-uploaded Token entity.
-	suppliedSecret := r.URL.Query().Get("secret")
+  var queryParams url.Values
+  var err error
+  if queryParams, err = url.ParseQuery(r.URL.RawQuery); err != nil {
+    http.Error(w, err.Error(), http.StatusBadRequest)
+    return
+  }
+
+  suppliedSecret := queryParams.Get("secret")
 	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
 	var token Token
 	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
 
 	if suppliedSecret != token.Secret {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("Invalid token '%s'", suppliedSecret), http.StatusUnauthorized)
 		return
 	}
 
@@ -66,8 +73,6 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 	testRun.CreatedAt = time.Now()
 
-	fmt.Fprintf(w, "got... %v", testRun)
-
 	// Create a new TestRun out of the JSON body of the request.
 	key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
 	if _, err := datastore.Put(ctx, key, &testRun); err != nil {
@@ -75,7 +80,12 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Successfully created TestRun... %v", testRun)
+	var jsonBytes []byte
+	if jsonBytes, err = json.Marshal(testRun); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonBytes)
 	w.WriteHeader(http.StatusCreated)
 }
 
