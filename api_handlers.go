@@ -36,8 +36,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx := appengine.NewContext(r)
 	var browserNames []string
-	browserNames, err = GetBrowserNames()
-	if err != nil {
+	if browserNames, err = GetBrowserNames(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

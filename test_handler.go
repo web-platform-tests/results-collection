@@ -18,11 +18,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
-	"sort"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
@@ -101,29 +99,6 @@ func ParseSHAParam(r *http.Request) (runSHA string, err error) {
 		runSHA = runParam
 	}
 	return runSHA, err
-}
-
-// GetBrowserNames loads, parses and returns the set of names of browsers
-// which are to be included (flagged as initially_loaded in the JSON).
-// TODO(lukebjerring): Persist in memory.
-func GetBrowserNames() (browserNames []string, err error) {
-	var bytes []byte
-	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-		return nil, err
-	}
-
-	var browsers map[string]Browser
-	if err = json.Unmarshal(bytes, &browsers); err != nil {
-		return nil, err
-	}
-
-	for _, browser := range browsers {
-		if browser.InitiallyLoaded {
-			browserNames = append(browserNames, browser.BrowserName)
-		}
-	}
-	sort.Strings(browserNames)
-	return browserNames, nil
 }
 
 // getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that complete for all of the given browser names.
