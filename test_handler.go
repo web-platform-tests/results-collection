@@ -15,11 +15,15 @@
 package wptdashboard
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
+
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -42,6 +46,16 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	ctx := appengine.NewContext(r)
+	// Make sure to show results for the same complete run (executed for all browsers).
+	if runSHA == "latest" {
+		runSHA, err = getLastCompleteRunSHA(ctx, browserNames)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	const sourceURL = `/api/run?browser=%s&sha=%s`
@@ -85,4 +99,38 @@ func ParseSHAParam(r *http.Request) (runSHA string, err error) {
 		runSHA = runParam
 	}
 	return runSHA, err
+}
+
+// getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that complete for all of the given browser names.
+func getLastCompleteRunSHA(ctx context.Context, browserNames []string) (sha string, err error) {
+	baseQuery := datastore.
+		NewQuery("TestRun").
+		Order("-CreatedAt").
+		Limit(100).
+		Project("Revision")
+
+	// Map is sha -> browser -> seen yet?  - this prevents over-counting dupes.
+	runSHAs := make(map[string]map[string]bool)
+	for _, browser := range browserNames {
+		it := baseQuery.Filter("BrowserName = ", browser).Run(ctx)
+		for {
+			var testRun TestRun
+			_, err := it.Next(&testRun)
+			if err == datastore.Done {
+				break
+			}
+			if err != nil {
+				return "latest", err
+			}
+			if _, ok := runSHAs[testRun.Revision]; !ok {
+				runSHAs[testRun.Revision] = make(map[string]bool)
+			}
+			browsersSeen := runSHAs[testRun.Revision]
+			browsersSeen[browser] = true
+			if len(browsersSeen) == len(browserNames) {
+				return testRun.Revision, nil
+			}
+		}
+	}
+	return "latest", nil
 }
