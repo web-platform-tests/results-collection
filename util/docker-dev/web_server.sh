@@ -16,4 +16,4 @@ if [ "${DOCKER_STATUS}" != "0" ]; then
 fi
 info "Starting web server. Port forwarded from wptd-dev-instance: 8080"
 docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
-    dev_appserver.py --host=0.0.0.0 .
+    dev_appserver.py --api_port=9999 --host=0.0.0.0 .
