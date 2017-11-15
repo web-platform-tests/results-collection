@@ -23,6 +23,7 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"fmt"
 )
 
 // apiTestRunsHandler is responsible for emitting test-run JSON for all the runs at a given SHA.
@@ -149,7 +150,7 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if suppliedSecret != token.Secret {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("Invalid token '%s'", suppliedSecret), http.StatusUnauthorized)
 		return
 	}
 
@@ -161,7 +162,7 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	var testRun TestRun
 	if err = json.Unmarshal(body, &testRun); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to parse JSON: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 	testRun.CreatedAt = time.Now()
