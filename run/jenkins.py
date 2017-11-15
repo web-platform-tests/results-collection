@@ -119,21 +119,6 @@ def main():
         ]
         if args['run_path']:
             command.insert(3, args['run_path'])
-    elif platform['browser_name'] == "firefox":
-        command = [
-            'xvfb-run', '--auto-servernum',
-            './wpt', 'run',
-            platform['browser_name'],
-            '--install-fonts',
-            '--install-browser',
-            '--yes',
-            '--log-mach=%s' % LOCAL_LOG_FILEPATH,
-            '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
-            # temp fix for webRTC
-            '--setpref', 'media.navigator.streams.fake=true',
-        ]
-        if args['run_path']:
-            command.insert(5, args['run_path'])
     else:
         command = [
             'xvfb-run', '--auto-servernum',
@@ -144,7 +129,10 @@ def main():
             '--yes',
             '--log-mach=%s' % LOCAL_LOG_FILEPATH,
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
-        ]
+        ],
+        if platform['browser_name'] == 'firefox':
+          # for webrtc
+          command.extend(['--setpref', 'media.navigator.streams.fake=true'])
         if args['run_path']:
             command.insert(5, args['run_path'])
 
