@@ -16,70 +16,27 @@ package wptdashboard
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
-	"time"
+	"sort"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )
 
-func testRunHandler(w http.ResponseWriter, r *http.Request) {
+// testRunsHandler handles GET/POST requests to /test-runs
+func testRunsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		handlePost(w, r)
+		// TODO(#251): Move consumers of old endpoint.
+		// /test-runs is the legacy POST endpoint, migrated to /api/runs, and left to avoid breakages
+		apiTestRunPostHandler(w, r)
 	} else if r.Method == "GET" {
-		handleGet(w, r)
+		handleTestRunGet(w, r)
 	} else {
 		http.Error(w, "This endpoint only supports GET and POST.", http.StatusMethodNotAllowed)
 	}
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	var err error
-
-	// Fetch pre-uploaded Token entity.
-	suppliedSecret := r.URL.Query().Get("secret")
-	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
-	var token Token
-	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if suppliedSecret != token.Secret {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-
-	var body []byte
-	if body, err = ioutil.ReadAll(r.Body); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var testRun TestRun
-	if err = json.Unmarshal(body, &testRun); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	testRun.CreatedAt = time.Now()
-
-	fmt.Fprintf(w, "got... %v", testRun)
-
-	// Create a new TestRun out of the JSON body of the request.
-	key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
-	if _, err := datastore.Put(ctx, key, &testRun); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Fprintf(w, "Successfully created TestRun... %v", testRun)
-	w.WriteHeader(http.StatusCreated)
-}
-
-func handleGet(w http.ResponseWriter, r *http.Request) {
+func handleTestRunGet(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	var err error
 	var browserNames []string
@@ -89,21 +46,18 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(100)
-	runs := make(map[string][]TestRun)
+
+	var runs []TestRun
 	for _, browserName := range browserNames {
-		var testRunResults []TestRun
+		var queryResults []TestRun
 		query := baseQuery.Filter("BrowserName =", browserName)
-		if _, err := query.GetAll(ctx, &testRunResults); err != nil {
+		if _, err := query.GetAll(ctx, &queryResults); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		for _, r := range testRunResults {
-			if _, ok := runs[r.Revision]; !ok {
-				runs[r.Revision] = make([]TestRun, 0)
-			}
-			runs[r.Revision] = append(runs[r.Revision], r)
-		}
+		runs = append(runs, queryResults...)
 	}
+	sort.Sort(byCreatedAtDesc(runs))
 
 	// Serialize the data + pipe through the test-runs.html template.
 	testRunsBytes, err := json.Marshal(runs)
@@ -122,3 +76,9 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+type byCreatedAtDesc []TestRun
+
+func (a byCreatedAtDesc) Len() int           { return len(a) }
+func (a byCreatedAtDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byCreatedAtDesc) Less(i, j int) bool { return a[i].CreatedAt.Before(a[j].CreatedAt) }

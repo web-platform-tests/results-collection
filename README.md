@@ -145,10 +145,6 @@ This doesn't work with some HTTPS tests. Also be advised that the server is not 
 - ECMAScript 6 compatibility table - https://kangax.github.io/compat-table/es6/
 - https://html5test.com/
 
-#### Disclaimer
-
-This is not an official Google product.
-
 # Appendix
 
 ## Terminology
