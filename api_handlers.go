@@ -16,11 +16,14 @@ package wptdashboard
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"fmt"
 )
 
 // apiTestRunsHandler is responsible for emitting test-run JSON for all the runs at a given SHA.
@@ -66,13 +69,23 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(testRunsBytes)
 }
 
-// apiTestRunHandler is responsible for emitting the test-run JSON a specific run,
+func apiTestRunHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		apiTestRunPostHandler(w, r)
+	} else if r.Method == "GET" {
+		apiTestRunGetHandler(w, r)
+	} else {
+		http.Error(w, "This endpoint only supports GET and POST.", http.StatusMethodNotAllowed)
+	}
+}
+
+// apiTestRunGetHandler is responsible for emitting the test-run JSON a specific run,
 // identified by a named browser (platform) at a given SHA.
 //
 // URL Params:
 //     sha: SHA[0:10] of the repo when the test was executed (or 'latest')
 //     browser: Browser for the run (e.g. 'chrome', 'safari-10')
-func apiTestRunHandler(w http.ResponseWriter, r *http.Request) {
+func apiTestRunGetHandler(w http.ResponseWriter, r *http.Request) {
 	runSHA, err := ParseSHAParam(r)
 	if err != nil {
 		http.Error(w, "Invalid query params", http.StatusBadRequest)
@@ -118,6 +131,56 @@ func apiTestRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(testRunsBytes)
+}
+
+// apiTestRunPostHandler is responsible for handling TestRun submissions (via HTTP POST requests).
+// It asserts the presence of a required secret token, then saves the JSON blob to the Datastore.
+// See models.go for the JSON format expected.
+func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	var err error
+
+	// Fetch pre-uploaded Token entity.
+	suppliedSecret := r.URL.Query().Get("secret")
+	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
+	var token Token
+	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if suppliedSecret != token.Secret {
+		http.Error(w, fmt.Sprintf("Invalid token '%s'", suppliedSecret), http.StatusUnauthorized)
+		return
+	}
+
+	var body []byte
+	if body, err = ioutil.ReadAll(r.Body); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var testRun TestRun
+	if err = json.Unmarshal(body, &testRun); err != nil {
+		http.Error(w, "Failed to parse JSON: " + err.Error(), http.StatusBadRequest)
+		return
+	}
+	testRun.CreatedAt = time.Now()
+
+	// Create a new TestRun out of the JSON body of the request.
+	key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
+	if _, err := datastore.Put(ctx, key, &testRun); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var jsonOutput []byte
+	if jsonOutput, err = json.Marshal(testRun); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonOutput)
+	w.WriteHeader(http.StatusCreated)
 }
 
 // getBrowserParam parses and validates the 'browser' param for the request.

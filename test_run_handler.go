@@ -16,81 +16,28 @@ package wptdashboard
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"sort"
-	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"net/url"
 )
 
-func testRunHandler(w http.ResponseWriter, r *http.Request) {
+// testRunsHandler handles GET/POST requests to /test-runs
+func testRunsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		handlePost(w, r)
+		// TODO(#251): Move consumers of old endpoint.
+		// /test-runs is the legacy POST endpoint, migrated to /api/runs, and left to avoid breakages
+		apiTestRunPostHandler(w, r)
 	} else if r.Method == "GET" {
-		handleGet(w, r)
+		handleTestRunGet(w, r)
 	} else {
 		http.Error(w, "This endpoint only supports GET and POST.", http.StatusMethodNotAllowed)
 	}
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-
-	// Fetch pre-uploaded Token entity.
-	var queryParams url.Values
-	var err error
-	if queryParams, err = url.ParseQuery(r.URL.RawQuery); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	suppliedSecret := queryParams.Get("secret")
-	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
-	var token Token
-	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if suppliedSecret != token.Secret {
-		http.Error(w, fmt.Sprintf("Invalid token '%s'", suppliedSecret), http.StatusUnauthorized)
-		return
-	}
-
-	var body []byte
-	if body, err = ioutil.ReadAll(r.Body); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var testRun TestRun
-	if err = json.Unmarshal(body, &testRun); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	testRun.CreatedAt = time.Now()
-
-	// Create a new TestRun out of the JSON body of the request.
-	key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
-	if _, err := datastore.Put(ctx, key, &testRun); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var jsonBytes []byte
-	if jsonBytes, err = json.Marshal(testRun); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(jsonBytes)
-	w.WriteHeader(http.StatusCreated)
-}
-
-func handleGet(w http.ResponseWriter, r *http.Request) {
+func handleTestRunGet(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	var err error
 	var browserNames []string
