@@ -106,6 +106,7 @@ def main(args):  # type: (argparse.Namespace) -> None
             ResultsURL=path % 'safari-10-macos-10.12-sauce-summary.json.gz'),
     ]  # type: List[TestRun]
 
+    # TODO(lukebjerring): Re-use #242 add_production_run.py code here instead.
     for browser in ['chrome', 'edge', 'firefox', 'safari']:
         jsonURL = ('https://wpt.fyi/results?'
                    + urlencode({'platform': browser}))
