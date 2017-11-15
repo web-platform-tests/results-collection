@@ -34,14 +34,6 @@ var errUseLastResponse = errors.New("net/http: use last response")
 func populateDevData(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
-	// Store an empty secret for /test-runs POST requests.
-	key := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
-	if _, err := datastore.Put(ctx, key, &Token{Secret: ""}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write([]byte("Successfully added Token 'upload-token' with empty secret.\n"))
-
 	devData := map[string]*TestRun{
 		"dev-testrun-chrome-63": &TestRun{
 			BrowserName:    "chrome",

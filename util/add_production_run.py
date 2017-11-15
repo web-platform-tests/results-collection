@@ -39,8 +39,6 @@ here = os.path.dirname(__file__)
 def main():
     args = parse_flags()  # type: argparse.Namespace
 
-    print(http.client.CREATED)
-
     loggingLevel = getattr(logging, args.log.upper(), None)
     logging.basicConfig(level=loggingLevel)
 
@@ -85,7 +83,8 @@ def main():
             continue
 
         if response.status == http.client.CREATED:
-            logging.info("Successfully created TestRun")
+            logging.info("Successfully created TestRun %s@%s"
+                         % (test['browser_name'], test['revision']))
         logging.info("%s\n" % (response.data.decode('utf-8')))
 
 
