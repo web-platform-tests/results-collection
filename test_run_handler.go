@@ -21,7 +21,6 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"net/url"
 )
 
 // testRunsHandler handles GET/POST requests to /test-runs
