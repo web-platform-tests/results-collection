@@ -16,12 +16,8 @@ package wptdashboard
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"net/http"
-	"sort"
-
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 	"net/url"
 	"regexp"
 )
@@ -34,61 +30,36 @@ import (
 // The browsers initially displayed to the user are defined in browsers.json.
 // The JSON property "initially_loaded" is what controls this.
 func testHandler(w http.ResponseWriter, r *http.Request) {
-	runSHA, err := GetRunSHA(r)
+	runSHA, err := ParseSHAParam(r)
 	if err != nil {
 		http.Error(w, "Invalid query params", http.StatusBadRequest)
 		return
 	}
 
-	ctx := appengine.NewContext(r)
-	var bytes []byte
-	var browsers map[string]Browser
-
-	if bytes, err = ioutil.ReadFile("browsers.json"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err = json.Unmarshal(bytes, &browsers); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var testRuns []TestRun
-	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
+	var testRunSources []string
 	var browserNames []string
-
-	for _, browser := range browsers {
-		if browser.InitiallyLoaded {
-			browserNames = append(browserNames, browser.BrowserName)
-		}
+	browserNames, err = GetBrowserNames()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	sort.Strings(browserNames)
 
+	const sourceURL = `/api/run?browser=%s&sha=%s`
 	for _, browserName := range browserNames {
-		var testRunResults []TestRun
-		query := baseQuery.Filter("BrowserName =", browserName)
-		if runSHA != "" && runSHA != "latest" {
-			query = query.Filter("Revision =", runSHA)
-		}
-		if _, err := query.GetAll(ctx, &testRunResults); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		testRuns = append(testRuns, testRunResults...)
+		testRunSources = append(testRunSources, fmt.Sprintf(sourceURL, browserName, runSHA))
 	}
 
-	testRunsBytes, err := json.Marshal(testRuns)
+	testRunSourcesBytes, err := json.Marshal(testRunSources)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := struct {
-		TestRuns string
-		SHA      string
+		TestRunSources string
+		SHA            string
 	}{
-		string(testRunsBytes),
+		string(testRunSourcesBytes),
 		runSHA,
 	}
 
@@ -98,9 +69,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetRunSHA parses and validates the 'sha' param for the request.
+// ParseSHAParam parses and validates the 'sha' param for the request.
 // It returns "latest" by default (and in error cases).
-func GetRunSHA(r *http.Request) (runSHA string, err error) {
+func ParseSHAParam(r *http.Request) (runSHA string, err error) {
 	// Get the SHA for the run being loaded (the first part of the path.)
 	runSHA = "latest"
 	params, err := url.ParseQuery(r.URL.RawQuery)

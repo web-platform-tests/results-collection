@@ -1,0 +1,61 @@
+<!--
+Copyright 2017 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="wpt-results-base">
+    <script>
+      /**
+       * Base class for re-use of results-fetching behaviour, between
+       * multi-item (wpt-results) and single-test (test-file-results) views.
+       */
+      class ResultsBase extends window.Polymer.Element {
+        static get is () { return 'wpt-results-base' }
+
+        static get properties () {
+          return {
+            // URLs for TestRuns to load.
+            testRunResources: {
+              type: Array
+            },
+            // Fetched + parsed JSON blobs for the runs
+            testRuns: {
+              type: Array
+            }
+          }
+        }
+
+        async connectedCallback () {
+          super.connectedCallback()
+
+          if (!this.testRuns) {
+            const fetches = await Promise.all(
+              this.testRunResources.map(async url => {
+                const response = await window.fetch(url)
+                if (response.status !== 200) {
+                  return Promise.resolve()
+                }
+                return response.json()
+              })
+            )
+            this.testRuns = fetches.filter(e => e)  // Filter unresolved fetches.
+          }
+        }
+      }
+
+      window.customElements.define(ResultsBase.is, ResultsBase)
+    </script>
+</dom-module>
