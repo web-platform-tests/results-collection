@@ -86,14 +86,18 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
 		"safari",
 	} {
 		// TODO(lukebjerring): Move wpt.fyi base URL to constant.
-		jsonURL := "https://wpt.fyi/results?platform=" + browserName
+		jsonURL := "https://wpt.fyi/json?platform=" + browserName
 		resp, err := client.Head(jsonURL)
+		if resp != nil {
+			defer resp.Body.Close()
+		}
 
+		if urlError, ok := err.(*url.Error); !ok || urlError.Err != errUseLastResponse {
+			fmt.Fprintf(w, "Failed to fetch latest run for %s: %s\n", browserName, )
+			continue
+		}
 		if err == nil {
 			fmt.Fprintf(w, "Got unexpected non-redirect status %d for %s\n", resp.StatusCode, jsonURL)
-			continue
-		} else if urlError, ok := err.(*url.Error); !ok || urlError.Err != errUseLastResponse {
-			fmt.Fprintf(w, "Failed to fetch latest run for %s: %s\n", browserName, )
 			continue
 		}
 

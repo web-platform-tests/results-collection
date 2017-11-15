@@ -26,7 +26,8 @@ import (
 // testRunsHandler handles GET/POST requests to /test-runs
 func testRunsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		// /test-runs is the legacy POST endpoint, migrated to /api/runs and left to avoid breakages.
+		// TODO(#251): Move consumers of old endpoint.
+		// /test-runs is the legacy POST endpoint, migrated to /api/runs, and left to avoid breakages
 		apiTestRunPostHandler(w, r)
 	} else if r.Method == "GET" {
 		handleTestRunGet(w, r)
