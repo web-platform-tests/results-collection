@@ -17,6 +17,7 @@ package wptdashboard
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
@@ -44,21 +45,18 @@ func handleTestRunGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(100)
-	runs := make(map[string][]TestRun)
+
+	var runs []TestRun
 	for _, browserName := range browserNames {
-		var testRunResults []TestRun
+		var queryResults []TestRun
 		query := baseQuery.Filter("BrowserName =", browserName)
-		if _, err := query.GetAll(ctx, &testRunResults); err != nil {
+		if _, err := query.GetAll(ctx, &queryResults); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		for _, r := range testRunResults {
-			if _, ok := runs[r.Revision]; !ok {
-				runs[r.Revision] = make([]TestRun, 0)
-			}
-			runs[r.Revision] = append(runs[r.Revision], r)
-		}
+		runs = append(runs, queryResults...)
 	}
+	sort.Sort(byCreatedAtDesc(runs))
 
 	// Serialize the data + pipe through the test-runs.html template.
 	testRunsBytes, err := json.Marshal(runs)
@@ -77,3 +75,9 @@ func handleTestRunGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+type byCreatedAtDesc []TestRun
+
+func (a byCreatedAtDesc) Len() int           { return len(a) }
+func (a byCreatedAtDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byCreatedAtDesc) Less(i, j int) bool { return a[i].CreatedAt.Before(a[j].CreatedAt) }
