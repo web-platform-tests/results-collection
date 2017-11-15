@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="results.html">
 <link rel="import" href="test-run.html">
 
 <dom-module id="test-file-results">
@@ -76,17 +76,14 @@ limitations under the License.
   </template>
 
   <script>
-    class TestFileResults extends window.Polymer.Element {
+    /* global ResultsBase */
+    class TestFileResults extends ResultsBase {
       static get is () { return 'test-file-results' }
 
       static get properties () {
         return {
-          testRuns: {
-            type: Array
-          },
           testFile: {
-            type: String,
-            observer: '_testFileChanged'
+            type: String
           },
           subtestNames: {
             type: Array,
@@ -95,12 +92,14 @@ limitations under the License.
         }
       }
 
-      connectedCallback () {
-        super.connectedCallback()
+      async connectedCallback () {
+        await super.connectedCallback()
         console.assert(this.testFile)
         console.assert(this.testFile[0] === '/')
         console.assert(this.testRuns)
         console.assert(this.testRuns.length > 0)
+
+        this.fetchTestFile()
       }
 
       async fetchTestFile () {
@@ -136,11 +135,6 @@ limitations under the License.
           return Promise.resolve(null)
         }
         return response.json()
-      }
-
-      _testFileChanged () {
-        this.subtestNames = []
-        this.fetchTestFile()
       }
 
       resultsURL (testRun, testFile) {

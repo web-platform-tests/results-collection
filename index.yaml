@@ -32,6 +32,12 @@ indexes:
 - kind: TestRun
   properties:
   - name: BrowserName
+  - name: Revision
+  - name: CreatedAt
+    direction: desc
+- kind: TestRun
+  properties:
+  - name: BrowserName
   - name: BrowserVersion
   - name: CreatedAt
     direction: desc
@@ -50,3 +56,9 @@ indexes:
   - name: OSVersion
   - name: CreatedAt
     direction: desc
+- kind: TestRun
+  properties:
+  - name: BrowserName
+  - name: CreatedAt
+    direction: desc
+  - name: Revision

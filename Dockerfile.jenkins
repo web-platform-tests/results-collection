@@ -1,32 +1,24 @@
-FROM gcr.io/cloud-solutions-images/jenkins-k8s-slave
-
-USER root
-
-# Expose Sauce Connect port
-EXPOSE 4445
-
-RUN apt-get update
-
-# wpt run dependencies
-RUN apt-get install -y python-pip
-RUN pip install virtualenv
-RUN pip install 'requests==2.13.0'
-
-RUN apt-get install -y git
+FROM wptd-base
 
 # Needed for hosts_fixup
-RUN apt-get install -y sudo
+RUN apt-get install --assume-yes --no-install-suggests \
+    --no-install-recommends \
+    sudo
 
 # Used for running FF and Chrome
-RUN apt-get install -y xvfb
+RUN apt-get install --assume-yes --no-install-suggests \
+    --no-install-recommends \
+    xauth \
+    xvfb
 
 # Used for running FF
-RUN apt-get install -y \
+RUN apt-get install --assume-yes --no-install-suggests \
+    --no-install-recommends \
     libnss3-tools \
     libgtk-3-common \
     libdbus-glib-1-2
 
-RUN mkdir /wptdashboard
-ADD . /wptdashboard
+ADD . "${WPTD_PATH}"
 
-RUN chown -R jenkins:jenkins /wptdashboard
+# Expose Sauce Connect port
+EXPOSE 4445
