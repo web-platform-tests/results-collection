@@ -117,8 +117,7 @@ limitations under the License.
 
         let browsers = new Set()
         let testRuns = {}
-        Object.values(this.testRuns)
-            .reduce((sum, value) => sum.concat(value))
+        this.testRuns
             .forEach(results => {
               browsers.add(results.browser_name)
               if (!testRuns[results.revision]) {
@@ -135,7 +134,7 @@ limitations under the License.
             .map(entry => ({ sha: entry[0], runs: entry[1] }))
             .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)
         this.testResults = flattened
-        this.browsers = Array.from(browsers)
+        this.browsers = Array.from(browsers).sort()
       }
 
       _runClass (testRuns, browser) {
