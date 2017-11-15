@@ -23,7 +23,7 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-  "net/url"
+	"net/url"
 )
 
 func testRunHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,20 +40,20 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	// Fetch pre-uploaded Token entity.
-  var queryParams url.Values
-  var err error
-  if queryParams, err = url.ParseQuery(r.URL.RawQuery); err != nil {
-    http.Error(w, err.Error(), http.StatusBadRequest)
-    return
-  }
+	var queryParams url.Values
+	var err error
+	if queryParams, err = url.ParseQuery(r.URL.RawQuery); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-  suppliedSecret := queryParams.Get("secret")
+	suppliedSecret := queryParams.Get("secret")
 	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
 	var token Token
 	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    return
-  }
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	if suppliedSecret != token.Secret {
 		http.Error(w, fmt.Sprintf("Invalid token '%s'", suppliedSecret), http.StatusUnauthorized)

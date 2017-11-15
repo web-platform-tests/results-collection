@@ -36,7 +36,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
 
 	// Store an empty secret for /test-runs POST requests.
 	key := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
-	if _, err := datastore.Put(ctx, key, &Token{ Secret: "" }); err != nil {
+	if _, err := datastore.Put(ctx, key, &Token{Secret: ""}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -1,8 +1,8 @@
 package wptdashboard
 
 import (
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 	"sort"
 )
 
