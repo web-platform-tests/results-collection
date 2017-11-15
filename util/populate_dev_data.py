@@ -51,7 +51,7 @@ def main(args):  # type: (argparse.Namespace) -> None
         secure=args.secure)
 
     class Token(ndb.Model):
-        secret = ndb.StringProperty()
+        Secret = ndb.StringProperty()
 
     class TestRun(ndb.Model):
         BrowserName = ndb.StringProperty()
@@ -63,9 +63,12 @@ def main(args):  # type: (argparse.Namespace) -> None
         CreatedAt = ndb.DateProperty()
 
     # Create empty Token 'upload-token'
-    secret = Token(id='upload-token', secret='')
+    secret = Token(
+        id='upload-token',
+        Secret='')
     secret.put()
     logging.info('Added Token \'upload-token\' with empty secret.')
+    
     # Add some runs.
     path = '/static/b952881825/%s'
     test_runs = [
