@@ -42,7 +42,7 @@ We run the tests in the development environment with a Python script [`run/run.p
 
 ### Running
 
-Ensure that the Docker development image is running (`./util/docker/dev.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
+Ensure that the Docker development image is running (`./util/docker-dev/run.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
 
 ```sh
 docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
