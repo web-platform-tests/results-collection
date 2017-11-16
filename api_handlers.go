@@ -16,14 +16,15 @@ package wptdashboard
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"fmt"
 )
 
 // apiTestRunsHandler is responsible for emitting test-run JSON for all the runs at a given SHA.
@@ -165,7 +166,12 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse JSON: " + err.Error(), http.StatusBadRequest)
 		return
 	}
-	testRun.CreatedAt = time.Now()
+
+	// Use 'now' as created time, unless flagged as retroactive.
+	if retro, err := strconv.ParseBool(r.URL.Query().Get("retroactive"));
+	    err != nil || !retro {
+	    testRun.CreatedAt = time.Now()
+    }
 
 	// Create a new TestRun out of the JSON body of the request.
 	key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
