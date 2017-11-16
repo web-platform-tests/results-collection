@@ -71,7 +71,8 @@ def main():
                             % (test['browser_name'], test['revision']))
             continue
 
-        post_url = 'http://localhost:8080/api/run'
+        post_url = ('http://localhost:8080/api/run?'
+                    + urlencode({'retroactive': True}))
         try:
             response = pool.request(
                 'POST',
