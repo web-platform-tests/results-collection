@@ -28,10 +28,14 @@ limitations under the License.
       }
       table {
         width: 100%;
+        border-collapse: separate;
       }
-      tr td {
+      td {
         padding: 0 0.5em;
         margin: 2px;
+      }
+      td.month {
+        border-top: 1px solid #e3edfd;
       }
 
       .info {
@@ -74,12 +78,15 @@ limitations under the License.
       <tbody>
 
       <template is="dom-repeat" items="{{ testResults }}" as="results">
-        <tr>
+        <tr data-boundary$="{{ results.month_boundary }}">
           <td>
-            <a href="/?sha={{ results.sha }}">{{ results.sha }}</a>
+            <a href="/?sha={{ results.sha }}" title="{{ _computeDateTooltip(results.date) }}">{{ results.sha }}</a>
           </td>
           <template is="dom-repeat" items="{{ browsers }}" as="browser">
             <td class$="{{ _runClass(results.runs, browser) }}"></td>
+          </template>
+          <template is="dom-if" if="{{ results.month_boundary }}">
+            <td class="month">{{ _computeMonthName(results.date) }}</td>
           </template>
         </tr>
       </template>
@@ -112,6 +119,27 @@ limitations under the License.
         }
       }
 
+      _computeMonthName(date) {
+        return [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December"
+        ][date.getMonth()]
+      }
+
+      _computeDateTooltip(date) {
+        return date.toDateString()
+      }
+
       async connectedCallback () {
         super.connectedCallback()
 
@@ -132,7 +160,19 @@ limitations under the License.
         const firstRunTime = x => Object.values(x.runs)[0].created_at
         const flattened = Object.entries(testRuns)
             .map(entry => ({ sha: entry[0], runs: entry[1] }))
-            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)
+            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)    
+        
+        // Append time (month) metadata.
+        if (flattened.length > 1) {
+            let previousMonth = -1
+            for (var i = 0; i < flattened.length; i++) {
+                let current = new Date(firstRunTime(flattened[i]))
+                flattened[i]['date'] = current
+                if (previousMonth != current.getMonth())
+                    flattened[i]['month_boundary'] = true
+                previousMonth = current.getMonth()
+            }
+        }
         this.testResults = flattened
         this.browsers = Array.from(browsers).sort()
       }
