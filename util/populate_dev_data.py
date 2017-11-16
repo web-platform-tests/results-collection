@@ -30,7 +30,7 @@ import os
 import sys
 
 from typing import List
-from urllib import urlencode
+from add_production_run import ProdRunCopier
 
 
 def main(args):  # type: (argparse.Namespace) -> None
@@ -106,21 +106,14 @@ def main(args):  # type: (argparse.Namespace) -> None
             ResultsURL=path % 'safari-10-macos-10.12-sauce-summary.json.gz'),
     ]  # type: List[TestRun]
 
-    # TODO(lukebjerring): Re-use #242 add_production_run.py code here instead.
-    for browser in ['chrome', 'edge', 'firefox', 'safari']:
-        jsonURL = ('https://wpt.fyi/results?'
-                   + urlencode({'platform': browser}))
-        test_runs.append(
-            TestRun(
-                id=('prod-latest-' + browser),
-                BrowserName=browser,
-                BrowserVersion='latest',
-                Revision='latest',
-                ResultsURL=jsonURL))
-
     for test_run in test_runs:
         test_run.put()
         logging.info('Added TestRun %s' % test_run.key.id())
+
+    # Also whatever the latest TestRun are.
+    logging.debug('Added TestRun %s' % test_run.key.id())
+    copier = ProdRunCopier(logging.getLogger())
+    copier.copy_prod_run('latest')
 
 
 # Create an ArgumentParser for the flags we'll expect.
