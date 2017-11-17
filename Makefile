@@ -52,6 +52,7 @@ py_test: py_proto py_deps
 
 go_lint: go_deps
 	golint -set_exit_status
+    diff -u <(echo -n) <(gofmt -d ./)
 
 go_test: go_deps
 	go test -v ./...
