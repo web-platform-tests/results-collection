@@ -83,7 +83,8 @@ limitations under the License.
       static get properties () {
         return {
           testFile: {
-            type: String
+            type: String,
+            observer: '_testFileChanged'
           },
           subtestNames: {
             type: Array,
@@ -125,6 +126,11 @@ limitations under the License.
             }
           }
         })
+      }
+
+      _testFileChanged () {
+        this.subtestNames = []
+        this.fetchTestFile()
       }
 
       async loadResultFile (testRun) {
