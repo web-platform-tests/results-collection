@@ -67,6 +67,7 @@ py_proto: $(PROTOS)
 		--python_out=$(PB_PY_OUT_DIR) $(PROTOS)
 
 py_deps: $(find . -type f | grep '\.py$' | grep -v '\_pb.py$')
+	pip install wheel===0.30.0
 	pip install -r requirements.txt
 
 go_deps: $(find .  -type f | grep '\.go$' | grep -v '\.pb.go$')
