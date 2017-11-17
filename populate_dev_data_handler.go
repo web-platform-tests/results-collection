@@ -93,7 +93,7 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if urlError, ok := err.(*url.Error); !ok || urlError.Err != errUseLastResponse {
-			fmt.Fprintf(w, "Failed to fetch latest run for %s: %s\n", browserName, )
+			fmt.Fprintf(w, "Failed to fetch latest run for %s: %s\n", browserName)
 			continue
 		}
 		if err == nil {
