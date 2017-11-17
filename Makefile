@@ -66,6 +66,8 @@ py_proto: $(PROTOS)
 	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) \
 		--python_out=$(PB_PY_OUT_DIR) $(PROTOS)
 
+# Strangely, wheel-format deps in requirements.txt just fail (rather than first
+# installing wheel). Install wheel first, then everything else.
 py_deps: $(find . -type f | grep '\.py$' | grep -v '\_pb.py$')
 	pip install wheel===0.30.0
 	pip install -r requirements.txt
