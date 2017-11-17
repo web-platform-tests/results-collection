@@ -68,7 +68,7 @@ def main(args):  # type: (argparse.Namespace) -> None
         Secret='')
     secret.put()
     logging.info('Added Token \'upload-token\' with empty secret.')
-    
+
     # Add some runs.
     path = '/static/b952881825/%s'
     test_runs = [
