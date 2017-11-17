@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package w3c.wptdashboard;
+package wptdashboard;
 
 import "google/protobuf/timestamp.proto";
 
