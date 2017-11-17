@@ -9,6 +9,7 @@ source "${DOCKER_DIR}/../path.sh"
 WPTD_PATH=${WPTD_PATH:-$(absdir "${DOCKER_DIR}/../..")}
 
 WPTDASHBOARD_HOST_WEB_PORT=${WPTDASHBOARD_HOST_WEB_PORT:-"8080"}
+WPTDASHBOARD_HOST_API_WEB_PORT=${WPTDASHBOARD_HOST_API_WEB_PORT:-"9999"}
 
 # Create a docker instance:
 #
@@ -31,6 +32,7 @@ docker run -t -d --entrypoint /bin/bash \
     -v "${WPTD_PATH}":/home/jenkins/wptdashboard \
     -u $(id -u $USER):$(id -g $USER) \
     -p "${WPTDASHBOARD_HOST_WEB_PORT}:8080" \
+    -p "${WPTDASHBOARD_HOST_API_WEB_PORT}:9999" \
     --name wptd-dev-instance wptd-dev
 
 docker exec -u 0:0 wptd-dev-instance \
