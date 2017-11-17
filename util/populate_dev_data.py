@@ -130,7 +130,7 @@ def parse_flags():  # type: () -> argparse.Namespace
         type=str,
         dest='sdk_root',
         default='',
-        help='Root path to the App Engine SDK installation, if it\'s not'
+        help='Root path to the App Engine SDK installation, if it\'s not '
              'already in your PYTHONPATH. You can download the SDK from '
              'https://cloud.google.com/appengine/downloads')
     parser.add_argument(
@@ -138,8 +138,8 @@ def parse_flags():  # type: () -> argparse.Namespace
         type=str,
         dest='creds_path',
         default='',
-        help='Path to the Application Default Credentials, if it\'s not'
-             'already in your enviroment (as GOOGLE_APPLICATION_CREDENTIALS).'
+        help='Path to the Application Default Credentials, if it\'s not '
+             'already in your enviroment (as GOOGLE_APPLICATION_CREDENTIALS). '
              'See https://developers.google.com/identity/protocols/'
              'application-default-credentials')
     parser.add_argument(

@@ -66,7 +66,7 @@ def main():
     pool = urllib3.PoolManager()  # type: urllib3.PoolManager
     for platform in args.platforms:  # type: str
         encodedArgs = urlencode({'sha': sha, 'platform': platform})
-        url = 'https://wpt.fyi/json?' + encodedArgs
+        url = 'https://wpt.fyi/results?' + encodedArgs
 
         # type: urllib3.response.HTTPResponse
         response = pool.request('GET', url,
@@ -96,7 +96,7 @@ def main():
         for key in tests.keys():
             encodedArgs = urlencode(
                 {'sha': sha, 'platform': platform, 'test': key[1:]})
-            testUrl = 'https://wpt.fyi/json?' + encodedArgs
+            testUrl = 'https://wpt.fyi/results?' + encodedArgs
             try:
                 filename = os.path.join(staticFilePath, platform, key[1:])
                 if os.path.exists(filename):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 # Copyright 2017 Google Inc.
 #
@@ -90,7 +90,8 @@ class ProdRunCopier(object):
                                     % (test['browser_name'], test['revision']))
                 continue
 
-            post_url = 'http://localhost:8080/api/run'
+            post_url = ('http://localhost:8080/api/run?'
+                        + urlencode({'retroactive': True}))
             try:
                 response = pool.request(
                     'POST',
