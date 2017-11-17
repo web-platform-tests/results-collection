@@ -24,14 +24,15 @@ Example usage:
 
 import argparse
 import certifi
-import http
 import inspect
 import json
 import logging
 import os
-
-from urllib.parse import urlencode
 import urllib3
+import sys
+
+from httplib import CREATED
+from urllib import urlencode
 
 here = os.path.dirname(__file__)
 
@@ -42,51 +43,69 @@ def main():
     loggingLevel = getattr(logging, args.log.upper(), None)
     logging.basicConfig(level=loggingLevel)
 
+    logger = logging.getLogger()
+    copier = ProdRunCopier(logger)
+
     sha = args.sha  # type: str
+    copier.copy_prod_run(sha)
 
-    pool = urllib3.PoolManager(
-            cert_reqs='CERT_REQUIRED',
-            ca_certs=certifi.where())
-    encoded_args = urlencode({'sha': sha})
-    url = 'https://wpt.fyi/api/runs?' + encoded_args
 
-    # type: urllib3.response.HTTPResponse
-    response = pool.request('GET', url)
+class ProdRunCopier(object):
+    def __init__(self,
+                 logger  # type: logging.Logger
+                 ):
+        self.logger = logger
 
-    if response.status != 200:
-        logging.warning('Failed to fetch %s' % (url))
-        return
-    logging.debug('Processing JSON from %s' % (url))
-    tests = json.loads(response.data.decode('utf-8'))
+    def copy_prod_run(self, sha):  # type: (str) -> None
+        if sys.version_info < (2, 7, 11):
+            # SSL requests fail for earlier versions (e.g. 2.7.6)
+            self.logger.fatal(
+                'copy_prod_run requires python version 2.7.11 or greater')
+            return
 
-    for test in tests:
-        encoded_args = urlencode({
-            'sha': test['revision'],
-            'browser': test['browser_name']
-        })
-        url = 'http://localhost:8080/api/run?' + encoded_args
+        pool = urllib3.PoolManager(
+                cert_reqs='CERT_REQUIRED',
+                ca_certs=certifi.where())
+        encoded_args = urlencode({'sha': sha})
+        url = 'https://wpt.fyi/api/runs?' + encoded_args
+
+        # type: urllib3.response.HTTPResponse
         response = pool.request('GET', url)
-        if response.status != 404:
-            logging.warning('Skipping TestRun %s@%s (already present)\n'
-                            % (test['browser_name'], test['revision']))
-            continue
 
-        post_url = ('http://localhost:8080/api/run?'
-                    + urlencode({'retroactive': True}))
-        try:
-            response = pool.request(
-                'POST',
-                post_url,
-                body=json.dumps(test),
-                headers={'Content-Type': 'application/json'})
-        except IOError:
-            logging.warning("Failed to POST %s" % (post_url))
-            continue
+        if response.status != 200:
+            self.logger.warning('Failed to fetch %s' % (url))
+            return
+        self.logger.debug('Processing JSON from %s' % (url))
+        tests = json.loads(response.data.decode('utf-8'))
 
-        if response.status == http.client.CREATED:
-            logging.info("Successfully created TestRun %s@%s"
-                         % (test['browser_name'], test['revision']))
-        logging.info("%s\n" % (response.data.decode('utf-8')))
+        for test in tests:
+            encoded_args = urlencode({
+                'sha': test['revision'],
+                'browser': test['browser_name']
+            })
+            url = 'http://localhost:8080/api/run?' + encoded_args
+            response = pool.request('GET', url)
+            if response.status != 404:
+                self.logger.warning('Skipping TestRun %s@%s (already present)'
+                                    % (test['browser_name'], test['revision']))
+                continue
+
+            post_url = ('http://localhost:8080/api/run?'
+                        + urlencode({'retroactive': True}))
+            try:
+                response = pool.request(
+                    'POST',
+                    post_url,
+                    body=json.dumps(test),
+                    headers={'Content-Type': 'application/json'})
+            except IOError:
+                self.logger.warning("Failed to POST %s" % (post_url))
+                continue
+
+            if response.status == CREATED:
+                self.logger.info("Successfully created TestRun %s@%s"
+                                 % (test['browser_name'], test['revision']))
+            self.logger.info("%s\n" % (response.data.decode('utf-8')))
 
 
 # Create an ArgumentParser for the flags we'll expect.

@@ -22,7 +22,6 @@ import (
 var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 func init() {
-	http.HandleFunc("/tasks/populate-dev-data", populateDevData)
 	http.HandleFunc("/test-runs", testRunsHandler)
 	http.HandleFunc("/about", aboutHandler)
 	http.HandleFunc("/api/runs", apiTestRunsHandler)
