@@ -15,10 +15,14 @@
 syntax = "proto3";
 
 package wptdashboard;
-import "bq_table_name.proto";
 
-message Strawman {
-  option (gen_bq_schema.table_name) = "strawmen";
-
-  int32 straw = 1;
+// Browser holds objects that appear in browsers.json
+message Browser {
+  bool initially_loaded = 1;
+  bool currently_run = 2;
+  string browser_name = 3;
+  string browser_version = 4;
+  string os_name = 5;
+  string os_version = 6;
+  bool sauce = 7;
 }
