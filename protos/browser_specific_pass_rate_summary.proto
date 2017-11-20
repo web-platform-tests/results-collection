@@ -21,19 +21,23 @@ import "browser.proto";
 import "google/protobuf/timestamp.proto";
 import "operating_system.proto";
 
-// An invocation of the WPT runner in some OS+browser context.
-message TestRun {
-  option (gen_bq_schema.table_name) = "test_runs";
+// The pass rate from a collection of TestResults from the same TestRun that
+// share "base_name" prefix in their TestResult.test_name.
+message BrowserSpecificPassRateSummary {
+  option (gen_bq_schema.table_name) = "browser_specific_pass_rate_summaries";
 
-  google.protobuf.Timestamp start_time = 1;
-  google.protobuf.Timestamp end_time = 2;
+  OperatingSystem os = 1;
+  string os_version_str = 2;
 
-  OperatingSystem os = 3;
-  string os_version_str = 4;
+  Browser browser = 3;
+  string browser_version_str = 4;
 
-  Browser browser = 5;
-  string browser_version_str = 6;
-
+  google.protobuf.Timestamp test_run_start_time = 5;
+  google.protobuf.Timestamp test_run_end_time = 6;
   string long_wpt_hash = 7;
   google.protobuf.Timestamp wpt_commit_time = 8;
+
+  string base_name = 9;
+  int32 num_total = 10;
+  int32 num_passed = 11;
 }
