@@ -1,23 +1,5 @@
 FROM wptd-base
 
-# Needed for hosts_fixup
-RUN apt-get install --assume-yes --no-install-suggests \
-    --no-install-recommends \
-    sudo
-
-# Used for running FF and Chrome
-RUN apt-get install --assume-yes --no-install-suggests \
-    --no-install-recommends \
-    xauth \
-    xvfb
-
-# Used for running FF
-RUN apt-get install --assume-yes --no-install-suggests \
-    --no-install-recommends \
-    libnss3-tools \
-    libgtk-3-common \
-    libdbus-glib-1-2
-
 ADD . "${WPTD_PATH}"
 
 # Expose Sauce Connect port
