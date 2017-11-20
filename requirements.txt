@@ -13,12 +13,13 @@ gapic-google-cloud-spanner-admin-database-v1==0.15.3
 gapic-google-cloud-spanner-admin-instance-v1==0.15.3
 gapic-google-cloud-spanner-v1==0.15.3
 gapic-google-cloud-speech-v1==0.15.3
+google-api-core==0.1.1
 google-auth==1.2.1
 google-auth-httplib2==0.0.3
 google-cloud==0.26.1
-google-cloud-bigquery==0.25.0
+google-cloud-bigquery==0.28.0
 google-cloud-bigtable==0.25.0
-google-cloud-core==0.25.0
+google-cloud-core==0.28.0
 google-cloud-datastore==1.1.0
 google-cloud-dns==0.25.0
 google-cloud-error-reporting==0.25.1
@@ -40,7 +41,7 @@ googleapis-common-protos==1.5.3
 grpc-google-iam-v1==0.11.4
 grpcio==1.7.0
 httplib2==0.10.3
-idna==2.5
+idna==2.6
 oauth2client==3.0.0
 ply==3.8
 proto-google-cloud-datastore-v1==0.90.4
@@ -55,8 +56,8 @@ protobuf==3.5.0
 pyasn1==0.3.7
 pyasn1-modules==0.1.5
 pycodestyle==2.3.1
-requests==2.18.1
+requests==2.18.4
 rsa==3.4.2
 six==1.11.0
-urllib3==1.21.1
+urllib3==1.22
 virtualenv==15.1.0
