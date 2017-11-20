@@ -15,10 +15,21 @@
 syntax = "proto3";
 
 package wptdashboard;
-import "bq_table_name.proto";
 
-message Strawman {
-  option (gen_bq_schema.table_name) = "strawmen";
+import "google/protobuf/timestamp.proto";
 
-  int32 straw = 1;
+message TestRun {
+  google.protobuf.Timestamp created_at = 1;
+
+  // The first 10 characters of the SHA1 of the tested WPT revision
+  string revision = 2;
+
+  // Platform information
+  string browser_name = 3;
+  string browser_version = 4;
+  string os_name = 5;
+  string os_version = 6;
+
+  // Resource URL for results JSON blob
+  string results_url = 7;
 }
