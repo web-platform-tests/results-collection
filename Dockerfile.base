@@ -41,6 +41,15 @@ RUN apt-get install --assume-yes --no-install-suggests \
     libgtk-3-common \
     libdbus-glib-1-2
 
+# Remove unwanted pre-installed Python packages
+RUN apt-get remove --assume-yes \
+    bzr \
+    python-bzrlib \
+    python-configobj \
+    python-six \
+    mercurial \
+    mercurial-common
+
 # Install golang
 RUN mkdir /go-fetch
 WORKDIR /go-fetch
