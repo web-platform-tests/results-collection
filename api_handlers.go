@@ -15,7 +15,6 @@
 package wptdashboard
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -24,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )
@@ -40,12 +40,14 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := appengine.NewContext(r)
-	// Make sure to show results for the same complete run (executed for all browsers).
-	if runSHA == "latest" {
-		runSHA, err = getLastCompleteRunSHA(ctx, browserNames)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+	// When ?complete=true, make sure to show results for the same complete run (executed for all browsers).
+	if complete, err := strconv.ParseBool(r.URL.Query().Get("complete")); err == nil && complete {
+		if runSHA == "latest" {
+			runSHA, err = getLastCompleteRunSHA(ctx, browserNames)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 
