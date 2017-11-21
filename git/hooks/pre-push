@@ -39,5 +39,10 @@ if [ "${DOCKER_INSTANCE_PID}" != "" ]; then
   kill "${DOCKER_INSTANCE_PID}"
 fi
 
-info "Pre-push exit status: ${FINAL_STATUS}"
+if [ "${FINAL_STATUS}" == "0" ]; then
+  info "Pre-push exit status: ${FINAL_STATUS}"
+else
+  error "Pre-push exit status: ${FINAL_STATUS}"
+fi
+
 exit "${FINAL_STATUS}"
