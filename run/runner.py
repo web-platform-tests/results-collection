@@ -74,10 +74,8 @@ class Runner(object):
 
         self.upload_secret = upload_secret
 
-        if not (platform_id and platform):
-            self.platform_id, self.platform = self.get_and_validate_platform(
-                self.wptd_path,
-            )
+        self.platform_id = platform_id
+        self.platform = platform
 
         self.local_log_filepath = local_log_filepath or (
             '%s/wptd-testrun.log' % self.output_path
@@ -114,27 +112,6 @@ class Runner(object):
                 self.gs_results_bucket, self.summary_filename,
             )
         )
-
-    def get_and_validate_platform(self, wptd_path):
-        """Validates testing platform ID against currently tested platforms."""
-        with open('%s/browsers.json' % wptd_path) as f:
-            browsers = json.load(f)
-
-        self.platform_id = os.environ['PLATFORM_ID']
-        assert self.platform_id, 'Runner.platform_id or %s' % (
-            '`PLATFORM_ID` env var required (keys in browsers.json)'
-        )
-        assert self.platform_id in browsers, (
-            'platform_id not found in browsers.json'
-        )
-        return self.platform_id, browsers.get(self.platform_id)
-
-    def validate(self):
-        assert self.wpt_path, Runner.ASSERT_WPT_PATH
-        assert not self.wpt_path.endswith('/'), Runner.ASSERT_WPT_PATH_FMT
-        assert len(self.sha) == 10, Runner.ASSERT_SHA_LEN
-        if self.platform.get('sauce'):
-            assert self.sauce_key and self.sauce_user, Runner.ASSERT_SAUCE_DATA
 
     def run(self):
         self.validate()
@@ -191,6 +168,32 @@ class Runner(object):
 
         print('==================================================')
         print('Run complete.')
+
+    def validate(self):
+        assert self.wpt_path, Runner.ASSERT_WPT_PATH
+        assert not self.wpt_path.endswith('/'), Runner.ASSERT_WPT_PATH_FMT
+        assert len(self.sha) == 10, Runner.ASSERT_SHA_LEN
+        if not (self.platform_id and self.platform):
+            self.platform_id, self.platform = self.get_and_validate_platform(
+                self.wptd_path,
+            )
+
+        if self.platform.get('sauce'):
+            assert self.sauce_key and self.sauce_user, Runner.ASSERT_SAUCE_DATA
+
+    def get_and_validate_platform(self, wptd_path):
+        """Validates testing platform ID against currently tested platforms."""
+        with open('%s/browsers.json' % wptd_path) as f:
+            browsers = json.load(f)
+
+        self.platform_id = os.environ['PLATFORM_ID']
+        assert self.platform_id, 'Runner.platform_id or %s' % (
+            '`PLATFORM_ID` env var required (keys in browsers.json)'
+        )
+        assert self.platform_id in browsers, (
+            'platform_id not found in browsers.json'
+        )
+        return self.platform_id, browsers.get(self.platform_id)
 
     def will_upload(self):
         return self.prod_run or self.prod_wet_run
