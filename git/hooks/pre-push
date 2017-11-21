@@ -25,7 +25,10 @@ LINT_STATUS="${?}"
 FINAL_STATUS="${LINT_STATUS}"
 if [ "${LINT_STATUS}" != "0" ]; then
   warn "Lint failed. Push anyway (y/N)?"
+
+  exec < /dev/tty
   read -n 1 CH
+
   if [ "${CH}" != "y" ] && [ "${CH}" != "Y" ]; then
     info "Pushing in spite of lint errors..."
     FINAL_STATUS="0"
