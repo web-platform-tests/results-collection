@@ -90,7 +90,7 @@ These are of the pattern: `{sha[0:10]}/{platform_id}/{test_file_path}`
 - `platform_id`: the key of the platform configuration in `browsers.json`
 - `test_file_path`: the full WPT path of the test file
 
-Example: https://storage.googleapis.com/wptd/b12daf6ead/safari-10-macos-10.12-sauce/IndexedDB/abort-in-initial-upgradeneeded.html
+Example: https://storage.googleapis.com/wptd/b12daf6ead/safari-11-macos-10.12-sauce/IndexedDB/abort-in-initial-upgradeneeded.html
 
 Structure:
 ```json

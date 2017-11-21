@@ -71,7 +71,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 //
 // URL Params:
 //     sha: SHA[0:10] of the repo when the test was executed (or 'latest')
-//     browser: Browser for the run (e.g. 'chrome', 'safari-10')
+//     browser: Browser for the run (e.g. 'chrome', 'safari-11')
 func apiTestRunHandler(w http.ResponseWriter, r *http.Request) {
 	runSHA, err := ParseSHAParam(r)
 	if err != nil {

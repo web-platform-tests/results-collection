@@ -62,13 +62,13 @@ func populateDevData(w http.ResponseWriter, r *http.Request) {
 			ResultsURL:     "/static/b952881825/firefox-57.0-linux-summary.json.gz",
 			CreatedAt:      time.Now(),
 		},
-		"dev-testrun-safari-10": &TestRun{
+		"dev-testrun-safari-11": &TestRun{
 			BrowserName:    "safari",
-			BrowserVersion: "10",
+			BrowserVersion: "11",
 			OSName:         "macos",
 			OSVersion:      "10.12",
 			Revision:       "b952881825",
-			ResultsURL:     "/static/b952881825/safari-10-macos-10.12-sauce-summary.json.gz",
+			ResultsURL:     "/static/b952881825/safari-11-macos-10.12-sauce-summary.json.gz",
 			CreatedAt:      time.Now(),
 		},
 	}
