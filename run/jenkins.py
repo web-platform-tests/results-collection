@@ -3,7 +3,6 @@ import os
 
 from runner import Runner
 
-
 def main(runner):
     runner.run()
 

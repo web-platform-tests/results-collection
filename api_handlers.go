@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )
@@ -39,6 +40,17 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := appengine.NewContext(r)
+	// When ?complete=true, make sure to show results for the same complete run (executed for all browsers).
+	if complete, err := strconv.ParseBool(r.URL.Query().Get("complete")); err == nil && complete {
+		if runSHA == "latest" {
+			runSHA, err = getLastCompleteRunSHA(ctx, browserNames)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
 	var browserNames []string
 	if browserNames, err = GetBrowserNames(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -210,4 +222,38 @@ func getBrowserParam(r *http.Request) (browser string, err error) {
 		}
 	}
 	return "", nil
+}
+
+// getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that complete for all of the given browser names.
+func getLastCompleteRunSHA(ctx context.Context, browserNames []string) (sha string, err error) {
+	baseQuery := datastore.
+		NewQuery("TestRun").
+		Order("-CreatedAt").
+		Limit(100).
+		Project("Revision")
+
+	// Map is sha -> browser -> seen yet?  - this prevents over-counting dupes.
+	runSHAs := make(map[string]map[string]bool)
+	for _, browser := range browserNames {
+		it := baseQuery.Filter("BrowserName = ", browser).Run(ctx)
+		for {
+			var testRun TestRun
+			_, err := it.Next(&testRun)
+			if err == datastore.Done {
+				break
+			}
+			if err != nil {
+				return "latest", err
+			}
+			if _, ok := runSHAs[testRun.Revision]; !ok {
+				runSHAs[testRun.Revision] = make(map[string]bool)
+			}
+			browsersSeen := runSHAs[testRun.Revision]
+			browsersSeen[browser] = true
+			if len(browsersSeen) == len(browserNames) {
+				return testRun.Revision, nil
+			}
+		}
+	}
+	return "latest", nil
 }
