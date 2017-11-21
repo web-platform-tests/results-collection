@@ -18,8 +18,8 @@ package wptdashboard;
 
 enum Engine {
   ENGINE_UNKNOWN = 0;
-  CHROMIUM = 1;
-  EDGE_HTML = 2;
+  BLINK = 1;
+  EDGEHTML = 2;
   GECKO = 3;
-  WEB_KIT = 4;
+  WEBKIT = 4;
 }

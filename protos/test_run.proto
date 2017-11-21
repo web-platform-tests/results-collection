@@ -36,6 +36,6 @@ message TestRun {
   Browser browser = 6;
   string browser_version_str = 7;
 
-  string long_wpt_hash = 8;
+  string wpt_hash = 8; // Full-length git commit hash.
   google.protobuf.Timestamp wpt_commit_time = 9;
 }
