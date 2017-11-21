@@ -7,10 +7,12 @@ from runner import Runner
 def main(runner):
     runner.run()
 
+
 if __name__ == '__main__':
     main(Runner(
         # For making instance-internal network requests for metadata.
-        # See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
+        # See:
+        # https://cloud.google.com/compute/docs/storing-retrieving-metadata
         metadata_url='http://metadata.google.internal/computeMetadata/v1',
         prod_host='https://wptdashboard.appspot.com',
         gs_results_bucket='wptd',

@@ -5,6 +5,7 @@ import requests
 import subprocess
 import time
 
+
 # TODO after --install-browser verify browser
 #      version or change platform ID to correct browser version
 #      This can be done by running `wpt install firefox` and then verifying
@@ -15,7 +16,9 @@ import time
 # TODO break this file up into smaller, unit tested modules.
 # TODO document how we use metadata
 class Runner(object):
-    ASSERT_WPT_PATH = 'Runner.wpt_path required. (Default: `WPT_PATH` env var.)'
+    ASSERT_WPT_PATH = (
+        'Runner.wpt_path required. (Default: `WPT_PATH` env var.)'
+    )
     ASSERT_WPT_PATH_FMT = 'Runner.wpt_path cannot end with /. %s' % (
         '(Default: `WPT_PATH` env var.)',
     )
@@ -25,7 +28,8 @@ class Runner(object):
         self,
 
         # For making instance-internal network requests for metadata.
-        # See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
+        # See:
+        # https://cloud.google.com/compute/docs/storing-retrieving-metadata
         metadata_url=None,
         prod_host=None,
         gs_results_bucket=None,
@@ -117,7 +121,7 @@ class Runner(object):
             browsers = json.load(f)
 
         self.platform_id = os.environ['PLATFORM_ID']
-        assert self.platform_id, 'Runner.platform_id or '% (
+        assert self.platform_id, 'Runner.platform_id or %s' % (
             '`PLATFORM_ID` env var required (keys in browsers.json)'
         )
         assert self.platform_id in browsers, (
