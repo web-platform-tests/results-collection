@@ -290,34 +290,21 @@ class Runner(object):
         return subprocess.call(command, cwd=self.wpt_path)
 
     def do_run_local(self):
-        if self.platform['browser_name'] == "firefox":
-            command = [
-                'xvfb-run', '--auto-servernum',
-                './wpt', 'run',
-                self.platform['browser_name'],
-                '--install-fonts',
-                '--install-browser',
-                '--yes',
-                '--log-mach=%s' % self.local_log_filepath,
-                '--log-wptreport=%s' % self.local_report_filepath,
-                # temp fix for webRTC
-                '--setpref', 'media.navigator.streams.fake=true',
-            ]
-            if self.run_path:
-                command.insert(5, self.run_path)
-        else:
-            command = [
-                'xvfb-run', '--auto-servernum',
-                './wpt', 'run',
-                self.platform['browser_name'],
-                '--install-fonts',
-                '--install-browser',
-                '--yes',
-                '--log-mach=%s' % self.local_log_filepath,
-                '--log-wptreport=%s' % self.local_report_filepath,
-            ]
-            if self.run_path:
-                command.insert(5, self.run_path)
+        command = [
+            'xvfb-run', '--auto-servernum',
+            './wpt', 'run',
+            self.platform['browser_name'],
+            '--install-fonts',
+            '--install-browser',
+            '--yes',
+            '--log-mach=%s' % self.local_log_filepath,
+            '--log-wptreport=%s' % self.local_report_filepath,
+        ]
+        if self.platform['browser_name'] == 'firefox':
+          # for webrtc
+          command.extend(['--setpref', 'media.navigator.streams.fake=true'])
+        if self.run_path:
+            command.insert(5, self.run_path)
 
         return subprocess.call(command, cwd=self.wpt_path)
 
