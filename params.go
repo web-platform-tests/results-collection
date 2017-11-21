@@ -22,6 +22,7 @@ import (
 	"strings"
 )
 
+// SHARegex is a regex for SHA[0:10] slice of a git hash.
 var SHARegex = regexp.MustCompile("[0-9a-fA-F]{10}")
 
 // ParseSHAParam parses and validates the 'sha' param for the request.
