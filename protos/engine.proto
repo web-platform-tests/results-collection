@@ -16,25 +16,11 @@ syntax = "proto3";
 
 package wptdashboard;
 
-import "bq_table_name.proto";
-import "browser.proto";
-import "google/protobuf/timestamp.proto";
-import "operating_system.proto";
-
-// An invocation of the WPT runner in some OS+browser context.
-message TestRun {
-  option (gen_bq_schema.table_name) = "test_runs";
-
-  google.protobuf.Timestamp start_time = 1;
-  google.protobuf.Timestamp end_time = 2;
-
-  OperatingSystem os = 3;
-  string os_version_str = 4;
-
-  Engine engine = 5;
-  Browser browser = 6;
-  string browser_version_str = 7;
-
-  string long_wpt_hash = 8;
-  google.protobuf.Timestamp wpt_commit_time = 9;
+enum Engine {
+  ENGINE_UNKNOWN = 0;
+  CHROMIUM = 1;
+  EDGE_HTML = 2;
+  GECKO = 3;
+  WEB_KIT = 4;
+  QUANTUM = 5;
 }

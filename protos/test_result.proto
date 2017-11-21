@@ -18,6 +18,7 @@ package wptdashboard;
 
 import "bq_table_name.proto";
 import "browser.proto";
+import "engine.proto";
 import "google/protobuf/timestamp.proto";
 import "operating_system.proto";
 import "test_status.proto";
@@ -29,16 +30,17 @@ message TestResult {
   OperatingSystem os = 1;
   string os_version_str = 2;
 
-  Browser browser = 3;
-  string browser_version_str = 4;
+  Engine engine = 3;
+  Browser browser = 4;
+  string browser_version_str = 5;
 
-  google.protobuf.Timestamp test_run_start_time = 5;
-  google.protobuf.Timestamp test_run_end_time = 6;
-  string long_wpt_hash = 7;
-  google.protobuf.Timestamp wpt_commit_time = 8;
+  google.protobuf.Timestamp test_run_start_time = 6;
+  google.protobuf.Timestamp test_run_end_time = 7;
+  string long_wpt_hash = 8;
+  google.protobuf.Timestamp wpt_commit_time = 9;
 
-  string test_name = 9;
-  string test_sub_name = 10;
-  TestStatus status = 11;
-  string result_message = 12;
+  string test_name = 10;
+  string test_sub_name = 11;
+  TestStatus status = 12;
+  string result_message = 13;
 }
