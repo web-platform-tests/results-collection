@@ -1,4 +1,12 @@
 {
+    "chrome-64.0-linux": {
+        "initially_loaded": false,
+        "currently_run": false,
+        "browser_name": "chrome",
+        "browser_version": "64.0",
+        "os_name": "linux",
+        "os_version": "*"
+    },
     "chrome-63.0-linux": {
         "initially_loaded": true,
         "currently_run": true,
