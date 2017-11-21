@@ -61,3 +61,22 @@ func GetBrowserNames() ([]string, error) {
 	sort.Strings(browserNames)
 	return browserNames, nil
 }
+
+// IsBrowserName determines whether the given name string is a valid browser name.
+// Used for validating user-input params for browsers.
+func IsBrowserName(name string) bool {
+	if name == "" {
+		return false
+	}
+	var browsers []string
+	var err error
+	if browsers, err = GetBrowserNames(); err != nil {
+		return false
+	}
+	for _, browser := range browsers {
+		if browser == name {
+			return true
+		}
+	}
+	return false
+}
