@@ -131,8 +131,8 @@ def main():
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
         ]
         if platform['browser_name'] == 'firefox':
-          # for webrtc
-          command.extend(['--setpref', 'media.navigator.streams.fake=true'])
+            # for webrtc
+            command.extend(['--setpref', 'media.navigator.streams.fake=true'])
         if args['run_path']:
             command.insert(5, args['run_path'])
 
