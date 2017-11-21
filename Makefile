@@ -26,6 +26,8 @@ PB_BQ_LIB_DIR ?= ../protoc-gen-bq-schema
 PB_LOCAL_LIB_DIR ?= protos
 PB_BQ_OUT_DIR ?= bq-schema
 PB_PY_OUT_DIR ?= run/protos
+PB_GO_OUT_DIR ?= generated
+PB_GO_PKG_MAP ?= Mbq_table_name.proto=github.com/GoogleCloudPlatform/protoc-gen-bq-schema/protos
 
 PROTOS=$(wildcard $(PB_LOCAL_LIB_DIR)/*.proto)
 
@@ -42,7 +44,7 @@ jenkins_install: py_deps
 
 lint: py_lint go_lint
 
-proto: bq_proto py_proto
+proto: bq_proto go_proto py_proto
 
 py_lint: py_proto py_deps
 	pycodestyle --exclude=*_pb2.py .
@@ -52,6 +54,8 @@ py_test: py_proto py_deps
 
 go_lint: go_deps
 	golint -set_exit_status
+	# Print differences between current/gofmt'd output, check empty.
+	! gofmt -d ./... 2>&1 | read
 
 go_test: go_deps
 	go test -v ./...
@@ -60,6 +64,11 @@ bq_proto: $(PROTOS)
 	mkdir -p $(PB_BQ_OUT_DIR)
 	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) \
 		--bq-schema_out=$(PB_BQ_OUT_DIR) $(PROTOS)
+
+go_proto: $(PROTOS)
+	mkdir -p $(PB_GO_OUT_DIR)
+	protoc -I$(PB_LIB_DIR) -I$(PB_BQ_LIB_DIR) -I$(PB_LOCAL_LIB_DIR) \
+		--go_out=$(PB_GO_PKG_MAP):$(PB_GO_OUT_DIR) $(PROTOS)
 
 py_proto: $(PROTOS)
 	mkdir -p $(PB_PY_OUT_DIR)

@@ -28,11 +28,17 @@ In one terminal, start the web server:
 ./util/docker-dev/web_server.sh
 ```
 
-This will build dependencies and start the Google App Engine development server inside `wptd-dev-instance`. In another terminal, populate the app with data:
+This will build dependencies and start the Google App Engine development server inside `wptd-dev-instance`.
+You'll also need to populate the app datastore with some initial data, using util/populate_dev_data.py.
 
 ```sh
-curl http://localhost:8080/tasks/populate-dev-data
+./util/populate_dev_data.py \
+    --server localhost:9999 \
+    --sdk-root /path/to/google-cloud-sdk \
+    --creds ~/Downloads/wptdashboard-creds-file.json
 ```
+
+Further instructions on using the populate util can be found with the --help flag.
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
 
@@ -42,7 +48,7 @@ We run the tests in the development environment with a Python script [`run/run.p
 
 ### Running
 
-Ensure that the Docker development image is running (`./util/docker/dev.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
+Ensure that the Docker development image is running (`./util/docker-dev/run.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
 
 ```sh
 docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
@@ -138,10 +144,6 @@ This doesn't work with some HTTPS tests. Also be advised that the server is not 
 
 - ECMAScript 6 compatibility table - https://kangax.github.io/compat-table/es6/
 - https://html5test.com/
-
-#### Disclaimer
-
-This is not an official Google product.
 
 # Appendix
 

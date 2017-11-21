@@ -229,7 +229,7 @@ def main(platform_id, platform, args, config):
 
     print('==================================================')
     print('Creating new TestRun in the dashboard...')
-    url = '%s/test-runs' % config['wptd_prod_host']
+    url = '%s/api/run' % config['wptd_prod_host']
     response = requests.post(url, params={
             'secret': config['secret']
         },
