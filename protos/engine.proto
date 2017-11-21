@@ -22,5 +22,4 @@ enum Engine {
   EDGE_HTML = 2;
   GECKO = 3;
   WEB_KIT = 4;
-  QUANTUM = 5;
 }

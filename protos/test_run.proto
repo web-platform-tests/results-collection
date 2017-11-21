@@ -18,6 +18,7 @@ package wptdashboard;
 
 import "bq_table_name.proto";
 import "browser.proto";
+import "engine.proto";
 import "google/protobuf/timestamp.proto";
 import "operating_system.proto";
 
