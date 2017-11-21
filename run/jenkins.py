@@ -193,7 +193,7 @@ def main():
 
     print('==================================================')
     print('Creating new TestRun in the dashboard...')
-    url = '%s/test-runs' % PROD_HOST
+    url = '%s/api/run' % PROD_HOST
 
     if args['prod_run']:
         final_browser_name = platform['browser_name']
