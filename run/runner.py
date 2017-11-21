@@ -371,7 +371,7 @@ class Runner(object):
             # browser name it creates will be prefixed by eval-,
             # causing it to not show up in the dashboard.
             final_browser_name = 'eval-%s' % self.platform['browser_name']
-        url = '%s/test-runs' % self.prod_host
+        url = '%s/api/run' % self.prod_host
         response = requests.post(url, params={
                 'secret': self.upload_secret
             },
