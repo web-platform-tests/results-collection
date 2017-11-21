@@ -16,9 +16,10 @@ syntax = "proto3";
 
 package wptdashboard;
 
-enum TestStatus {
-  TEST_STATUS_UNKNOWN = 0;
-  TEST_OK = 1;
-  TEST_ERROR = 2;
-  TEST_TIMEOUT = 3;
+enum SubTestStatus {
+  SUB_TEST_STATUS_UNKNOWN = 0;
+  SUB_TEST_PASS = 1;
+  SUB_TEST_FAIL = 2;
+  SUB_TEST_TIMEOUT = 3;
+  SUB_TEST_NOT_RUN = 4;
 }
