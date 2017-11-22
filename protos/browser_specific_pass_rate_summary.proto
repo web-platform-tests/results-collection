@@ -31,16 +31,15 @@ message BrowserSpecificPassRateSummary {
   OperatingSystem os = 1;
   string os_version_str = 2;
 
-  Engine engine = 3;
-  Browser browser = 4;
-  string browser_version_str = 5;
+  Browser browser = 3;
+  string browser_version_str = 4;
 
-  google.protobuf.Timestamp test_run_start_time = 6;
-  google.protobuf.Timestamp test_run_end_time = 7;
-  string long_wpt_hash = 8;
-  google.protobuf.Timestamp wpt_commit_time = 9;
+  google.protobuf.Timestamp test_run_start_time = 5;
+  google.protobuf.Timestamp test_run_end_time = 6;
+  string long_wpt_hash = 7;
+  google.protobuf.Timestamp wpt_commit_time = 8;
 
-  string base_name = 10;
-  int32 num_total = 11;
-  int32 num_passed = 12;
+  string base_name = 9;
+  int32 num_total = 10;
+  int32 num_passed = 11;
 }

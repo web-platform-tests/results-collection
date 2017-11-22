@@ -32,20 +32,19 @@ message TestResult {
   OperatingSystem os = 1;
   string os_version_str = 2;
 
-  Engine engine = 3;
-  Browser browser = 4;
-  string browser_version_str = 5;
+  Browser browser = 3;
+  string browser_version_str = 4;
 
-  google.protobuf.Timestamp test_run_start_time = 6;
-  google.protobuf.Timestamp test_run_end_time = 7;
-  string wpt_hash = 8; // Full-length git commit hash.
-  google.protobuf.Timestamp wpt_commit_time = 9;
+  google.protobuf.Timestamp test_run_start_time = 5;
+  google.protobuf.Timestamp test_run_end_time = 6;
+  string wpt_hash = 7; // Full-length git commit hash.
+  google.protobuf.Timestamp wpt_commit_time = 8;
 
-  string test_name = 10;
-  TestStatus status = 11;
-  string test_message = 12;
+  string test_name = 9;
+  TestStatus status = 10;
+  string test_message = 11;
 
-  string test_sub_name = 13;
-  SubTestStatus test_sub_status = 14;
-  string test_sub_message = 15;
+  string test_sub_name = 12;
+  SubTestStatus test_sub_status = 13;
+  string test_sub_message = 14;
 }

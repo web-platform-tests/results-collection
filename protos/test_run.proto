@@ -33,10 +33,9 @@ message TestRun {
   OperatingSystem os = 3;
   string os_version_str = 4;
 
-  Engine engine = 5;
-  Browser browser = 6;
-  string browser_version_str = 7;
+  Browser browser = 5;
+  string browser_version_str = 6;
 
-  string wpt_hash = 8; // Full-length git commit hash.
-  google.protobuf.Timestamp wpt_commit_time = 9;
+  string wpt_hash = 7; // Full-length git commit hash.
+  google.protobuf.Timestamp wpt_commit_time = 8;
 }

@@ -17,10 +17,18 @@ syntax = "proto3";
 package wptdashboard;
 option go_package = "generated";
 
+import "engine.proto";
+import "google/protobuf/descriptor.proto";
+
+// Engine is metadata regarding Browser values.
+extend google.protobuf.EnumValueOptions {
+  Engine engine = 50000;
+}
+
 enum Browser {
-  BROWSER_UNKNOWN = 0;
-  CHROME = 1;
-  EDGE = 2;
-  FIREFOX = 3;
-  SAFARI = 4;
+  BROWSER_UNKNOWN = 0 [(engine) = ENGINE_UNKNOWN];
+  CHROME = 1 [(engine) = BLINK];
+  EDGE = 2 [(engine) = EDGEHTML];
+  FIREFOX = 3 [(engine) = GECKO];
+  SAFARI = 4 [(engine) = WEBKIT];
 }
