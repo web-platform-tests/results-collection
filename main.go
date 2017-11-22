@@ -24,7 +24,7 @@ var templates = template.Must(template.ParseGlob("templates/*.html"))
 func init() {
 	http.HandleFunc("/test-runs", testRunsHandler)
 	http.HandleFunc("/about", aboutHandler)
-	http.HandleFunc("/api/diff", apiResultsDiffHandler)
+	http.HandleFunc("/api/diff", apiDiffHandler)
 	http.HandleFunc("/api/runs", apiTestRunsHandler)
 	http.HandleFunc("/api/run", apiTestRunHandler)
 	http.HandleFunc("/results", resultsRedirectHandler)
