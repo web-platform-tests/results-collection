@@ -80,7 +80,7 @@ func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (TestRun,
 	query := baseQuery.
 		Filter("BrowserName =", revision.Platform)
 	if revision.Revision != "latest" {
-		query.Filter("Revision = ", revision.Revision)
+		query = query.Filter("Revision = ", revision.Revision)
 	}
 	if _, err := query.GetAll(ctx, &results); err != nil {
 		return TestRun{}, err
