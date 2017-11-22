@@ -16,10 +16,7 @@ syntax = "proto3";
 
 package wptdashboard;
 option go_package = "generated";
-import "bq_table_name.proto";
 
-message Strawman {
-  option (gen_bq_schema.table_name) = "strawmen";
-
-  int32 straw = 1;
+message Token {
+  string secret = 1;
 }

@@ -15,6 +15,9 @@
 runtime: go
 api_version: go1
 
+builtins:
+- remote_api: on
+
 handlers:
 - url: /components
   static_dir: components
