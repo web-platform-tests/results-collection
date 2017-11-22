@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 package wptdashboard;
+option go_package = "generated";
 
 enum Engine {
   ENGINE_UNKNOWN = 0;

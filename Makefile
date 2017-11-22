@@ -19,6 +19,8 @@
 # the correct version of tools are installed and environment variables are
 # set appropriately.
 
+SHELL := /bin/bash
+
 WPTD_PATH ?= /home/jenkins/wptdashboard
 
 PB_LIB_DIR ?= ../protobuf/src
@@ -55,7 +57,7 @@ py_test: py_proto py_deps
 go_lint: go_deps
 	golint -set_exit_status
 	# Print differences between current/gofmt'd output, check empty.
-	! gofmt -d ./... 2>&1 | read
+	! gofmt -d . 2>&1 | read
 
 go_test: go_deps
 	go test -v ./...

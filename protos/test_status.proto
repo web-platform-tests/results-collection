@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 package wptdashboard;
+option go_package = "generated";
 
 enum TestStatus {
   TEST_STATUS_UNKNOWN = 0;

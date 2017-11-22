@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 package wptdashboard;
+option go_package = "generated";
 
 import "google/protobuf/timestamp.proto";
 import "test_run.proto";
