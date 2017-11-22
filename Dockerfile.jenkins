@@ -2,5 +2,14 @@ FROM wptd-base
 
 ADD . "${WPTD_PATH}"
 
+# Ensure Google Cloud Platform tools are installed
+RUN gcloud components install \
+    app-engine-go \
+    bq \
+    core \
+    gsutil \
+    app-engine-python \
+    kubectl
+
 # Expose Sauce Connect port
 EXPOSE 4445
