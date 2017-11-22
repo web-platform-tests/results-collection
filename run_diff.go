@@ -22,9 +22,9 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
-	"golang.org/x/net/context"
 )
 
 type platformAtRevision struct {
