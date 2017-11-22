@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 package wptdashboard;
+option go_package = "generated";
 
 // Browser holds objects that appear in browsers.json
 message Browser {
