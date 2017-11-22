@@ -209,17 +209,8 @@ func getBrowserParam(r *http.Request) (browser string, err error) {
 		return browser, err
 	}
 
-	browserNames, err := GetBrowserNames()
-	if err != nil {
-		return browser, err
-	}
-
-	browser = params.Get("browser")
-	// Check that it's a browser name we recognize.
-	for _, name := range browserNames {
-		if name == browser {
-			return name, nil
-		}
+	if browser = params.Get("browser"); IsBrowserName(browser) {
+		return browser, nil
 	}
 	return "", nil
 }
