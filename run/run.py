@@ -21,9 +21,12 @@ import json
 import platform as host_platform
 import re
 import requests
+import shas
 import subprocess
 import sys
 import os
+
+from datetime import date
 
 """
 run.py runs WPT and uploads results to Google Cloud Storage.
@@ -60,6 +63,9 @@ By default this script will not upload anything! To run for production:
 
 
 def main(platform_id, platform, args, config):
+    loggingLevel = getattr(logging, namespace.log.upper(), None)
+    logging.basicConfig(level=loggingLevel)
+    logger = logging.getLogger()
 
     print('PLATFORM_ID:', platform_id)
     print('PLATFORM INFO:', platform)
@@ -113,9 +119,17 @@ def main(platform_id, platform, args, config):
 
     patch_wpt(config, platform)
 
-    # TODO(#40): modify this to test against the first SHA of the day
-    CURRENT_WPT_SHA = get_current_wpt_sha(config)
+    wpt_path = config['wpt_path']
+    sha_finder = shas.SHAFinder(logger)
+    CURRENT_WPT_SHA = (sha_finder.get_todays_sha(wpt_path)
+                       or sha_finder.get_head_sha(wpt_path))
     print('Current WPT SHA: %s' % CURRENT_WPT_SHA)
+
+    return_code = subprocess.check_call(
+        ['git', 'checkout', CURRENT_WPT_SHA], cwd=config['wpt_path'])
+    assert return_code == 0, (
+        'Got non-0 return code: '
+        '%d from command %s' % (return_code, command))
 
     SHORT_SHA = CURRENT_WPT_SHA[0:10]
 
@@ -295,15 +309,6 @@ def verify_or_set_os_version(platform):
         % (os_version, platform['os_version']))
 
 
-def get_current_wpt_sha(config):
-    command = ['git', 'rev-parse', 'HEAD']
-    output = subprocess.check_output(command, cwd=config['wpt_path'])
-    sha = output.decode('UTF-8').strip()
-
-    assert len(sha) == 40, 'Invalid SHA: "%s"' % sha
-    return sha
-
-
 def report_to_summary(wpt_report):
     test_files = {}
 
@@ -414,6 +419,12 @@ def parse_args():
               'promoted if "initially_loaded" is true for the '
               'browser in browsers.json.'),
         action='store_true'
+    )
+    parser.add_argument(
+        '--log',
+        type=str,
+        default='INFO',
+        help='Log level to output'
     )
     args = parser.parse_args()
 
