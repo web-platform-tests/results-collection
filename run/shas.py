@@ -30,13 +30,8 @@ date.
 class SHAFinder(object):
 
     def __init__(self,
-                 logger  # type: logging.Logger
-                 ):
-        self.__init__(logger, date.today())
-
-    def __init__(self,
                  logger,  # type: logging.Logger
-                 date,  # type: datetime.date
+                 date=date.today(),  # type: datetime.date
                  ):
         self.logger = logger
         self.date = date
