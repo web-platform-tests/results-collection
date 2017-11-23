@@ -14,14 +14,13 @@
 
 import unittest
 
-from jenkins import (
-    report_to_summary,
-)
+from runner import Runner
 
 
 class TestJenkins(unittest.TestCase):
     def test_report_to_summary(self):
-        actual = report_to_summary({
+        runner = Runner()
+        actual = runner.report_to_summary({
             'results': [
                 {
                     'test': '/dom/a.html',

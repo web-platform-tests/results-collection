@@ -1,3 +1,7 @@
 # Git hooks
 
-Sym-link this directory to `/path/to/wptdashboard/.git/hooks` to install version-controlled Git hooks.
+To opt in for these version-controlled Git hooks, sym-link to this directory from `../.git/hooks`, i.e.:
+
+    cd /path/to/wptdashboard/.git
+    ln -s ../git/hooks hooks
+

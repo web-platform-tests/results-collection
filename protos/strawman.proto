@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 package wptdashboard;
+option go_package = "generated";
 import "bq_table_name.proto";
 
 message Strawman {
