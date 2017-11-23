@@ -28,7 +28,10 @@ import (
 )
 
 type platformAtRevision struct {
+	// Platform is the string representing browser (+ version), and OS (+ version).
 	Platform string
+
+	// Revision is the SHA[0:10] of the git repo.
 	Revision string
 }
 
@@ -44,6 +47,7 @@ func parsePlatformAtRevisionSpec(spec string) (platformAtRevision platformAtRevi
 	} else {
 		platformAtRevision.Revision = pieces[1]
 	}
+	// TODO(lukebjerring): Also handle actual platforms (with version + os)
 	if IsBrowserName(platformAtRevision.Platform) {
 		return platformAtRevision, nil
 	}
@@ -77,6 +81,7 @@ func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (TestRun,
 		Limit(1)
 
 	var results []TestRun
+	// TODO(lukebjerring): Handle actual platforms (split out version + os)
 	query := baseQuery.
 		Filter("BrowserName =", revision.Platform)
 	if revision.Revision != "latest" {
@@ -91,6 +96,8 @@ func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (TestRun,
 	return results[0], nil
 }
 
+// fetchRunResultsJSON fetches the results JSON summary for the given test run, but does not include subtests (since
+// a full run can span 20k files).
 func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (results map[string][]int, err error) {
 	client := urlfetch.Client(ctx)
 	url := run.ResultsURL
@@ -117,6 +124,8 @@ func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (res
 	return results, nil
 }
 
+// diffResults returns a map of test name to an array of [count-different-tests, total-tests], for tests which had
+// different results counts in their map (which is test name to array of [count-passed, total-tests]).
 func diffResults(before map[string][]int, after map[string][]int) map[string][]int {
 	diff := make(map[string][]int)
 	for test, resultsBefore := range before {
