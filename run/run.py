@@ -120,17 +120,17 @@ def main(platform_id, platform, args, config):
 
     wpt_path = config['wpt_path']
     sha_finder = shas.SHAFinder(logger)
-    CURRENT_WPT_SHA = (sha_finder.get_todays_sha(wpt_path)
-                       or sha_finder.get_head_sha(wpt_path))
-    print('Current WPT SHA: %s' % CURRENT_WPT_SHA)
+    WPT_SHA = (sha_finder.get_todays_sha(wpt_path)
+               or sha_finder.get_head_sha(wpt_path))
+    print('Current WPT SHA: %s' % WPT_SHA)
 
     return_code = subprocess.check_call(
-        ['git', 'checkout', CURRENT_WPT_SHA], cwd=config['wpt_path'])
+        ['git', 'checkout', WPT_SHA], cwd=config['wpt_path'])
     assert return_code == 0, (
         'Got non-0 return code: '
         '%d from command %s' % (return_code, command))
 
-    SHORT_SHA = CURRENT_WPT_SHA[0:10]
+    SHORT_SHA = WPT_SHA[0:10]
 
     LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (
         config['build_path'], SHORT_SHA, platform_id

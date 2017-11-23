@@ -32,22 +32,28 @@ class SHAFinder(object):
     def __init__(self,
                  logger  # type: logging.Logger
                  ):
+        self.__init__(logger, date.today())
+
+    def __init__(self,
+                 logger,  # type: logging.Logger
+                 date,  # type: datetime.date
+                 ):
         self.logger = logger
+        self.date = date
 
     def get_todays_sha(self, path):  # type: (str) -> str
         """
         Gets the first SHA for the current date of the git repo in the given
         path.
         """
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
+        today = self.date
+        tomorrow = self.date + timedelta(days=1)
         command = [
             'git',
             'log',
             '--format=%H',
-            '--after="%s 00:00:00"' % today.isoformat(),
-            '--before="%s 00:00:00"' % tomorrow.isoformat(),
-            '--date-order',
+            '--after="%s T00:00:00Z"' % today.isoformat(),
+            '--before="%s T00:00:00Z"' % tomorrow.isoformat(),
             '--reverse'
         ]
         abspath = os.path.abspath(path)
