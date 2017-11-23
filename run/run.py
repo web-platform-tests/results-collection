@@ -18,6 +18,7 @@ import argparse
 import ConfigParser as configparser
 import gzip
 import json
+import logging
 import platform as host_platform
 import re
 import requests
@@ -25,8 +26,6 @@ import shas
 import subprocess
 import sys
 import os
-
-from datetime import date
 
 """
 run.py runs WPT and uploads results to Google Cloud Storage.
@@ -63,7 +62,7 @@ By default this script will not upload anything! To run for production:
 
 
 def main(platform_id, platform, args, config):
-    loggingLevel = getattr(logging, namespace.log.upper(), None)
+    loggingLevel = getattr(logging, args.log.upper(), None)
     logging.basicConfig(level=loggingLevel)
     logger = logging.getLogger()
 
@@ -280,12 +279,16 @@ def version_string_to_major_minor(version):
 
 def verify_browser_binary_version(platform, browser_binary):
     command = [browser_binary, '--version']
-    output = subprocess.check_output(command).decode('UTF-8').strip()
-    version = version_string_to_major_minor(output)
-    assert version == platform['browser_version'], (
-        'Browser binary version does not match desired platform version.\n'
-        'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
-        % (browser_binary, version, platform['browser_version']))
+    try:
+        output = subprocess.check_output(command).decode('UTF-8').strip()
+        version = version_string_to_major_minor(output)
+        assert version == platform['browser_version'], (
+            'Browser binary version does not match desired platform version.\n'
+            'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
+            % (browser_binary, version, platform['browser_version']))
+    except OSError as e:
+        logging.fatal('Error executing %s' % ' '.join(command))
+        raise e
 
 
 def verify_os_name(platform):

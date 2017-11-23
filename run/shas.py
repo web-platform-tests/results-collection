@@ -51,8 +51,8 @@ class SHAFinder(object):
             '--reverse'
         ]
         abspath = os.path.abspath(path)
-        logger.debug('Using dir ' + abspath)
-        logger.debug('Executing ' + ' '.join(command))
+        self.logger.debug('Using dir ' + abspath)
+        self.logger.debug('Executing ' + ' '.join(command))
         output = subprocess.check_output(command, cwd=abspath)
         shas = output.decode('UTF-8').strip().split(os.linesep)
         if len(shas) > 0:
@@ -69,8 +69,8 @@ class SHAFinder(object):
             'HEAD',
         ]
         abspath = os.path.abspath(path)
-        logger.debug('Using dir ' + abspath)
-        logger.debug('Executing ' + ' '.join(command))
+        self.logger.debug('Using dir ' + abspath)
+        self.logger.debug('Executing ' + ' '.join(command))
         output = subprocess.check_output(command, cwd=abspath)
         sha = output.decode('UTF-8').strip()
         assert len(sha) == 40, 'Invalid SHA: "%s"' % sha
