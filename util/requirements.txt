@@ -1,4 +1,0 @@
-certifi==2017.11.5
-mock==2.0.0
-typing==3.6.2
-urllib3[secure]==1.21.1
