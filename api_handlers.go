@@ -215,7 +215,8 @@ func getBrowserParam(r *http.Request) (browser string, err error) {
 	return "", nil
 }
 
-// getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that complete for all of the given browser names.
+// getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that exists for all initially-loaded browser
+// names (see GetBrowserNames).
 func getLastCompleteRunSHA(ctx context.Context) (sha string, err error) {
 	baseQuery := datastore.
 		NewQuery("TestRun").
