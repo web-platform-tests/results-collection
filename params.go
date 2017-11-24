@@ -20,10 +20,20 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/deckarep/golang-set"
 )
+
+// MaxCountDefaultValue is the default value returned by ParseMaxCountParam for the max-count param.
+const MaxCountDefaultValue = 1
+
+// MaxCountMaxValue is the maximum allowed value for the max-count param.
+const MaxCountMaxValue = 500
+
+// MaxCountMinValue is the minimum allowed value for the max-count param.
+const MaxCountMinValue = 1
 
 // SHARegex is a regex for SHA[0:10] slice of a git hash.
 var SHARegex = regexp.MustCompile("[0-9a-fA-F]{10}")
@@ -86,6 +96,23 @@ func ParseBrowsersParam(r *http.Request) (browsers []string, err error) {
 	}
 	sort.Strings(browsers)
 	return browsers, nil
+}
+
+// ParseMaxCountParam parses the 'max-count' parameter as an integer.
+func ParseMaxCountParam(r *http.Request) (count int, err error) {
+	count = MaxCountDefaultValue
+	if maxCountParam := r.URL.Query().Get("max-count"); maxCountParam != "" {
+		if count, err = strconv.Atoi(maxCountParam); err != nil {
+			return MaxCountDefaultValue, err
+		}
+		if count < MaxCountMinValue {
+			count = MaxCountMinValue
+		}
+		if count > MaxCountMaxValue {
+			count = MaxCountMaxValue
+		}
+	}
+	return count, err
 }
 
 // ParsePathsParam returns a set list of test paths to include, or nil if no filter is provided (and all tests should be

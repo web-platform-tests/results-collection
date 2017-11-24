@@ -141,6 +141,44 @@ func TestParseBrowsersParam_MultiBrowserParam_AllInvalid(t *testing.T) {
 	assert.Empty(t, browsers)
 }
 
+func TestParseMaxCountParam_Missing(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/", nil)
+	count, err := ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountDefaultValue, count)
+}
+
+func TestParseMaxCountParam_TooSmall(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/?max-count=0", nil)
+	count, err := ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountMinValue, count)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/?max-count=-1", nil)
+	count, err = ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountMinValue, count)
+}
+
+func TestParseMaxCountParam_TooLarge(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/?max-count=123456789", nil)
+	count, err := ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountMaxValue, count)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/?max-count=100000000", nil)
+	count, err = ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountMaxValue, count)
+}
+
+func TestParseMaxCountParam(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/?max-count=2", nil)
+	count, err := ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, count)
+}
+
 func TestParsePathsParam_Missing(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff", nil)
 	paths := ParsePathsParam(r)
@@ -150,17 +188,17 @@ func TestParsePathsParam_Missing(t *testing.T) {
 func TestParsePathsParam_Path_Duplicate(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?path=/css&path=/css", nil)
 	paths := ParsePathsParam(r)
-	assert.Len(t, paths.ToSlice(), 1)
+	assert.Equal(t, 1, paths.Cardinality())
 }
 
 func TestParsePathsParam_Paths_Duplicate(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?paths=/css,/css", nil)
 	paths := ParsePathsParam(r)
-	assert.Len(t, paths.ToSlice(), 1)
+	assert.Equal(t, 1, paths.Cardinality())
 }
 
 func TestParsePathsParam_PathsAndPath_Duplicate(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?paths=/css&path=/css", nil)
 	paths := ParsePathsParam(r)
-	assert.Len(t, paths.ToSlice(), 1)
+	assert.Equal(t, 1, paths.Cardinality())
 }
