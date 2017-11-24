@@ -47,6 +47,11 @@ func GetBrowsers() (map[string]Browser, error) {
 // GetBrowserNames returns an alphabetically-ordered array of the names
 // of the browsers returned by GetBrowsers.
 func GetBrowserNames() ([]string, error) {
+	if browserNamesAlphabetical == nil {
+		if err := loadBrowserNames(); err != nil {
+			return nil, err
+		}
+	}
 	return browserNamesAlphabetical, nil
 }
 
