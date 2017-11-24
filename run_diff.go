@@ -152,7 +152,7 @@ func diffResults(before map[string][]int, after map[string][]int, paths mapset.S
 		}
 	}
 	for test, resultsAfter := range after {
-		if paths != nil && !anyPathMatches(paths, test) {
+		if !anyPathMatches(paths, test) {
 			continue
 		}
 
