@@ -60,7 +60,7 @@ def main(args):  # type: (argparse.Namespace) -> None
         OSVersion = ndb.StringProperty()
         Revision = ndb.StringProperty()
         ResultsURL = ndb.StringProperty()
-        CreatedAt = ndb.DateProperty()
+        CreatedAt = ndb.DateProperty(auto_now_add=True)
 
     # Create empty Token 'upload-token'
     secret = Token(
@@ -70,7 +70,7 @@ def main(args):  # type: (argparse.Namespace) -> None
     logging.info('Added Token \'upload-token\' with empty secret.')
 
     # Add some runs.
-    path = '/static/b952881825/%s'
+    path = 'localhost:8080/static/b952881825/%s'
     test_runs = [
         TestRun(
             id='dev-testrun-chrome-63',
