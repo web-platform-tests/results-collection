@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -52,7 +51,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var browserNames []string
-	if browserNames, err = GetBrowserNames(); err != nil {
+	if browserNames, err = ParseBrowsersParam(r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +105,7 @@ func apiTestRunGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var browserName string
-	browserName, err = getBrowserParam(r)
+	browserName, err = ParseBrowserParam(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -198,21 +197,6 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(jsonOutput)
 	w.WriteHeader(http.StatusCreated)
-}
-
-// getBrowserParam parses and validates the 'browser' param for the request.
-// It returns "" by default (and in error cases).
-func getBrowserParam(r *http.Request) (browser string, err error) {
-	browser = ""
-	params, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		return browser, err
-	}
-
-	if browser = params.Get("browser"); IsBrowserName(browser) {
-		return browser, nil
-	}
-	return "", nil
 }
 
 // getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that exists for all initially-loaded browser

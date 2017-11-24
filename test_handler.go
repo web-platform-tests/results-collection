@@ -18,8 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
-	"regexp"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -67,22 +65,4 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-// ParseSHAParam parses and validates the 'sha' param for the request.
-// It returns "latest" by default (and in error cases).
-func ParseSHAParam(r *http.Request) (runSHA string, err error) {
-	// Get the SHA for the run being loaded (the first part of the path.)
-	runSHA = "latest"
-	params, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		return runSHA, err
-	}
-
-	runParam := params.Get("sha")
-	regex := regexp.MustCompile("[0-9a-fA-F]{10}")
-	if regex.MatchString(runParam) {
-		runSHA = runParam
-	}
-	return runSHA, err
 }
