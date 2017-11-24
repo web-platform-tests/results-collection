@@ -78,3 +78,16 @@ func loadBrowserNames() error {
 	sort.Strings(browserNamesAlphabetical)
 	return nil
 }
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+func max(x int, y int) int {
+	if x < y {
+		return y
+	}
+	return x
+}
