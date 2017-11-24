@@ -105,7 +105,6 @@ func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (res
 	if strings.Index(url, "/") == 0 {
 		reqURL := *r.URL
 		reqURL.Path = url
-		panic(reqURL)
 	}
 	var resp *http.Response
 	if resp, err = client.Get(url); err != nil {
@@ -164,6 +163,7 @@ func diffResults(before map[string][]int, after map[string][]int, paths mapset.S
 	}
 	return diff
 }
+
 
 func anyPathMatches(paths mapset.Set, testPath string) bool {
 	if paths == nil {

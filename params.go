@@ -128,10 +128,16 @@ func ParsePathsParam(r *http.Request) (paths mapset.Set) {
 	for _, path := range pathParams {
 		paths.Add(path)
 	}
-	if browsersParam := pathsParam; browsersParam != "" {
-		for _, path := range strings.Split(browsersParam, ",") {
+	if pathsParam != "" {
+		for _, path := range strings.Split(pathsParam, ",") {
 			paths.Add(path)
 		}
+	}
+	if paths.Contains("") {
+		paths.Remove("")
+	}
+	if paths.Cardinality() == 0 {
+		return nil
 	}
 	return paths
 }

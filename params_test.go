@@ -185,6 +185,16 @@ func TestParsePathsParam_Missing(t *testing.T) {
 	assert.Nil(t, paths)
 }
 
+func TestParsePathsParam_Empty(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?path=", nil)
+	paths := ParsePathsParam(r)
+	assert.Nil(t, paths)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/api/diff?paths=", nil)
+	paths = ParsePathsParam(r)
+	assert.Nil(t, paths)
+}
+
 func TestParsePathsParam_Path_Duplicate(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?path=/css&path=/css", nil)
 	paths := ParsePathsParam(r)
