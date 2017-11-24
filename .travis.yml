@@ -68,5 +68,6 @@ script:
   - docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${TEST_TARGET}"
 
 after_script:
+  - docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" xvfb-run --auto-servernum ../web-platform-tests/wpt run firefox webrtc/simplecall.html --log-mach-level debug --install-browser --yes --certutil-binary=certutil --setpref media.navigator.streams.fake=true --no-pause --log-mach=- --log-wptreport /home/jenkins/wptdbuild/wptd-193eed58c3-firefox-56.0-linux-report.log --install-fonts
   - docker stop "${DOCKER_INSTANCE}"
   - docker rm "${DOCKER_INSTANCE}"
