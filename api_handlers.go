@@ -280,7 +280,8 @@ func apiDiffHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	diffJSON := diffResults(beforeJSON, afterJSON)
+	paths := ParsePathsParam(r)
+	diffJSON := diffResults(beforeJSON, afterJSON, paths)
 	var bytes []byte
 	if bytes, err = json.Marshal(diffJSON); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

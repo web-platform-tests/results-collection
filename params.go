@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/deckarep/golang-set"
 )
 
 // SHARegex is a regex for SHA[0:10] slice of a git hash.
@@ -84,4 +86,25 @@ func ParseBrowsersParam(r *http.Request) (browsers []string, err error) {
 	}
 	sort.Strings(browsers)
 	return browsers, nil
+}
+
+// ParsePathsParam returns a set list of test paths to include, or nil if no filter is provided (and all tests should be
+// included). It parses the 'paths' parameter, split on commas, and also checks for the (repeatable) 'path' params.
+func ParsePathsParam(r *http.Request) (paths mapset.Set) {
+	pathParams := r.URL.Query()["path"]
+	pathsParam := r.URL.Query().Get("paths")
+	if len(pathParams) == 0 && pathsParam == "" {
+		return nil
+	}
+
+	paths = mapset.NewSet()
+	for _, path := range pathParams {
+		paths.Add(path)
+	}
+	if browsersParam := pathsParam; browsersParam != "" {
+		for _, path := range strings.Split(browsersParam, ",") {
+			paths.Add(path)
+		}
+	}
+	return paths
 }

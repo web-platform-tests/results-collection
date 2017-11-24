@@ -140,3 +140,27 @@ func TestParseBrowsersParam_MultiBrowserParam_AllInvalid(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Empty(t, browsers)
 }
+
+func TestParsePathsParam_Missing(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff", nil)
+	paths := ParsePathsParam(r)
+	assert.Nil(t, paths)
+}
+
+func TestParsePathsParam_Path_Duplicate(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?path=/css&path=/css", nil)
+	paths := ParsePathsParam(r)
+	assert.Len(t, paths.ToSlice(), 1)
+}
+
+func TestParsePathsParam_Paths_Duplicate(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?paths=/css,/css", nil)
+	paths := ParsePathsParam(r)
+	assert.Len(t, paths.ToSlice(), 1)
+}
+
+func TestParsePathsParam_PathsAndPath_Duplicate(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?paths=/css&path=/css", nil)
+	paths := ParsePathsParam(r)
+	assert.Len(t, paths.ToSlice(), 1)
+}

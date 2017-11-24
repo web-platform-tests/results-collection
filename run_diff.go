@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/deckarep/golang-set"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
@@ -104,6 +105,7 @@ func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (res
 	if strings.Index(url, "/") == 0 {
 		reqURL := *r.URL
 		reqURL.Path = url
+		panic(reqURL)
 	}
 	var resp *http.Response
 	if resp, err = client.Get(url); err != nil {
@@ -126,9 +128,13 @@ func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (res
 
 // diffResults returns a map of test name to an array of [count-different-tests, total-tests], for tests which had
 // different results counts in their map (which is test name to array of [count-passed, total-tests]).
-func diffResults(before map[string][]int, after map[string][]int) map[string][]int {
+func diffResults(before map[string][]int, after map[string][]int, paths mapset.Set) map[string][]int {
 	diff := make(map[string][]int)
 	for test, resultsBefore := range before {
+		if !anyPathMatches(paths, test) {
+			continue
+		}
+
 		if resultsAfter, ok := after[test]; !ok {
 			// Missing? Then N / N tests are 'different'
 			diff[test] = []int{resultsBefore[1], resultsBefore[1]}
@@ -147,10 +153,26 @@ func diffResults(before map[string][]int, after map[string][]int) map[string][]i
 		}
 	}
 	for test, resultsAfter := range after {
+		if paths != nil && !anyPathMatches(paths, test) {
+			continue
+		}
+
 		if _, ok := before[test]; !ok {
 			// Missing? Then N / N tests are 'different'
 			diff[test] = []int{resultsAfter[1], resultsAfter[1]}
 		}
 	}
 	return diff
+}
+
+func anyPathMatches(paths mapset.Set, testPath string) bool {
+	if paths == nil {
+		return true
+	}
+	for path := range paths.Iter() {
+		if strings.Index(testPath, path.(string)) == 0 {
+			return true
+		}
+	}
+	return false
 }

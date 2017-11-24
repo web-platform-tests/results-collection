@@ -15,8 +15,10 @@
 package wptdashboard
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,17 +71,51 @@ func TestDiffResults_Removed(t *testing.T) {
 	assertDelta(t, []int{1, 2}, []int{1, 1}, []int{1, 2})
 }
 
+func TestDiffResults_Filtered(t *testing.T) {
+	// Test filtering by each /, /mock/, and /mock/path.html
+	pieces := strings.SplitAfter(mockTestPath, "/")
+	for i := 1; i < len(pieces); i++ {
+		paths := mapset.NewSet(strings.Join(pieces[:i], ""))
+		assertDeltaFiltered(t, []int{0, 5}, []int{5, 5}, []int{5, 5}, paths)
+	}
+
+	// Filter where none match
+	paths := mapset.NewSet("/different/path/")
+	rBefore, rAfter := getDeltaResultsMaps([]int{0, 5}, []int{5, 5})
+	assert.Empty(t, diffResults(rBefore, rAfter, paths))
+
+	// Filter where one matches
+	mockPath1, mockPath2 := "/mock/path-1.html", "/mock/path-2.html"
+	rBefore = map[string][]int{
+		mockPath1: {0, 1},
+		mockPath2: {0, 1},
+	}
+	rAfter = map[string][]int{
+		mockPath1: {2, 2},
+		mockPath2: {2, 2},
+	}
+	paths = mapset.NewSet(mockPath1)
+	delta := diffResults(rBefore, rAfter, paths)
+	assert.NotContains(t, delta, mockPath2)
+	assert.Contains(t, delta, mockPath1)
+	assert.Equal(t, []int{2, 2}, delta[mockPath1])
+}
+
 func assertNoDeltaDifferences(t *testing.T, before []int, after []int) {
 	rBefore, rAfter := getDeltaResultsMaps(before, after)
-	assert.Equal(t, map[string][]int{}, diffResults(rBefore, rAfter))
+	assert.Equal(t, map[string][]int{}, diffResults(rBefore, rAfter, nil))
 }
 
 func assertDelta(t *testing.T, before []int, after []int, delta []int) {
+	assertDeltaFiltered(t, before, after, delta, nil)
+}
+
+func assertDeltaFiltered(t *testing.T, before []int, after []int, delta []int, paths mapset.Set) {
 	rBefore, rAfter := getDeltaResultsMaps(before, after)
 	assert.Equal(
 		t,
 		map[string][]int{mockTestPath: delta},
-		diffResults(rBefore, rAfter))
+		diffResults(rBefore, rAfter, paths))
 }
 
 func getDeltaResultsMaps(before []int, after []int) (map[string][]int, map[string][]int) {
