@@ -99,8 +99,8 @@ func ParseBrowsersParam(r *http.Request) (browsers []string, err error) {
 // ParseMaxCountParam parses the 'max-count' parameter as an integer.
 func ParseMaxCountParam(r *http.Request) (count int, err error) {
 	count = MaxCountDefaultValue
-	if browsersParam := r.URL.Query().Get("max-count"); browsersParam != "" {
-		if count, err = strconv.Atoi(browsersParam); err != nil {
+	if maxCountParam := r.URL.Query().Get("max-count"); maxCountParam != "" {
+		if count, err = strconv.Atoi(maxCountParam); err != nil {
 			return MaxCountDefaultValue, err
 		}
 		if count < MaxCountMinValue {

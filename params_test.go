@@ -160,11 +160,21 @@ func TestParseMaxCountParam_TooSmall(t *testing.T) {
 	count, err := ParseMaxCountParam(r)
 	assert.Nil(t, err)
 	assert.Equal(t, MaxCountMinValue, count)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/?max-count=-1", nil)
+	count, err = ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountMinValue, count)
 }
 
 func TestParseMaxCountParam_TooLarge(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/?max-count=123456789", nil)
 	count, err := ParseMaxCountParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, MaxCountMaxValue, count)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/?max-count=100000000", nil)
+	count, err = ParseMaxCountParam(r)
 	assert.Nil(t, err)
 	assert.Equal(t, MaxCountMaxValue, count)
 }
