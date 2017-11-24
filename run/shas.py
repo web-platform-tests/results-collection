@@ -46,6 +46,7 @@ class SHAFinder(object):
         command = [
             'git',
             'log',
+            '--first-parent',
             '--format=%H',
             '--after="%s T00:00:00Z"' % today.isoformat(),
             '--before="%s T00:00:00Z"' % tomorrow.isoformat(),
