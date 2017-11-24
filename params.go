@@ -15,6 +15,7 @@
 package wptdashboard
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -45,19 +46,14 @@ func ParseSHAParam(r *http.Request) (runSHA string, err error) {
 // ParseBrowserParam parses and validates the 'browser' param for the request.
 // It returns "" by default (and in error cases).
 func ParseBrowserParam(r *http.Request) (browser string, err error) {
-	browserNames, err := GetBrowserNames()
-	if err != nil {
-		return browser, err
-	}
-
 	browser = r.URL.Query().Get("browser")
-	// Check that it's a browser name we recognize.
-	for _, name := range browserNames {
-		if name == browser {
-			return name, nil
-		}
+	if "" == browser {
+		return "", nil
 	}
-	return "", nil
+	if IsBrowserName(browser) {
+		return browser, nil
+	}
+	return "", fmt.Errorf("invalid browser param %s", browser)
 }
 
 // ParseBrowsersParam returns a sorted list of browsers to include.

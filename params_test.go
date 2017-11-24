@@ -73,7 +73,7 @@ func TestParseBrowserParam_Chrome(t *testing.T) {
 func TestParseBrowserParam_Invalid(t *testing.T) {
 	r := httptest.NewRequest("GET", "http://wpt.fyi/?browser=invalid", nil)
 	browser, err := ParseBrowserParam(r)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 	assert.Equal(t, "", browser)
 }
 
