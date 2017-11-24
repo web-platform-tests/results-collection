@@ -164,7 +164,6 @@ func diffResults(before map[string][]int, after map[string][]int, paths mapset.S
 	return diff
 }
 
-
 func anyPathMatches(paths mapset.Set, testPath string) bool {
 	if paths == nil {
 		return true
