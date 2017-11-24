@@ -138,7 +138,12 @@ func diffResults(before map[string][]int, after map[string][]int) map[string][]i
 			if countDiff == 0 && passDiff == 0 {
 				continue
 			}
-			diff[test] = []int{passDiff + countDiff, max(resultsBefore[1], resultsAfter[1])}
+			// Changed tests is at most the number of different outcomes,
+			// but newly introduced tests should still be counted (e.g. 0/2 => 0/5)
+			diff[test] = []int{
+				max(passDiff, countDiff),
+				max(resultsBefore[1], resultsAfter[1]),
+			}
 		}
 	}
 	for test, resultsAfter := range after {
