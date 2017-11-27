@@ -51,7 +51,13 @@ limitations under the License.
                 return response.json()
               })
             )
-            this.testRuns = fetches.filter(e => e)  // Filter unresolved fetches.
+            // Filter unresolved fetches and flatten any array-fetches into the array.
+            const nonEmpty = fetches.filter(e => e)
+            const flattened = nonEmpty
+                .reduce((sum, item) => {
+                  return Array.isArray(item) ? sum.concat(item) : [...sum, item]
+                }, [])
+            this.testRuns = flattened
           }
         }
       }

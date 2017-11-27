@@ -136,7 +136,7 @@ limitations under the License.
       }
 
       _computeDateTooltip(date) {
-        return date.toDateString()
+        return date && date.toDateString()
       }
 
       async connectedCallback () {
