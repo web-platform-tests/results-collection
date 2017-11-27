@@ -112,3 +112,43 @@ func ParseMaxCountParam(r *http.Request) (count int, err error) {
 	}
 	return count, err
 }
+
+// DiffFilterParam represents the types of changed test paths to include.
+type DiffFilterParam struct {
+	// Added tests are present in the 'after' state of the diff, but not present
+	// in the 'before' state of the diff.
+	Added bool
+
+	// Deleted tests are present in the 'before' state of the diff, but not present
+	// in the 'after' state of the diff.
+	Deleted bool
+
+	// Changed tests are present in both the 'before' and 'after' states of the diff,
+	// but the number of passes, failures, or total tests has changed.
+	Changed bool
+}
+
+// ParseDiffFilterParam splits the filter param into the differences to include.
+func ParseDiffFilterParam(r *http.Request) (param DiffFilterParam, err error) {
+	param = DiffFilterParam{
+		true,
+		true,
+		true,
+	}
+	if filter := r.URL.Query().Get("filter"); filter != "" {
+		param = DiffFilterParam{}
+		for _, char := range filter {
+			switch char {
+			case 'A':
+				param.Added = true
+			case 'D':
+				param.Deleted = true
+			case 'C':
+				param.Changed = true
+			default:
+				return param, fmt.Errorf("invalid filter character %c", char)
+			}
+		}
+	}
+	return param, nil
+}

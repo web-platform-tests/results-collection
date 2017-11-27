@@ -178,3 +178,42 @@ func TestParseMaxCountParam_TooLarge(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, MaxCountMaxValue, count)
 }
+
+func TestParseDiffFilterParam(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=A", nil)
+	filter, _ := ParseDiffFilterParam(r)
+	assert.Equal(t, DiffFilterParam{true, false, false}, filter)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=D", nil)
+	filter, _ = ParseDiffFilterParam(r)
+	assert.Equal(t, DiffFilterParam{false, true, false}, filter)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=C", nil)
+	filter, _ = ParseDiffFilterParam(r)
+	assert.Equal(t, DiffFilterParam{false, false, true}, filter)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=CAD", nil)
+	filter, _ = ParseDiffFilterParam(r)
+	assert.Equal(t, DiffFilterParam{true, true, true}, filter)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=CD", nil)
+	filter, _ = ParseDiffFilterParam(r)
+	assert.Equal(t, DiffFilterParam{false, true, true}, filter)
+
+	r = httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=CACA", nil)
+	filter, _ = ParseDiffFilterParam(r)
+	assert.Equal(t, DiffFilterParam{true, false, true}, filter)
+}
+
+func TestParseDiffFilterParam_Empty(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff", nil)
+	filter, err := ParseDiffFilterParam(r)
+	assert.Nil(t, err)
+	assert.Equal(t, true, filter.Changed && filter.Added && filter.Deleted)
+}
+
+func TestParseDiffFilterParam_Invalid(t *testing.T) {
+	r := httptest.NewRequest("GET", "http://wpt.fyi/api/diff?filter=Z", nil)
+	_, err := ParseDiffFilterParam(r)
+	assert.NotNil(t, err)
+}
