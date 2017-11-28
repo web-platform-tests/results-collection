@@ -2,5 +2,27 @@ FROM wptd-base
 
 ADD . "${WPTD_PATH}"
 
+USER root
+
+# Install inotify-tools for dev server scripts
+RUN apt-get install --assume-yes --no-install-suggests \
+    --no-install-recommends \
+    inotify-tools
+
+# Ensure Google Cloud Platform tools are installed
+RUN gcloud components install \
+    app-engine-go \
+    bq \
+    core \
+    gsutil \
+    app-engine-python \
+    kubectl
+
+# Put wptdashboard code in GOPATH
+RUN ln -s "${WPTD_PATH}" "${GOPATH}/src/wptdashboard"
+
+# Drop dev environment into source path
+WORKDIR "${WPTD_PATH}"
+
 # Expose Sauce Connect port
 EXPOSE 4445
