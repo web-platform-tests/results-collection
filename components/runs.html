@@ -41,7 +41,7 @@ limitations under the License.
         async connectedCallback () {
           super.connectedCallback()
 
-          if (!this.testRuns) {
+          if (this.testRunResources) {
             const fetches = await Promise.all(
               this.testRunResources.map(async url => {
                 const response = await window.fetch(url)
@@ -57,7 +57,7 @@ limitations under the License.
                 .reduce((sum, item) => {
                   return Array.isArray(item) ? sum.concat(item) : [...sum, item]
                 }, [])
-            this.testRuns = flattened
+            this.testRuns = this.testRuns ? [...flattened, ...this.testRuns] : flattened
           }
         }
       }

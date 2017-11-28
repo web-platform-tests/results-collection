@@ -34,8 +34,35 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	const sourceURL = `/api/runs?sha=%s`
-	testRunSources := []string{fmt.Sprintf(sourceURL, runSHA)}
+	var testRunSources []string
+
+	specBefore := r.URL.Query().Get("before")
+	specAfter := r.URL.Query().Get("after")
+	if specBefore != "" || specAfter != "" {
+		if specBefore == "" {
+			http.Error(w, "after param provided, but before param missing", http.StatusBadRequest)
+			return
+		} else if specAfter == "" {
+			http.Error(w, "before param provided, but after param missing", http.StatusBadRequest)
+			return
+		}
+		var before platformAtRevision; var after platformAtRevision
+		if before, err = parsePlatformAtRevisionSpec(specBefore); err != nil {
+			http.Error(w, "invalid before param", http.StatusBadRequest)
+			return
+		} else if after, err = parsePlatformAtRevisionSpec(specAfter); err != nil {
+			http.Error(w, "invalid after param", http.StatusBadRequest)
+			return
+		}
+		const singleRunURL = `/api/run?sha=%s&browser=%s`
+		testRunSources = []string {
+			fmt.Sprintf(singleRunURL, before.Revision, before.Platform),
+			fmt.Sprintf(singleRunURL, after.Revision, after.Platform),
+		}
+	} else {
+		const sourceURL = `/api/runs?sha=%s`
+		testRunSources = []string{fmt.Sprintf(sourceURL, runSHA)}
+	}
 
 	testRunSourcesBytes, err := json.Marshal(testRunSources)
 	if err != nil {
@@ -44,11 +71,27 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
+		TestRuns       string
 		TestRunSources string
 		SHA            string
 	}{
-		string(testRunSourcesBytes),
-		runSHA,
+		TestRunSources: string(testRunSourcesBytes),
+		SHA: runSHA,
+	}
+
+	if specBefore != "" || specAfter != "" {
+		const diffRunURL = `/api/diff?before=%s&after=%s`
+		diffRun := TestRun {
+			Revision: "diff",
+			BrowserName: "Diff",
+			ResultsURL: fmt.Sprintf(diffRunURL, specBefore, specAfter),
+		}
+		var marshaled []byte
+		if marshaled, err = json.Marshal([]TestRun{diffRun}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data.TestRuns = string(marshaled)
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
