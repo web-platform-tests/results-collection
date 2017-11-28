@@ -22,7 +22,6 @@ RUN apt-get install --assume-yes --no-install-suggests \
     python-setuptools \
     virtualenv \
     unzip
-    dtrx
 
 # Needed for hosts_fixup
 RUN apt-get install --assume-yes --no-install-suggests \
