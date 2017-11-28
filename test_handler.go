@@ -46,7 +46,8 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "before param provided, but after param missing", http.StatusBadRequest)
 			return
 		}
-		var before platformAtRevision; var after platformAtRevision
+		var before platformAtRevision
+		var after platformAtRevision
 		if before, err = parsePlatformAtRevisionSpec(specBefore); err != nil {
 			http.Error(w, "invalid before param", http.StatusBadRequest)
 			return
@@ -55,7 +56,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		const singleRunURL = `/api/run?sha=%s&browser=%s`
-		testRunSources = []string {
+		testRunSources = []string{
 			fmt.Sprintf(singleRunURL, before.Revision, before.Platform),
 			fmt.Sprintf(singleRunURL, after.Revision, after.Platform),
 		}
@@ -76,15 +77,15 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		SHA            string
 	}{
 		TestRunSources: string(testRunSourcesBytes),
-		SHA: runSHA,
+		SHA:            runSHA,
 	}
 
 	if specBefore != "" || specAfter != "" {
 		const diffRunURL = `/api/diff?before=%s&after=%s`
-		diffRun := TestRun {
-			Revision: "diff",
+		diffRun := TestRun{
+			Revision:    "diff",
 			BrowserName: "Diff",
-			ResultsURL: fmt.Sprintf(diffRunURL, specBefore, specAfter),
+			ResultsURL:  fmt.Sprintf(diffRunURL, specBefore, specAfter),
 		}
 		var marshaled []byte
 		if marshaled, err = json.Marshal([]TestRun{diffRun}); err != nil {
