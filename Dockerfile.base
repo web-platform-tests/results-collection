@@ -61,9 +61,7 @@ RUN curl -L -o "go.tar.gz" "https://redirector.gvt1.com/edgedl/go/go${GO_VERSION
 # Setup go environment
 RUN mkdir "${USER_HOME}/go"
 ENV GOPATH="${USER_HOME}/go"
-
-# Setup go + python binaries path
-ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin:${USER_HOME}/.local/bin
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 # Install go dependencies
 RUN go get github.com/golang/lint/golint
