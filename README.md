@@ -8,25 +8,23 @@ It consists of 3 parts:
 - **Serving**: An [App Engine app](main.go) for storing test run metadata and serving HTML
 - **Visualizing**: [Polymer elements](components/wpt-results.html) for loading and visualizing test results
 
-## Setting up your environment
-
-You'll need [Docker](https://www.docker.com/). With Docker installed, build the base image and development image, and start a development server instance:
-
-```sh
-docker build -t wptd-base -f Dockerfile.base .
-docker build -t wptd-dev -f Dockerfile.dev .
-./util/docker-dev/run.sh
-```
-
-This starts a Docker instance named `wptd-dev-instance`.
-
 ## Running locally
 
-In one terminal, start the web server:
+You'll need the [Google App Engine Go SDK](https://cloud.google.com/appengine/docs/standard/go/download).
 
 ```sh
-./util/docker-dev/web_server.sh
+# Start the server on localhost:8080
+dev_appserver.py .
+curl http://localhost:8080/tasks/populate-dev-data
 ```
+
+See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
+
+## Running the tests
+
+We run the tests with a Python script [`run/run.py`](run/run.py) which is a thin wrapper around WPT's [`wpt run`](https://github.com/w3c/web-platform-tests/#running-tests-automatically). If you're triaging test failures, use `wpt run`.
+
+### Setup
 
 This will build dependencies and start the Google App Engine development server inside `wptd-dev-instance`.
 You'll also need to populate the app datastore with some initial data, using util/populate_dev_data.py.
@@ -48,11 +46,18 @@ We run the tests in the development environment with a Python script [`run/run.p
 
 ### Running
 
-Ensure that the Docker development image is running (`./util/docker-dev/run.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
+You'll need to make sure that you have Python 2.7 installed. It is recommended that you setup a [virtualenv](https://virtualenv.pypa.io/en/stable/). When you have activated your `virtualenv`, install the dependencies:
 
 ```sh
-docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
-    run/run.py firefox-56.0-linux --path battery-status
+pip install -r requirements.txt
+```
+
+Copy the file `run/running.example.ini` to `run/running.ini` and edit the fields to the correct locations for items on your machine. If you do not do this you will receive an error.
+
+To run a directory of WPT, pass the [platform ID](#platform-id) and a test path:
+
+```sh
+./run/run.py firefox-56.0-linux --path battery-status
 ```
 
 # Filesystem and network output
