@@ -32,10 +32,8 @@ def main():
         'sauce_user': os.environ.get('SAUCE_USER', ''),
         'jenkins_job_name': os.environ.get('JOB_NAME'),
         'wpt_path': os.environ.get('WPT_PATH'),
-        'wptd_path': (os.environ.get('WPTD_PATH') or
-                      '%s/wptdashboard' % (os.environ.get('HOME'))),
-        'output_path': (os.environ.get('WPTD_OUT_PATH') or
-                        '%s/wptdout' % (os.environ.get('HOME'))),
+        'wptd_path': '/wptdashboard',
+        'output_path': '/wptdout',
 
         # Passing RUN_PATH will run a specific path in WPT (e.g. html)
         'run_path': os.environ.get('RUN_PATH', ''),
