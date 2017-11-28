@@ -4,4 +4,3 @@ run/running.ini
 .DS_Store
 run/protos/*_pb2.py
 bq-schema
-generated

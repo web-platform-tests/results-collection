@@ -23,6 +23,11 @@ trap stop INT
 PB_LIB=${PB_LIB:-"/protobuf/src"}
 PROTOS=${PROTOS:-"./protos"}
 BQ_LIB=${BQ_LIB:-"/protoc-gen-bq-schema"}
+BQ_OUT=${BQ_OUT:-"./bq-schema"}
+PY_OUT=${PY_OUT:-"./run/protos"}
+
+mkdir -p "${BQ_OUT}"
+mkdir -p "${PY_OUT}"
 
 function compile_protos() {
   pushd "${WPTD_PATH}" > /dev/null
