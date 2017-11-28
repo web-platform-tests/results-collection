@@ -83,7 +83,6 @@ An object where the key is the test file name and the value is a list of the typ
 
 ```json
 {
-    "/test/file/name1.html": [0, 1],
     "/test/file/name2.html": [5, 10]
 }
 ```
