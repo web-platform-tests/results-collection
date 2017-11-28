@@ -21,7 +21,7 @@ RUN apt-get install --assume-yes --no-install-suggests \
     python-wheel \
     python-setuptools \
     virtualenv \
-    unzip \
+    unzip
     dtrx
 
 # Needed for hosts_fixup
