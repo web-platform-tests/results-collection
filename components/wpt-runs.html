@@ -118,24 +118,24 @@ limitations under the License.
         }
       }
 
-      _computeMonthName(date) {
+      _computeMonthName (date) {
         return [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December"
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December'
         ][date.getMonth()]
       }
 
-      _computeDateTooltip(date) {
+      _computeDateTooltip (date) {
         return date && date.toDateString()
       }
 
@@ -160,18 +160,19 @@ limitations under the License.
         const firstRunTime = x => Object.values(x.runs)[0].created_at
         const flattened = Object.entries(testRunsBySha)
             .map(entry => ({ sha: entry[0], runs: entry[1] }))
-            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)    
-        
+            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)
+
         // Append time (month) metadata.
         if (flattened.length > 1) {
-            let previousMonth = -1
-            for (var i = 0; i < flattened.length; i++) {
-                let current = new Date(firstRunTime(flattened[i]))
-                flattened[i]['date'] = current
-                if (previousMonth != current.getMonth())
-                    flattened[i]['month_boundary'] = true
-                previousMonth = current.getMonth()
+          let previousMonth = -1
+          for (var i = 0; i < flattened.length; i++) {
+            let current = new Date(firstRunTime(flattened[i]))
+            flattened[i]['date'] = current
+            if (previousMonth !== current.getMonth()) {
+              flattened[i]['month_boundary'] = true
             }
+            previousMonth = current.getMonth()
+          }
         }
         this.testResults = flattened
         this.browsers = Array.from(browsers).sort()
