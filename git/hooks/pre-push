@@ -12,7 +12,7 @@ WPTD_PATH=${WPTD_PATH:-$(absdir "${REPO_DIR}")}
 DIFF_STATUS="${?}"
 if [ "${DIFF_STATUS}" != "0" ]; then
   confirm "You have uncommitted local changes. Push committed changes anyway?"
-  if [ "${?}" != "0" ]; then exit ${?}; fi
+  if [ "${?}" != "0" ]; then exit "${?}"; fi
 fi
 
 docker inspect wptd-dev-instance > /dev/null 2>&1
