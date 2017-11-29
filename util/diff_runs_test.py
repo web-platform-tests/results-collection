@@ -17,9 +17,15 @@
 import argparse
 import logging
 import mock
+import os
+import sys
 import unittest
 
 from diff_runs import Fetcher, RunDiffer, PlatformsAtRevision
+
+here = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(here, '../run/'))
+from run_summary import TestRunSpec, TestRunSummary, TestRunSummaryDiff  # noqa
 
 
 class DiffRunTestCase(unittest.TestCase):
@@ -48,10 +54,13 @@ class DiffRunTestCase(unittest.TestCase):
     def test_no_difference(self):
         self.mock_args.after = PlatformsAtRevision.parse("chrome@latest")
         self.mock_args.before = PlatformsAtRevision.parse("chrome@0123456789")
-        self.mock_fetcher.fetchResults.return_value = {
-            '/mock/path.html': [1, 1],
-            '/mock/path_2.html': [3, 5],
-        }
+
+        def result(spec):
+            return TestRunSummary(spec, {
+                '/mock/path.html': [1, 1],
+                '/mock/path_2.html': [3, 5],
+            })
+        self.mock_fetcher.fetchResults.side_effect = result
 
         self.differ.diff()
 
@@ -63,14 +72,14 @@ class DiffRunTestCase(unittest.TestCase):
         self.mock_args.after = PlatformsAtRevision.parse("chrome@latest")
         self.mock_args.before = PlatformsAtRevision.parse("chrome@0123456789")
 
-        def results(sha, platform):
-            if sha == 'latest':
-                return {}
-            if sha == '0123456789':
-                return {
+        def results(spec):
+            if spec.sha == 'latest':
+                return TestRunSummary(spec, {})
+            if spec.sha == '0123456789':
+                return TestRunSummary(spec, {
                     '/mock/path.html': [1, 1],
                     '/mock/path2.html': [1, 2]
-                }
+                })
         self.mock_fetcher.fetchResults.side_effect = results
 
         self.differ.diff()
@@ -83,15 +92,15 @@ class DiffRunTestCase(unittest.TestCase):
         self.mock_args.after = PlatformsAtRevision.parse("chrome@latest")
         self.mock_args.before = PlatformsAtRevision.parse("chrome@0123456789")
 
-        def results(sha, platform):
-            if sha == 'latest':
-                return {
+        def results(spec):  # type: (TestRunSpec) -> TestRunSummary
+            if spec.sha == 'latest':
+                return TestRunSummary(spec, {
                     '/mock/path.html': [0, 1]
-                }
-            if sha == '0123456789':
-                return {
+                })
+            if spec.sha == '0123456789':
+                return TestRunSummary(spec, {
                     '/mock/path.html': [1, 1]
-                }
+                })
         self.mock_fetcher.fetchResults.side_effect = results
 
         self.differ.diff()
