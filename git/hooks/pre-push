@@ -35,7 +35,7 @@ LINT_STATUS="${?}"
 FINAL_STATUS="${LINT_STATUS}"
 if [ "${LINT_STATUS}" != "0" ]; then
   confirm "Lint failed. Push anyway?"
-  if [ "${?}" != "0" ]; then exit ${?}; fi
+  if [ "${?}" != "0" ]; then exit "${?}"; fi
 
   info "Pushing in spite of lint errors..."
   FINAL_STATUS="0"
