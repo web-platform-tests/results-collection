@@ -34,18 +34,8 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var testRunSources []string
-	var browserNames []string
-	browserNames, err = GetBrowserNames()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	const sourceURL = `/api/run?browser=%s&sha=%s`
-	for _, browserName := range browserNames {
-		testRunSources = append(testRunSources, fmt.Sprintf(sourceURL, browserName, runSHA))
-	}
+	const sourceURL = `/api/runs?sha=%s`
+	testRunSources := []string{fmt.Sprintf(sourceURL, runSHA)}
 
 	testRunSourcesBytes, err := json.Marshal(testRunSources)
 	if err != nil {

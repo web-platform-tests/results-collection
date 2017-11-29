@@ -16,11 +16,8 @@ package wptdashboard
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"sort"
-
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 )
 
 // testRunsHandler handles GET/POST requests to /test-runs
@@ -37,38 +34,24 @@ func testRunsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTestRunGet(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	var err error
-	var browserNames []string
-	if browserNames, err = GetBrowserNames(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	maxCount, err := ParseMaxCountParamWithDefault(r, 100)
+	if err != nil {
+		http.Error(w, "Invalid max-count param: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(100)
-
-	var runs []TestRun
-	for _, browserName := range browserNames {
-		var queryResults []TestRun
-		query := baseQuery.Filter("BrowserName =", browserName)
-		if _, err := query.GetAll(ctx, &queryResults); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		runs = append(runs, queryResults...)
-	}
-	sort.Sort(byCreatedAtDesc(runs))
+	sourceURL := fmt.Sprintf(`/api/runs?max-count=%d`, maxCount)
 
 	// Serialize the data + pipe through the test-runs.html template.
-	testRunsBytes, err := json.Marshal(runs)
+	testRunSourcesBytes, err := json.Marshal([]string{sourceURL})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	data := struct {
-		TestRuns string
+		TestRunSources string
 	}{
-		string(testRunsBytes),
+		string(testRunSourcesBytes),
 	}
 
 	if err := templates.ExecuteTemplate(w, "test-runs.html", data); err != nil {
@@ -76,9 +59,3 @@ func handleTestRunGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-type byCreatedAtDesc []TestRun
-
-func (a byCreatedAtDesc) Len() int           { return len(a) }
-func (a byCreatedAtDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byCreatedAtDesc) Less(i, j int) bool { return a[i].CreatedAt.Before(a[j].CreatedAt) }
