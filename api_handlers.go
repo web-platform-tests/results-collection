@@ -288,7 +288,13 @@ func apiDiffHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	diffJSON := diffResults(beforeJSON, afterJSON)
+	var filter DiffFilterParam
+	if filter, err = ParseDiffFilterParam(r); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	diffJSON := getResultsDiff(beforeJSON, afterJSON, filter)
 	var bytes []byte
 	if bytes, err = json.Marshal(diffJSON); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
