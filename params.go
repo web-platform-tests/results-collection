@@ -98,12 +98,19 @@ func ParseBrowsersParam(r *http.Request) (browsers []string, err error) {
 	return browsers, nil
 }
 
-// ParseMaxCountParam parses the 'max-count' parameter as an integer.
+// ParseMaxCountParam parses the 'max-count' parameter as an integer, or returns 1 if no param
+// is present, or on error.
 func ParseMaxCountParam(r *http.Request) (count int, err error) {
-	count = MaxCountDefaultValue
+	return ParseMaxCountParamWithDefault(r, MaxCountDefaultValue)
+}
+
+// ParseMaxCountParamWithDefault parses the 'max-count' parameter as an integer, or returns the
+// default when no param is present, or on error.
+func ParseMaxCountParamWithDefault(r *http.Request, defaultValue int) (count int, err error) {
+	count = defaultValue
 	if maxCountParam := r.URL.Query().Get("max-count"); maxCountParam != "" {
 		if count, err = strconv.Atoi(maxCountParam); err != nil {
-			return MaxCountDefaultValue, err
+			return defaultValue, err
 		}
 		if count < MaxCountMinValue {
 			count = MaxCountMinValue
@@ -113,6 +120,52 @@ func ParseMaxCountParam(r *http.Request) (count int, err error) {
 		}
 	}
 	return count, err
+}
+
+// DiffFilterParam represents the types of changed test paths to include.
+type DiffFilterParam struct {
+	// Added tests are present in the 'after' state of the diff, but not present
+	// in the 'before' state of the diff.
+	Added bool
+
+	// Deleted tests are present in the 'before' state of the diff, but not present
+	// in the 'after' state of the diff.
+	Deleted bool
+
+	// Changed tests are present in both the 'before' and 'after' states of the diff,
+	// but the number of passes, failures, or total tests has changed.
+	Changed bool
+
+	// Set of test paths to include, or include all tests if nil.
+	Paths mapset.Set
+}
+
+// ParseDiffFilterParams collects the diff filtering params for the given request.
+// It splits the filter param into the differences to include. The filter param is inspired by Git's --diff-filter flag.
+// It also adds the set of test paths to include; see ParsePathsParam below.
+func ParseDiffFilterParams(r *http.Request) (param DiffFilterParam, err error) {
+	param = DiffFilterParam{
+		Added:   true,
+		Deleted: true,
+		Changed: true,
+	}
+	if filter := r.URL.Query().Get("filter"); filter != "" {
+		param = DiffFilterParam{}
+		for _, char := range filter {
+			switch char {
+			case 'A':
+				param.Added = true
+			case 'D':
+				param.Deleted = true
+			case 'C':
+				param.Changed = true
+			default:
+				return param, fmt.Errorf("invalid filter character %c", char)
+			}
+		}
+	}
+	param.Paths = ParsePathsParam(r)
+	return param, nil
 }
 
 // ParsePathsParam returns a set list of test paths to include, or nil if no filter is provided (and all tests should be

@@ -125,40 +125,51 @@ func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (res
 	return results, nil
 }
 
-// diffResults returns a map of test name to an array of [count-different-tests, total-tests], for tests which had
+// getResultsDiff returns a map of test name to an array of [count-different-tests, total-tests], for tests which had
 // different results counts in their map (which is test name to array of [count-passed, total-tests]).
-func diffResults(before map[string][]int, after map[string][]int, paths mapset.Set) map[string][]int {
+//
+func getResultsDiff(before map[string][]int, after map[string][]int, filter DiffFilterParam) map[string][]int {
 	diff := make(map[string][]int)
-	for test, resultsBefore := range before {
-		if !anyPathMatches(paths, test) {
-			continue
-		}
-
-		if resultsAfter, ok := after[test]; !ok {
-			// Missing? Then N / N tests are 'different'
-			diff[test] = []int{resultsBefore[1], resultsBefore[1]}
-		} else {
-			passDiff := abs(resultsBefore[0] - resultsAfter[0])
-			countDiff := abs(resultsBefore[1] - resultsAfter[1])
-			if countDiff == 0 && passDiff == 0 {
+	if filter.Deleted || filter.Changed {
+		for test, resultsBefore := range before {
+			if !anyPathMatches(filter.Paths, test) {
 				continue
 			}
-			// Changed tests is at most the number of different outcomes,
-			// but newly introduced tests should still be counted (e.g. 0/2 => 0/5)
-			diff[test] = []int{
-				max(passDiff, countDiff),
-				max(resultsBefore[1], resultsAfter[1]),
+
+			if resultsAfter, ok := after[test]; !ok {
+				// Missing? Then N / N tests are 'different'.
+				if !filter.Deleted {
+					continue
+				}
+				diff[test] = []int{resultsBefore[1], resultsBefore[1]}
+			} else {
+				if !filter.Changed {
+					continue
+				}
+				passDiff := abs(resultsBefore[0] - resultsAfter[0])
+				countDiff := abs(resultsBefore[1] - resultsAfter[1])
+				if countDiff == 0 && passDiff == 0 {
+					continue
+				}
+				// Changed tests is at most the number of different outcomes,
+				// but newly introduced tests should still be counted (e.g. 0/2 => 0/5)
+				diff[test] = []int{
+					max(passDiff, countDiff),
+					max(resultsBefore[1], resultsAfter[1]),
+				}
 			}
 		}
 	}
-	for test, resultsAfter := range after {
-		if !anyPathMatches(paths, test) {
-			continue
-		}
+	if filter.Added {
+		for test, resultsAfter := range after {
+			if !anyPathMatches(filter.Paths, test) {
+				continue
+			}
 
-		if _, ok := before[test]; !ok {
-			// Missing? Then N / N tests are 'different'
-			diff[test] = []int{resultsAfter[1], resultsAfter[1]}
+			if _, ok := before[test]; !ok {
+				// Missing? Then N / N tests are 'different'
+				diff[test] = []int{resultsAfter[1], resultsAfter[1]}
+			}
 		}
 	}
 	return diff
