@@ -129,6 +129,7 @@ type DiffFilterParam struct {
 }
 
 // ParseDiffFilterParam splits the filter param into the differences to include.
+// The filter param is inspired by Git's --diff-filter flag.
 func ParseDiffFilterParam(r *http.Request) (param DiffFilterParam, err error) {
 	param = DiffFilterParam{
 		true,
