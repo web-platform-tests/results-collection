@@ -36,7 +36,10 @@ from itertools import ifilter
 from urllib import urlencode
 from typing import List
 
+# Relative imports
 here = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(here, '../run/'))
+from run_summary import TestRunSpec, TestRunSummary, TestRunSummaryDiff  # noqa
 
 
 def main():
@@ -141,79 +144,86 @@ class RunDiffer(object):
         afterSHA = self.args.after.sha  # type: str
 
         for i in range(0, len(self.args.after.platforms)):
-            specBefore = '%s@%s' % (self.args.before.platforms[i],
-                                    self.args.before.sha)
-            specAfter = '%s@%s' % (self.args.after.platforms[i],
-                                   self.args.after.sha)
-            runBefore = self.fetcher.fetchResults(
-                beforeSHA, self.args.before.platforms[i])
-            runAfter = self.fetcher.fetchResults(
-                afterSHA, self.args.after.platforms[i])
+            specBefore = TestRunSpec(self.args.before.sha,
+                                     self.args.before.platforms[i])
+            specAfter = TestRunSpec(self.args.after.sha,
+                                    self.args.after.platforms[i])
+            runBefore = self.fetcher.fetchResults(specBefore)
+            if runBefore is None:
+                self.logger.warning('Failed to fetch %s' % specBefore)
 
-            self.cull_ignored_tests(runBefore, self.args.tests)
-            self.cull_ignored_tests(runAfter, self.args.tests)
+            runAfter = self.fetcher.fetchResults(specAfter)
+            if runAfter is None:
+                self.logger.warning('Failed to fetch %s' % specAfter)
 
             self.logger.info('Diffing %s and %s...' % (specBefore, specAfter))
 
-            if runBefore is None:
-                self.logger.warning('Failed to fetch %s' % specBefore)
-            if runAfter is None:
-                self.logger.warning('Failed to fetch %s' % specAfter)
             if runBefore is None or runAfter is None:
                 continue
 
-            differences = 0
-            checked = 0
-            added = 0
-            removed = 0
+            diff = self.diff_results_summaries(runBefore, runAfter)
+            diff.print_summary(self.logger)
 
-            for k in filter(lambda x: x not in runAfter, runBefore.keys()):
-                removed += 1
+    def diff_results_summaries(self,
+                               run_before,  # type: TestRunSummary
+                               run_after,   # type: TestRunSummary
+                               ):
+        # type: (TestRunSummary, TestRunSummary) -> TestRunSummaryDiff
+        assert run_before is not None and run_after is not None
+        if hasattr(self.args, 'tests'):
+            self.cull_ignored_tests(run_before.summary, self.args.tests)
+            self.cull_ignored_tests(run_after.summary, self.args.tests)
 
-            for test in runAfter.keys():
-                checked += 1
+        differences = 0
+        checked = 0
+        added = 0
+        removed = 0
 
-                if test not in runBefore:
-                    added += 1
-                    continue
+        tests = run_before.summary.keys()
+        for test in filter(lambda x: x not in run_after.summary, tests):
+            removed += 1
 
-                resultAfter = runAfter[test]
-                resultBefore = runBefore[test]
+        for test in run_after.summary.keys():
+            checked += 1
 
-                passingDelta = resultAfter[0] - resultBefore[0]
-                totalDelta = resultAfter[1] - resultBefore[1]
+            if test not in run_before.summary:
+                added += 1
+                continue
 
-                if totalDelta > 0:
-                    self.logger.info('%s has %d new tests (total)'
-                                     % (test, totalDelta))
-                elif totalDelta < 0:
-                    self.logger.info('%s has %d removed tests (total)'
-                                     % (test, math.fabs(totalDelta)))
+            resultAfter = run_after.summary[test]
+            resultBefore = run_before.summary[test]
 
-                if passingDelta < 0:
-                    self.logger.warning('%s has %d new failures'
-                                        % (test, math.fabs(passingDelta)))
-                elif passingDelta > 0:
-                    self.logger.info('%s has %d new passes'
-                                     % (test, passingDelta))
+            passingDelta = resultAfter[0] - resultBefore[0]
+            totalDelta = resultAfter[1] - resultBefore[1]
 
-                delta = math.fabs(totalDelta) + math.fabs(passingDelta)
-                logging.debug('%s has %d differences (%s vs %s)'
-                              % (test,
-                                 passingDelta,
-                                 resultAfter,
-                                 resultBefore))
-                differences += delta
+            if totalDelta > 0:
+                self.logger.info('%s has %d new tests (total)'
+                                 % (test, totalDelta))
+            elif totalDelta < 0:
+                self.logger.info('%s has %d removed tests (total)'
+                                 % (test, math.fabs(totalDelta)))
 
-            self.logger.info(
-                'Finished diff of %s and %s with %d differences in %d tests'
-                % (specBefore, specAfter, differences, checked))
-            if (added > 0):
-                self.logger.info('%d tests ran in %s but not in %s'
-                                 % (added, specAfter, specBefore))
-            if (removed > 0):
-                self.logger.info('%d tests ran in %s but not in %s'
-                                 % (removed, specBefore, specAfter))
+            if passingDelta < 0:
+                self.logger.warning('%s has %d new failures'
+                                    % (test, math.fabs(passingDelta)))
+            elif passingDelta > 0:
+                self.logger.info('%s has %d new passes'
+                                 % (test, passingDelta))
+
+            delta = math.fabs(totalDelta) + math.fabs(passingDelta)
+            logging.debug('%s has %d differences (%s vs %s)'
+                          % (test,
+                             passingDelta,
+                             resultAfter,
+                             resultBefore))
+            differences += delta
+        return TestRunSummaryDiff(
+            run_before=run_before,
+            run_after=run_after,
+            added=added,
+            deleted=removed,
+            changed=differences,
+            total=checked)
 
     def cull_ignored_tests(self, results, testWhitelist):
         if testWhitelist is None or len(testWhitelist) < 1:
@@ -241,7 +251,7 @@ class Fetcher(object):
             cert_reqs='CERT_REQUIRED',
             ca_certs=certifi.where())
 
-    def fetchResults(self, sha, platform):
+    def fetchResults(self, spec):  # type: (TestRunSpec) -> TestRunSummary
         '''Fetch a python object representing the test run results JSON for the
         given sha/platform spec. '''
         # type: (str, str) -> dict
@@ -249,7 +259,7 @@ class Fetcher(object):
         # array of [pass_count, total_test_count].
         # For example JSON output, see https://wpt.fyi/results?platform=chrome
 
-        encodedArgs = urlencode({'sha': sha, 'platform': platform})
+        encodedArgs = urlencode({'sha': spec.sha, 'platform': spec.platform})
         url = 'https://wpt.fyi/results?' + encodedArgs
 
         try:
@@ -272,7 +282,7 @@ class Fetcher(object):
             return None
 
         logging.debug('Processing JSON from %s' % (url))
-        return json.loads(response.data.decode('utf-8'))
+        return TestRunSummary(spec, json.loads(response.data.decode('utf-8')))
 
 
 if __name__ == '__main__':
