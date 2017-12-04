@@ -22,7 +22,7 @@ limitations under the License.
        * Base class for re-use of results-fetching behaviour, between
        * multi-item (wpt-results) and single-test (test-file-results) views.
        */
-      class ResultsBase extends window.Polymer.Element {
+      class TestRunsBase extends window.Polymer.Element {
         static get is () { return 'wpt-results-base' }
 
         static get properties () {
@@ -51,11 +51,17 @@ limitations under the License.
                 return response.json()
               })
             )
-            this.testRuns = fetches.filter(e => e)  // Filter unresolved fetches.
+            // Filter unresolved fetches and flatten any array-fetches into the array.
+            const nonEmpty = fetches.filter(e => e)
+            const flattened = nonEmpty
+                .reduce((sum, item) => {
+                  return Array.isArray(item) ? sum.concat(item) : [...sum, item]
+                }, [])
+            this.testRuns = flattened
           }
         }
       }
 
-      window.customElements.define(ResultsBase.is, ResultsBase)
+      window.customElements.define(TestRunsBase.is, TestRunsBase)
     </script>
 </dom-module>

@@ -17,6 +17,7 @@ limitations under the License.
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="runs.html">
 
 <dom-module id="wpt-runs">
   <template>
@@ -97,14 +98,12 @@ limitations under the License.
   </template>
 
   <script>
-    class WPTRuns extends window.Polymer.Element {
+    /* global TestRunsBase */
+    class WPTRuns extends TestRunsBase {
       static get is () { return 'wpt-runs' }
 
       static get properties () {
         return {
-          testRuns: {
-            type: Object
-          },
           // Array({ sha, Array({ platform, run, sum }))
           testResults: {
             type: Array
@@ -119,59 +118,61 @@ limitations under the License.
         }
       }
 
-      _computeMonthName(date) {
+      _computeMonthName (date) {
         return [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December"
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December'
         ][date.getMonth()]
       }
 
-      _computeDateTooltip(date) {
-        return date.toDateString()
+      _computeDateTooltip (date) {
+        return date && date.toDateString()
       }
 
       async connectedCallback () {
-        super.connectedCallback()
+        await super.connectedCallback()
 
         let browsers = new Set()
-        let testRuns = {}
+        // Group the runs by their revision/SHA
+        let testRunsBySha = {}
         this.testRuns
             .forEach(results => {
               browsers.add(results.browser_name)
-              if (!testRuns[results.revision]) {
-                testRuns[results.revision] = {}
+              if (!testRunsBySha[results.revision]) {
+                testRunsBySha[results.revision] = {}
               }
-              if (!testRuns[results.revision][results.browser_name]) {
-                testRuns[results.revision][results.browser_name] = results
+              if (!testRunsBySha[results.revision][results.browser_name]) {
+                testRunsBySha[results.revision][results.browser_name] = results
               }
             })
 
         // We flatten into an array of objects so Polymer can deal with them.
         const firstRunTime = x => Object.values(x.runs)[0].created_at
-        const flattened = Object.entries(testRuns)
+        const flattened = Object.entries(testRunsBySha)
             .map(entry => ({ sha: entry[0], runs: entry[1] }))
-            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)    
-        
+            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)
+
         // Append time (month) metadata.
         if (flattened.length > 1) {
-            let previousMonth = -1
-            for (var i = 0; i < flattened.length; i++) {
-                let current = new Date(firstRunTime(flattened[i]))
-                flattened[i]['date'] = current
-                if (previousMonth != current.getMonth())
-                    flattened[i]['month_boundary'] = true
-                previousMonth = current.getMonth()
+          let previousMonth = -1
+          for (var i = 0; i < flattened.length; i++) {
+            let current = new Date(firstRunTime(flattened[i]))
+            flattened[i]['date'] = current
+            if (previousMonth !== current.getMonth()) {
+              flattened[i]['month_boundary'] = true
             }
+            previousMonth = current.getMonth()
+          }
         }
         this.testResults = flattened
         this.browsers = Array.from(browsers).sort()

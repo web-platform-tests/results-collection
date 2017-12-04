@@ -21,3 +21,15 @@ function warn() {
 function error() {
   printf "\n${RED}[  $(date +'%Y-%m-%d %H:%M:%S')  ERRR  ]  $1${NC}\n"
 }
+
+function confirm() {
+  warn "${1} (Y/n)"
+  exec < /dev/tty
+  read -n 1 CH
+
+  if [ "${CH}" == "y" ] || [ "${CH}" == "Y" ]; then
+    return 0
+  else
+    return 1
+  fi
+}

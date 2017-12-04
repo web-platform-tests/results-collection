@@ -6,6 +6,15 @@ source "${REPO_DIR}/util/logging.sh"
 source "${REPO_DIR}/util/path.sh"
 WPTD_PATH=${WPTD_PATH:-$(absdir "${REPO_DIR}")}
 
+
+# Check for uncommitted changes.
+! git diff . 2>&1 | read > /dev/null 2>&1
+DIFF_STATUS="${?}"
+if [ "${DIFF_STATUS}" != "0" ]; then
+  confirm "You have uncommitted local changes. Push committed changes anyway?"
+  if [ "${?}" != "0" ]; then exit "${?}"; fi
+fi
+
 docker inspect wptd-dev-instance > /dev/null 2>&1
 INSPECT_STATUS="${?}"
 
@@ -25,15 +34,11 @@ docker exec -t -u $(id -u $USER):$(id -g $USER) wptd-dev-instance make lint
 LINT_STATUS="${?}"
 FINAL_STATUS="${LINT_STATUS}"
 if [ "${LINT_STATUS}" != "0" ]; then
-  warn "Lint failed. Push anyway (y/N)?"
+  confirm "Lint failed. Push anyway?"
+  if [ "${?}" != "0" ]; then exit "${?}"; fi
 
-  exec < /dev/tty
-  read -n 1 CH
-
-  if [ "${CH}" == "y" ] || [ "${CH}" == "Y" ]; then
-    info "Pushing in spite of lint errors..."
-    FINAL_STATUS="0"
-  fi
+  info "Pushing in spite of lint errors..."
+  FINAL_STATUS="0"
 fi
 
 if [ "${DOCKER_INSTANCE_PID}" != "" ]; then

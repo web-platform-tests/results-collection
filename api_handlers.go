@@ -43,7 +43,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	// When ?complete=true, make sure to show results for the same complete run (executed for all browsers).
 	if complete, err := strconv.ParseBool(r.URL.Query().Get("complete")); err == nil && complete {
 		if runSHA == "latest" {
-			runSHA, err = getLastCompleteRunSHA(ctx, browserNames)
+			runSHA, err = getLastCompleteRunSHA(ctx)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -52,13 +52,21 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var browserNames []string
-	if browserNames, err = GetBrowserNames(); err != nil {
+	if browserNames, err = ParseBrowsersParam(r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	var testRuns []TestRun
-	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
+	var limit int
+	if limit, err = ParseMaxCountParam(r); err != nil {
+		http.Error(w, "Invalid 'max-count' param: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	baseQuery := datastore.
+		NewQuery("TestRun").
+		Order("-CreatedAt").
+		Limit(limit)
 
 	for _, browserName := range browserNames {
 		var testRunResults []TestRun
@@ -106,7 +114,7 @@ func apiTestRunGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var browserName string
-	browserName, err = getBrowserParam(r)
+	browserName, err = ParseBrowserParam(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -200,32 +208,9 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// getBrowserParam parses and validates the 'browser' param for the request.
-// It returns "" by default (and in error cases).
-func getBrowserParam(r *http.Request) (browser string, err error) {
-	browser = ""
-	params, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		return browser, err
-	}
-
-	browserNames, err := GetBrowserNames()
-	if err != nil {
-		return browser, err
-	}
-
-	browser = params.Get("browser")
-	// Check that it's a browser name we recognize.
-	for _, name := range browserNames {
-		if name == browser {
-			return name, nil
-		}
-	}
-	return "", nil
-}
-
-// getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that complete for all of the given browser names.
-func getLastCompleteRunSHA(ctx context.Context, browserNames []string) (sha string, err error) {
+// getLastCompleteRunSHA returns the SHA[0:10] for the most recent run that exists for all initially-loaded browser
+// names (see GetBrowserNames).
+func getLastCompleteRunSHA(ctx context.Context) (sha string, err error) {
 	baseQuery := datastore.
 		NewQuery("TestRun").
 		Order("-CreatedAt").
@@ -234,6 +219,11 @@ func getLastCompleteRunSHA(ctx context.Context, browserNames []string) (sha stri
 
 	// Map is sha -> browser -> seen yet?  - this prevents over-counting dupes.
 	runSHAs := make(map[string]map[string]bool)
+	var browserNames []string
+	if browserNames, err = GetBrowserNames(); err != nil {
+		return sha, err
+	}
+
 	for _, browser := range browserNames {
 		it := baseQuery.Filter("BrowserName = ", browser).Run(ctx)
 		for {
@@ -256,4 +246,126 @@ func getLastCompleteRunSHA(ctx context.Context, browserNames []string) (sha stri
 		}
 	}
 	return "latest", nil
+}
+
+// apiDiffHandler takes 2 test-run results JSON blobs and produces JSON in the same format, with only the differences
+// between runs.
+//
+// GET takes before and after params, for historical production runs.
+// POST takes only a before param, and the after state is provided in the body of the POST request.
+func apiDiffHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		handleAPIDiffGet(w, r)
+	case "POST":
+		handleAPIDiffPost(w, r)
+	default:
+		http.Error(w, fmt.Sprintf("invalid HTTP method %s", r.Method), http.StatusBadRequest)
+	}
+}
+
+func handleAPIDiffGet(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	var err error
+	params, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	specBefore := params.Get("before")
+	if specBefore == "" {
+		http.Error(w, "before param missing", http.StatusBadRequest)
+		return
+	}
+	var beforeJSON map[string][]int
+	if beforeJSON, err = fetchRunResultsJSONForParam(ctx, r, specBefore); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if beforeJSON == nil {
+		http.Error(w, specBefore+" not found", http.StatusNotFound)
+		return
+	}
+
+	specAfter := params.Get("after")
+	if specAfter == "" {
+		http.Error(w, "after param missing", http.StatusBadRequest)
+		return
+	}
+	var afterJSON map[string][]int
+	if afterJSON, err = fetchRunResultsJSONForParam(ctx, r, specAfter); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if afterJSON == nil {
+		http.Error(w, specAfter+" not found", http.StatusNotFound)
+		return
+	}
+
+	var filter DiffFilterParam
+	if filter, err = ParseDiffFilterParam(r); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	diffJSON := getResultsDiff(beforeJSON, afterJSON, filter)
+	var bytes []byte
+	if bytes, err = json.Marshal(diffJSON); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(bytes)
+}
+
+// handleAPIDiffPost handles POST requests to /api/diff, which allows the caller to produce the diff of an arbitrary
+// run result JSON blob against a historical production run.
+func handleAPIDiffPost(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	var err error
+	params, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	specBefore := params.Get("before")
+	if specBefore == "" {
+		http.Error(w, "before param missing", http.StatusBadRequest)
+		return
+	}
+	var beforeJSON map[string][]int
+	if beforeJSON, err = fetchRunResultsJSONForParam(ctx, r, specBefore); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if beforeJSON == nil {
+		http.Error(w, specBefore+" not found", http.StatusNotFound)
+		return
+	}
+
+	var body []byte
+	if body, err = ioutil.ReadAll(r.Body); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var afterJSON map[string][]int
+	if err = json.Unmarshal(body, &afterJSON); err != nil {
+		http.Error(w, "Failed to parse JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var filter DiffFilterParam
+	if filter, err = ParseDiffFilterParam(r); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	diffJSON := getResultsDiff(beforeJSON, afterJSON, filter)
+	var bytes []byte
+	if bytes, err = json.Marshal(diffJSON); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(bytes)
 }

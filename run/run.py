@@ -18,9 +18,11 @@ import argparse
 import ConfigParser as configparser
 import gzip
 import json
+import logging
 import platform as host_platform
 import re
 import requests
+import shas
 import subprocess
 import sys
 import os
@@ -60,6 +62,9 @@ By default this script will not upload anything! To run for production:
 
 
 def main(platform_id, platform, args, config):
+    loggingLevel = getattr(logging, args.log.upper(), None)
+    logging.basicConfig(level=loggingLevel)
+    logger = logging.getLogger()
 
     print('PLATFORM_ID:', platform_id)
     print('PLATFORM INFO:', platform)
@@ -113,11 +118,19 @@ def main(platform_id, platform, args, config):
 
     patch_wpt(config, platform)
 
-    # TODO(#40): modify this to test against the first SHA of the day
-    CURRENT_WPT_SHA = get_current_wpt_sha(config)
-    print('Current WPT SHA: %s' % CURRENT_WPT_SHA)
+    wpt_path = config['wpt_path']
+    sha_finder = shas.SHAFinder(logger)
+    WPT_SHA = (sha_finder.get_todays_sha(wpt_path)
+               or sha_finder.get_head_sha(wpt_path))
+    print('Current WPT SHA: %s' % WPT_SHA)
 
-    SHORT_SHA = CURRENT_WPT_SHA[0:10]
+    return_code = subprocess.check_call(
+        ['git', 'checkout', WPT_SHA], cwd=config['wpt_path'])
+    assert return_code == 0, (
+        'Got non-0 return code: '
+        '%d from command %s' % (return_code, command))
+
+    SHORT_SHA = WPT_SHA[0:10]
 
     LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (
         config['build_path'], SHORT_SHA, platform_id
@@ -266,12 +279,16 @@ def version_string_to_major_minor(version):
 
 def verify_browser_binary_version(platform, browser_binary):
     command = [browser_binary, '--version']
-    output = subprocess.check_output(command).decode('UTF-8').strip()
-    version = version_string_to_major_minor(output)
-    assert version == platform['browser_version'], (
-        'Browser binary version does not match desired platform version.\n'
-        'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
-        % (browser_binary, version, platform['browser_version']))
+    try:
+        output = subprocess.check_output(command).decode('UTF-8').strip()
+        version = version_string_to_major_minor(output)
+        assert version == platform['browser_version'], (
+            'Browser binary version does not match desired platform version.\n'
+            'Binary location: %s\nBinary version: %s\nPlatform version: %s\n'
+            % (browser_binary, version, platform['browser_version']))
+    except OSError as e:
+        logging.fatal('Error executing %s' % ' '.join(command))
+        raise e
 
 
 def verify_os_name(platform):
@@ -293,15 +310,6 @@ def verify_or_set_os_version(platform):
         'Host OS version does not match platform os_version.\n'
         'Host OS version: %s\nPlatform os_version: %s'
         % (os_version, platform['os_version']))
-
-
-def get_current_wpt_sha(config):
-    command = ['git', 'rev-parse', 'HEAD']
-    output = subprocess.check_output(command, cwd=config['wpt_path'])
-    sha = output.decode('UTF-8').strip()
-
-    assert len(sha) == 40, 'Invalid SHA: "%s"' % sha
-    return sha
 
 
 def report_to_summary(wpt_report):
@@ -414,6 +422,12 @@ def parse_args():
               'promoted if "initially_loaded" is true for the '
               'browser in browsers.json.'),
         action='store_true'
+    )
+    parser.add_argument(
+        '--log',
+        type=str,
+        default='INFO',
+        help='Log level to output'
     )
     args = parser.parse_args()
 
