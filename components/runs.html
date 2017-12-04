@@ -39,9 +39,10 @@ limitations under the License.
         }
 
         async connectedCallback () {
-          super.connectedCallback()
+          await super.connectedCallback()
 
           if (this.testRunResources) {
+            const preloaded = this.testRuns
             const fetches = await Promise.all(
               this.testRunResources.map(async url => {
                 const response = await window.fetch(url)
@@ -55,9 +56,10 @@ limitations under the License.
             const nonEmpty = fetches.filter(e => e)
             const flattened = nonEmpty
                 .reduce((sum, item) => {
-                  return Array.isArray(item) ? sum.concat(item) : [...sum, item]
+                  return sum.concat(Array.isArray(item) ? item : [item])
                 }, [])
-            this.testRuns = this.testRuns ? [...flattened, ...this.testRuns] : flattened
+            this.testRuns = flattened.concat(preloaded || [])
+            this.testRunResources = null
           }
         }
       }

@@ -53,19 +53,19 @@ limitations under the License.
       <thead>
         <tr>
           <th>Subtest</th>
-          <template is="dom-repeat" items="{{testRuns}}" as="testRun">
+          <template is="dom-repeat" items="[[testRuns]]" as="testRun">
             <th><test-run test-run="[[testRun]]"></test-run></th>
           </template>
         </tr>
       </thead>
       <tbody>
-        <template is="dom-repeat" items="{{subtestNames}}" as="subtestName">
+        <template is="dom-repeat" items="[[subtestNames]]" as="subtestName">
           <tr>
-            <td class="sub-test-name">{{ subtestName }}</td>
+            <td class="sub-test-name">[[subtestName]]</td>
 
             <template is="dom-repeat" items="{{testRuns}}" as="testRun">
               <td class$="result [[ _subtestResultForTestRun(testRun, subtestName) ]]">
-                {{ _subtestResultForTestRun(testRun, subtestName) }}
+                [[ _subtestResultForTestRun(testRun, subtestName) ]]
               </td>
             </template>
           </tr>
@@ -104,6 +104,7 @@ limitations under the License.
       }
 
       async fetchTestFile () {
+        if (!this.testRuns) return
         const resultPerTestRun = await Promise.all(this.testRuns.map(tr => this.loadResultFile(tr)))
 
         resultPerTestRun.forEach((resultData, i) => {
@@ -144,6 +145,9 @@ limitations under the License.
       }
 
       resultsURL (testRun, testFile) {
+        if (testRun.revision == 'diff') {
+          return testRun.results_url + '&path=' + encodeURI(testFile)
+        }
         // This is relying on the assumption that result files are under a directory named SHA[0:10].
         const resultsBase = testRun.results_url.split('/' + testRun.revision)[0]
         // This is currently a hack to extract the platform ID from the summary URL.
