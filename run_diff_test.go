@@ -69,17 +69,46 @@ func TestDiffResults_Removed(t *testing.T) {
 	assertDelta(t, []int{1, 2}, []int{1, 1}, []int{1, 2})
 }
 
+func TestDiffResults_Filtered(t *testing.T) {
+	changedFilter := DiffFilterParam{Changed: true}
+	addedFilter := DiffFilterParam{Added: true}
+	deletedFilter := DiffFilterParam{Deleted: true}
+	const removedPath = "/mock/removed.html"
+	const changedPath = "/mock/changed.html"
+	const addedPath = "/mock/added.html"
+
+	before := map[string][]int{
+		removedPath: {1, 2},
+		changedPath: {2, 5},
+	}
+	after := map[string][]int{
+		changedPath: {3, 5},
+		addedPath:   {1, 3},
+	}
+	assert.Equal(t, map[string][]int{changedPath: {1, 5}}, getResultsDiff(before, after, changedFilter))
+	assert.Equal(t, map[string][]int{addedPath: {3, 3}}, getResultsDiff(before, after, addedFilter))
+	assert.Equal(t, map[string][]int{removedPath: {2, 2}}, getResultsDiff(before, after, deletedFilter))
+}
+
 func assertNoDeltaDifferences(t *testing.T, before []int, after []int) {
+	assertNoDeltaDifferencesWithFilter(t, before, after, DiffFilterParam{true, true, true})
+}
+
+func assertNoDeltaDifferencesWithFilter(t *testing.T, before []int, after []int, filter DiffFilterParam) {
 	rBefore, rAfter := getDeltaResultsMaps(before, after)
-	assert.Equal(t, map[string][]int{}, diffResults(rBefore, rAfter))
+	assert.Equal(t, map[string][]int{}, getResultsDiff(rBefore, rAfter, filter))
 }
 
 func assertDelta(t *testing.T, before []int, after []int, delta []int) {
+	assertDeltaWithFilter(t, before, after, delta, DiffFilterParam{true, true, true})
+}
+
+func assertDeltaWithFilter(t *testing.T, before []int, after []int, delta []int, filter DiffFilterParam) {
 	rBefore, rAfter := getDeltaResultsMaps(before, after)
 	assert.Equal(
 		t,
 		map[string][]int{mockTestPath: delta},
-		diffResults(rBefore, rAfter))
+		getResultsDiff(rBefore, rAfter, filter))
 }
 
 func getDeltaResultsMaps(before []int, after []int) (map[string][]int, map[string][]int) {
