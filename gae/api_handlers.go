@@ -162,10 +162,10 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	var err error
 
-	// Fetch pre-uploaded modles.Token entity.
+	// Fetch pre-uploaded models.Token entity.
 	suppliedSecret := r.URL.Query().Get("secret")
 	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
-	var token modles.Token
+	var token models.Token
 	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
