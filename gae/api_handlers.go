@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	models "github.com/w3c/wptdashboard"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
@@ -57,7 +58,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var testRuns []TestRun
+	var testRuns []models.TestRun
 	var limit int
 	if limit, err = ParseMaxCountParam(r); err != nil {
 		http.Error(w, "Invalid 'max-count' param: "+err.Error(), http.StatusBadRequest)
@@ -69,7 +70,7 @@ func apiTestRunsHandler(w http.ResponseWriter, r *http.Request) {
 		Limit(limit)
 
 	for _, browserName := range browserNames {
-		var testRunResults []TestRun
+		var testRunResults []models.TestRun
 		query := baseQuery.Filter("BrowserName =", browserName)
 		if runSHA != "" && runSHA != "latest" {
 			query = query.Filter("Revision =", runSHA)
@@ -134,7 +135,7 @@ func apiTestRunGetHandler(w http.ResponseWriter, r *http.Request) {
 		query = query.Filter("Revision =", runSHA)
 	}
 
-	var testRuns []TestRun
+	var testRuns []models.TestRun
 	if _, err := query.GetAll(ctx, &testRuns); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -161,10 +162,10 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	var err error
 
-	// Fetch pre-uploaded Token entity.
+	// Fetch pre-uploaded modles.Token entity.
 	suppliedSecret := r.URL.Query().Get("secret")
 	tokenKey := datastore.NewKey(ctx, "Token", "upload-token", 0, nil)
-	var token Token
+	var token modles.Token
 	if err = datastore.Get(ctx, tokenKey, &token); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -181,7 +182,7 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var testRun TestRun
+	var testRun models.TestRun
 	if err = json.Unmarshal(body, &testRun); err != nil {
 		http.Error(w, "Failed to parse JSON: "+err.Error(), http.StatusBadRequest)
 		return
@@ -192,7 +193,7 @@ func apiTestRunPostHandler(w http.ResponseWriter, r *http.Request) {
 		testRun.CreatedAt = time.Now()
 	}
 
-	// Create a new TestRun out of the JSON body of the request.
+	// Create a new models.TestRun out of the JSON body of the request.
 	key := datastore.NewIncompleteKey(ctx, "TestRun", nil)
 	if _, err := datastore.Put(ctx, key, &testRun); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -227,7 +228,7 @@ func getLastCompleteRunSHA(ctx context.Context) (sha string, err error) {
 	for _, browser := range browserNames {
 		it := baseQuery.Filter("BrowserName = ", browser).Run(ctx)
 		for {
-			var testRun TestRun
+			var testRun models.TestRun
 			_, err := it.Next(&testRun)
 			if err == datastore.Done {
 				break
