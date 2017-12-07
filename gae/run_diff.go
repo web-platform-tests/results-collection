@@ -101,7 +101,7 @@ func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (models.T
 // a full run can span 20k files).
 func fetchRunResultsJSON(ctx context.Context, r *http.Request, run models.TestRun) (results map[string][]int, err error) {
 	client := urlfetch.Client(ctx)
-	url := run.ResultsURL
+	url := strings.TrimSpace(run.ResultsURL)
 	if strings.Index(url, "/") == 0 {
 		reqURL := *r.URL
 		reqURL.Path = url
@@ -112,12 +112,12 @@ func fetchRunResultsJSON(ctx context.Context, r *http.Request, run models.TestRu
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s returned HTTP status %d", url, resp.StatusCode)
-	}
 	var body []byte
 	if body, err = ioutil.ReadAll(resp.Body); err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("%s returned HTTP status %d:\n%s", url, resp.StatusCode, string(body))
 	}
 	if err = json.Unmarshal(body, &results); err != nil {
 		return nil, err
