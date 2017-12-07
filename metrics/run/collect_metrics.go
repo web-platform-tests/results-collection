@@ -133,7 +133,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		passRateMetric = compute.ComputePassRateMetric(len(runs),
-			&resultsById, compute.OkAndUnknonwOrPasses)
+			&resultsById, compute.OkAndUnknownOrPasses)
 	}()
 	for _, run := range runs {
 		go func(browserName string) {
@@ -142,7 +142,7 @@ func main() {
 			failuresMetrics[browserName] =
 				compute.ComputeBrowserFailureList(len(runs),
 					browserName, &resultsById,
-					compute.OkAndUnknonwOrPasses)
+					compute.OkAndUnknownOrPasses)
 		}(run.BrowserName)
 	}
 	wg.Wait()
