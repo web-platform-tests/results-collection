@@ -183,7 +183,7 @@ class Runner(object):
 
     def get_and_validate_platform(self, wptd_path):
         """Validates testing platform ID against currently tested platforms."""
-        with open('%s/browsers.json' % wptd_path) as f:
+        with open('%s/gae/browsers.json' % wptd_path) as f:
             browsers = json.load(f)
 
         self.platform_id = os.environ['PLATFORM_ID']

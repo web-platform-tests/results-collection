@@ -36,7 +36,7 @@ func GetBrowsers() (map[string]models.Browser, error) {
 	}
 	var bytes []byte
 	var err error
-	if bytes, err = ioutil.ReadFile("../browsers.json"); err != nil {
+	if bytes, err = ioutil.ReadFile("../gae/browsers.json"); err != nil {
 		return nil, err
 	}
 
