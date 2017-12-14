@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/deckarep/golang-set"
 	models "github.com/w3c/wptdashboard"
+	"github.com/deckarep/golang-set"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"

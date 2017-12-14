@@ -92,14 +92,15 @@ RUN curl -L -o "protoc.zip" "https://github.com/google/protobuf/releases/downloa
     rm -rf /protoc
 
 # Install protobuf BigQuery schema generator
-WORKDIR /
-RUN git clone "https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema.git" && \
-    cd "protoc-gen-bq-schema" && \
-    make && \
+ENV BQ_SCHEMA_PATH="github.com/GoogleCloudPlatform/protoc-gen-bq-schema"
+RUN go get ${BQ_SCHEMA_PATH}
+WORKDIR ${GOPATH}/src/${BQ_SCHEMA_PATH}
+# Copy executable to bin dir
+RUN make && \
     cp "bin/protoc-gen-bq-schema" /usr/local/bin/ && \
-    cd / && \
-    mv "/protoc-gen-bq-schema" "${USER_HOME}/protoc-gen-bq-schema" && \
     chmod a+rx "/usr/local/bin/protoc-gen-bq-schema"
+# Copy src to working/git dir
+RUN cp -r ${GOPATH}/src/${BQ_SCHEMA_PATH} ${USER_HOME}/protoc-gen-bq-schema
 
 RUN mkdir "${WPTD_PATH}"
 RUN mkdir "${WPT_PATH}"
