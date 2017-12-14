@@ -304,7 +304,7 @@ func handleAPIDiffGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var filter DiffFilterParam
-	if filter, err = ParseDiffFilterParam(r); err != nil {
+	if filter, err = ParseDiffFilterParams(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -357,7 +357,7 @@ func handleAPIDiffPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var filter DiffFilterParam
-	if filter, err = ParseDiffFilterParam(r); err != nil {
+	if filter, err = ParseDiffFilterParams(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

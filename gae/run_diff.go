@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/deckarep/golang-set"
 	models "github.com/w3c/wptdashboard"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
@@ -132,6 +133,10 @@ func getResultsDiff(before map[string][]int, after map[string][]int, filter Diff
 	diff := make(map[string][]int)
 	if filter.Deleted || filter.Changed {
 		for test, resultsBefore := range before {
+			if !anyPathMatches(filter.Paths, test) {
+				continue
+			}
+
 			if resultsAfter, ok := after[test]; !ok {
 				// Missing? Then N / N tests are 'different'.
 				if !filter.Deleted {
@@ -158,6 +163,10 @@ func getResultsDiff(before map[string][]int, after map[string][]int, filter Diff
 	}
 	if filter.Added {
 		for test, resultsAfter := range after {
+			if !anyPathMatches(filter.Paths, test) {
+				continue
+			}
+
 			if _, ok := before[test]; !ok {
 				// Missing? Then N / N tests are 'different'
 				diff[test] = []int{resultsAfter[1], resultsAfter[1]}
@@ -165,4 +174,16 @@ func getResultsDiff(before map[string][]int, after map[string][]int, filter Diff
 		}
 	}
 	return diff
+}
+
+func anyPathMatches(paths mapset.Set, testPath string) bool {
+	if paths == nil {
+		return true
+	}
+	for path := range paths.Iter() {
+		if strings.Index(testPath, path.(string)) == 0 {
+			return true
+		}
+	}
+	return false
 }

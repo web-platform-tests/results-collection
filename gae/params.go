@@ -22,6 +22,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/deckarep/golang-set"
 )
 
 // MaxCountDefaultValue is the default value returned by ParseMaxCountParam for the max-count param.
@@ -133,15 +135,19 @@ type DiffFilterParam struct {
 	// Changed tests are present in both the 'before' and 'after' states of the diff,
 	// but the number of passes, failures, or total tests has changed.
 	Changed bool
+
+	// Set of test paths to include, or include all tests if nil.
+	Paths mapset.Set
 }
 
-// ParseDiffFilterParam splits the filter param into the differences to include.
-// The filter param is inspired by Git's --diff-filter flag.
-func ParseDiffFilterParam(r *http.Request) (param DiffFilterParam, err error) {
+// ParseDiffFilterParams collects the diff filtering params for the given request.
+// It splits the filter param into the differences to include. The filter param is inspired by Git's --diff-filter flag.
+// It also adds the set of test paths to include; see ParsePathsParam below.
+func ParseDiffFilterParams(r *http.Request) (param DiffFilterParam, err error) {
 	param = DiffFilterParam{
-		true,
-		true,
-		true,
+		Added:   true,
+		Deleted: true,
+		Changed: true,
 	}
 	if filter := r.URL.Query().Get("filter"); filter != "" {
 		param = DiffFilterParam{}
@@ -158,5 +164,33 @@ func ParseDiffFilterParam(r *http.Request) (param DiffFilterParam, err error) {
 			}
 		}
 	}
+	param.Paths = ParsePathsParam(r)
 	return param, nil
+}
+
+// ParsePathsParam returns a set list of test paths to include, or nil if no filter is provided (and all tests should be
+// included). It parses the 'paths' parameter, split on commas, and also checks for the (repeatable) 'path' params.
+func ParsePathsParam(r *http.Request) (paths mapset.Set) {
+	pathParams := r.URL.Query()["path"]
+	pathsParam := r.URL.Query().Get("paths")
+	if len(pathParams) == 0 && pathsParam == "" {
+		return nil
+	}
+
+	paths = mapset.NewSet()
+	for _, path := range pathParams {
+		paths.Add(path)
+	}
+	if pathsParam != "" {
+		for _, path := range strings.Split(pathsParam, ",") {
+			paths.Add(path)
+		}
+	}
+	if paths.Contains("") {
+		paths.Remove("")
+	}
+	if paths.Cardinality() == 0 {
+		return nil
+	}
+	return paths
 }
