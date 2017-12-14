@@ -15,8 +15,10 @@
 package wptdashboard
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -88,10 +90,39 @@ func TestDiffResults_Filtered(t *testing.T) {
 	assert.Equal(t, map[string][]int{changedPath: {1, 5}}, getResultsDiff(before, after, changedFilter))
 	assert.Equal(t, map[string][]int{addedPath: {3, 3}}, getResultsDiff(before, after, addedFilter))
 	assert.Equal(t, map[string][]int{removedPath: {2, 2}}, getResultsDiff(before, after, deletedFilter))
+
+	// Test filtering by each /, /mock/, and /mock/path.html
+	pieces := strings.SplitAfter(mockTestPath, "/")
+	for i := 1; i < len(pieces); i++ {
+		paths := mapset.NewSet(strings.Join(pieces[:i], ""))
+		filter := DiffFilterParam{Changed: true, Paths: paths}
+		assertDeltaWithFilter(t, []int{0, 5}, []int{5, 5}, []int{5, 5}, filter)
+	}
+
+	// Filter where none match
+	rBefore, rAfter := getDeltaResultsMaps([]int{0, 5}, []int{5, 5})
+	filter := DiffFilterParam{Changed: true, Paths: mapset.NewSet("/different/path/")}
+	assert.Empty(t, getResultsDiff(rBefore, rAfter, filter))
+
+	// Filter where one matches
+	mockPath1, mockPath2 := "/mock/path-1.html", "/mock/path-2.html"
+	rBefore = map[string][]int{
+		mockPath1: {0, 1},
+		mockPath2: {0, 1},
+	}
+	rAfter = map[string][]int{
+		mockPath1: {2, 2},
+		mockPath2: {2, 2},
+	}
+	filter.Paths = mapset.NewSet(mockPath1)
+	delta := getResultsDiff(rBefore, rAfter, filter)
+	assert.NotContains(t, delta, mockPath2)
+	assert.Contains(t, delta, mockPath1)
+	assert.Equal(t, []int{2, 2}, delta[mockPath1])
 }
 
 func assertNoDeltaDifferences(t *testing.T, before []int, after []int) {
-	assertNoDeltaDifferencesWithFilter(t, before, after, DiffFilterParam{true, true, true})
+	assertNoDeltaDifferencesWithFilter(t, before, after, DiffFilterParam{Added: true, Deleted: true, Changed: true})
 }
 
 func assertNoDeltaDifferencesWithFilter(t *testing.T, before []int, after []int, filter DiffFilterParam) {
@@ -100,7 +131,7 @@ func assertNoDeltaDifferencesWithFilter(t *testing.T, before []int, after []int,
 }
 
 func assertDelta(t *testing.T, before []int, after []int, delta []int) {
-	assertDeltaWithFilter(t, before, after, delta, DiffFilterParam{true, true, true})
+	assertDeltaWithFilter(t, before, after, delta, DiffFilterParam{Added: true, Deleted: true, Changed: true})
 }
 
 func assertDeltaWithFilter(t *testing.T, before []int, after []int, delta []int, filter DiffFilterParam) {
