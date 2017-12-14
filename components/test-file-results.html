@@ -138,7 +138,7 @@ limitations under the License.
         const url = this.resultsURL(testRun, this.testFile)
         const response = await window.fetch(url)
         if (response.status !== 200) {
-          console.error('Got non-200 status for url:', url)
+          console.error(`Got non-200 status for url: ${url}`)
           return Promise.resolve(null)
         }
         return response.json()
@@ -146,10 +146,10 @@ limitations under the License.
 
       resultsURL (testRun, testFile) {
         if (testRun.revision == 'diff') {
-          return testRun.results_url + '&path=' + encodeURI(testFile)
+          return `${testRun.results_url}&path=${encodeURI(testFile)}`
         }
         // This is relying on the assumption that result files are under a directory named SHA[0:10].
-        const resultsBase = testRun.results_url.split('/' + testRun.revision)[0]
+        const resultsBase = testRun.results_url.split(`/${testRun.revision}`)[0]
         // This is currently a hack to extract the platform ID from the summary URL.
         // A platform ID is any valid key from browsers.json.
         const platformID = testRun.results_url.split('/').pop().replace('-summary.json.gz', '')
