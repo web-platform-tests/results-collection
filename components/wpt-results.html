@@ -364,6 +364,15 @@ limitations under the License.
               : '&'
           path += 'sha=' + this.sha
         }
+        var diffRuns = this.testRuns.filter(r => r.revision == 'diff')
+        if (diffRuns.length > 0) {
+          path += path.indexOf('?') < 0
+                  ? '?'
+                  : '&'
+          let [before, after] = this.testRuns
+          path += `before=${before.browser_name}@${before.revision}`
+          path += `&after=${after.browser_name}@${after.revision}`
+        }
         window.history.pushState({}, '', path)
 
         // Send Google Analytics pageview event
