@@ -17,25 +17,10 @@ syntax = "proto3";
 package wptdashboard;
 option go_package = "generated";
 
-import "bq_table_name.proto";
-import "browser.proto";
-import "engine.proto";
-import "google/protobuf/timestamp.proto";
-import "operating_system.proto";
-
-// An invocation of the WPT runner in some OS+browser context.
-message TestRun {
-  option (gen_bq_schema.table_name) = "test_runs";
-
-  google.protobuf.Timestamp start_time = 1;
-  google.protobuf.Timestamp end_time = 2;
-
-  OperatingSystem os = 3;
-  string os_version_str = 4;
-
-  Browser browser = 5;
-  string browser_version_str = 6;
-
-  string wpt_hash = 7; // Full-length git commit hash.
-  google.protobuf.Timestamp wpt_commit_time = 8;
+enum Engine {
+  ENGINE_UNKNOWN = 0;
+  BLINK = 1;
+  EDGEHTML = 2;
+  GECKO = 3;
+  WEBKIT = 4;
 }

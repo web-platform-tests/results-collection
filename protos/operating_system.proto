@@ -17,6 +17,9 @@ syntax = "proto3";
 package wptdashboard;
 option go_package = "generated";
 
-message Token {
-  string secret = 1;
+enum OperatingSystem {
+  OPERATING_SYSTEM_UNKNOWN = 0;
+  DARWIN = 1;
+  LINUX = 2;
+  WINDOWS = 3;
 }

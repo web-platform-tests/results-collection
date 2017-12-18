@@ -22,20 +22,29 @@ import "browser.proto";
 import "engine.proto";
 import "google/protobuf/timestamp.proto";
 import "operating_system.proto";
+import "sub_test_status.proto";
+import "test_status.proto";
 
-// An invocation of the WPT runner in some OS+browser context.
-message TestRun {
-  option (gen_bq_schema.table_name) = "test_runs";
+// A result for a single test or sub-test from a TestRun.
+message TestResult {
+  option (gen_bq_schema.table_name) = "test_results";
 
-  google.protobuf.Timestamp start_time = 1;
-  google.protobuf.Timestamp end_time = 2;
+  OperatingSystem os = 1;
+  string os_version_str = 2;
 
-  OperatingSystem os = 3;
-  string os_version_str = 4;
+  Browser browser = 3;
+  string browser_version_str = 4;
 
-  Browser browser = 5;
-  string browser_version_str = 6;
-
+  google.protobuf.Timestamp test_run_start_time = 5;
+  google.protobuf.Timestamp test_run_end_time = 6;
   string wpt_hash = 7; // Full-length git commit hash.
   google.protobuf.Timestamp wpt_commit_time = 8;
+
+  string test_name = 9;
+  TestStatus status = 10;
+  string test_message = 11;
+
+  string test_sub_name = 12;
+  SubTestStatus test_sub_status = 13;
+  string test_sub_message = 14;
 }
