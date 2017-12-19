@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wptdashboard
+package webapp
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	models "github.com/w3c/wptdashboard/shared"
 )
 
 // This handler is responsible for all pages that display test results.
@@ -82,13 +84,13 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	if specBefore != "" || specAfter != "" {
 		const diffRunURL = `/api/diff?before=%s&after=%s`
-		diffRun := TestRun{
+		diffRun := models.TestRun{
 			Revision:    "diff",
 			BrowserName: "Diff",
 			ResultsURL:  fmt.Sprintf(diffRunURL, specBefore, specAfter),
 		}
 		var marshaled []byte
-		if marshaled, err = json.Marshal([]TestRun{diffRun}); err != nil {
+		if marshaled, err = json.Marshal([]models.TestRun{diffRun}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

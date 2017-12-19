@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wptdashboard
+package webapp
 
 import (
 	"encoding/json"
@@ -22,7 +22,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
+	models "github.com/w3c/wptdashboard/shared"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
@@ -66,22 +67,22 @@ func fetchRunResultsJSONForParam(
 
 func fetchRunResultsJSONForSpec(
 	ctx context.Context, r *http.Request, revision platformAtRevision) (results map[string][]int, err error) {
-	var run TestRun
+	var run models.TestRun
 	if run, err = fetchRunForSpec(ctx, revision); err != nil {
 		return nil, err
-	} else if (run == TestRun{}) {
+	} else if (run == models.TestRun{}) {
 		return nil, nil
 	}
 	return fetchRunResultsJSON(ctx, r, run)
 }
 
-func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (TestRun, error) {
+func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (models.TestRun, error) {
 	baseQuery := datastore.
 		NewQuery("TestRun").
 		Order("-CreatedAt").
 		Limit(1)
 
-	var results []TestRun
+	var results []models.TestRun
 	// TODO(lukebjerring): Handle actual platforms (split out version + os)
 	query := baseQuery.
 		Filter("BrowserName =", revision.Platform)
@@ -89,17 +90,17 @@ func fetchRunForSpec(ctx context.Context, revision platformAtRevision) (TestRun,
 		query = query.Filter("Revision = ", revision.Revision)
 	}
 	if _, err := query.GetAll(ctx, &results); err != nil {
-		return TestRun{}, err
+		return models.TestRun{}, err
 	}
 	if len(results) < 1 {
-		return TestRun{}, nil
+		return models.TestRun{}, nil
 	}
 	return results[0], nil
 }
 
 // fetchRunResultsJSON fetches the results JSON summary for the given test run, but does not include subtests (since
 // a full run can span 20k files).
-func fetchRunResultsJSON(ctx context.Context, r *http.Request, run TestRun) (results map[string][]int, err error) {
+func fetchRunResultsJSON(ctx context.Context, r *http.Request, run models.TestRun) (results map[string][]int, err error) {
 	client := urlfetch.Client(ctx)
 	url := strings.TrimSpace(run.ResultsURL)
 	if strings.Index(url, "/") == 0 {

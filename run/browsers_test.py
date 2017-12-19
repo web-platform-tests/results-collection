@@ -34,7 +34,7 @@ class TestBrowsers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         filepath = os.path.join(os.path.dirname(__file__),
-                                os.pardir, 'browsers.json')
+                                os.pardir, 'webapp', 'browsers.json')
         with open(filepath) as f:
             cls.browsers = json.load(f)
 
