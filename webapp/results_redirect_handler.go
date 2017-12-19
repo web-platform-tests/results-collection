@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wptdashboard
+package webapp
 
 import (
 	"errors"
@@ -22,12 +22,13 @@ import (
 	"regexp"
 	"strings"
 
+	models "github.com/w3c/wptdashboard/shared"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )
 
 // resultsRedirectHandler is responsible for redirecting to the Google Cloud Storage API
-// JSON blob for the given SHA (or latest) TestRun for the given browser.
+// JSON blob for the given SHA (or latest) models.TestRun for the given browser.
 //
 // URL format:
 // /results
@@ -63,7 +64,7 @@ func resultsRedirectHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if (TestRun{}) == run {
+	if (models.TestRun{}) == run {
 		http.Error(w, fmt.Sprintf("404 - Test run '%s' not found", runSHA), http.StatusNotFound)
 		return
 	}
@@ -74,7 +75,7 @@ func resultsRedirectHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, resultsURL, http.StatusFound)
 }
 
-func getRun(r *http.Request, run string, platform string) (latest TestRun, err error) {
+func getRun(r *http.Request, run string, platform string) (latest models.TestRun, err error) {
 	platformPieces := strings.Split(platform, "-")
 	if len(platformPieces) < 1 || len(platformPieces) > 4 {
 		err = errors.New("Invalid path")
@@ -84,7 +85,7 @@ func getRun(r *http.Request, run string, platform string) (latest TestRun, err e
 	ctx := appengine.NewContext(r)
 	baseQuery := datastore.NewQuery("TestRun").Order("-CreatedAt").Limit(1)
 
-	var testRunResults []TestRun
+	var testRunResults []models.TestRun
 	query := baseQuery.Filter("BrowserName =", platformPieces[0])
 	if run != "" && run != "latest" {
 		query = query.Filter("Revision =", run)
@@ -108,7 +109,7 @@ func getRun(r *http.Request, run string, platform string) (latest TestRun, err e
 	return
 }
 
-func getResultsURL(run TestRun, testFile string) (resultsURL string) {
+func getResultsURL(run models.TestRun, testFile string) (resultsURL string) {
 	resultsURL = run.ResultsURL
 	if testFile != "" && testFile != "/" {
 		// Assumes that result files are under a directory named SHA[0:10].

@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wptdashboard
+package webapp
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"sort"
+
+	models "github.com/w3c/wptdashboard/shared"
 )
 
-var browsers map[string]Browser
+var browsers map[string]models.Browser
 
 // No 'set' type in Go, so use map instead.
 var browserNames map[string]bool
@@ -28,7 +30,7 @@ var browserNamesAlphabetical []string
 
 // GetBrowsers loads, parses and returns the set of names of browsers
 // which are to be included (flagged as initially_loaded in the JSON).
-func GetBrowsers() (map[string]Browser, error) {
+func GetBrowsers() (map[string]models.Browser, error) {
 	if browsers != nil {
 		return browsers, nil
 	}
@@ -68,7 +70,7 @@ func IsBrowserName(name string) bool {
 }
 
 func loadBrowserNames() error {
-	var browsers map[string]Browser
+	var browsers map[string]models.Browser
 	var err error
 	if browsers, err = GetBrowsers(); err != nil {
 		return err

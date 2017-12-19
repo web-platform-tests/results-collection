@@ -265,7 +265,7 @@ def main(platform_id, platform, args, config):
 
 
 def get_and_validate_platform(platform_id):
-    with open('browsers.json') as f:
+    with open('webapp/browsers.json') as f:
         browsers = json.load(f)
 
     assert platform_id in browsers, 'platform_id not found in browsers.json'

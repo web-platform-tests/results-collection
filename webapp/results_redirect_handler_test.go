@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wptdashboard
+package webapp
 
 import (
 	"testing"
+
+	base "github.com/w3c/wptdashboard/shared"
 )
 
 type Case struct {
-	testRun  TestRun
+	testRun  base.TestRun
 	testFile string
 	expected string
 }
@@ -33,7 +35,7 @@ func TestGetResultsURL_EmptyFile(t *testing.T) {
 	checkResult(
 		t,
 		Case{
-			TestRun{
+			base.TestRun{
 				ResultsURL: resultsURL,
 				Revision:   sha,
 			},
@@ -47,7 +49,7 @@ func TestGetResultsURL_TestFile(t *testing.T) {
 	checkResult(
 		t,
 		Case{
-			TestRun{
+			base.TestRun{
 				ResultsURL: resultsURL,
 				Revision:   sha,
 			},
@@ -60,7 +62,7 @@ func TestGetResultsURL_TrailingSlash(t *testing.T) {
 	checkResult(
 		t,
 		Case{
-			TestRun{
+			base.TestRun{
 				ResultsURL: resultsURL,
 				Revision:   sha,
 			},
