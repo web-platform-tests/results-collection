@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gae
+package webapp
 
 import (
+	"html/template"
 	"net/http"
 )
 
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	if err := templates.ExecuteTemplate(w, "about.html", nil); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+var templates = template.Must(template.ParseGlob("templates/*.html"))
+
+func init() {
+	http.HandleFunc("/test-runs", testRunsHandler)
+	http.HandleFunc("/about", aboutHandler)
+	http.HandleFunc("/api/diff", apiDiffHandler)
+	http.HandleFunc("/api/runs", apiTestRunsHandler)
+	http.HandleFunc("/api/run", apiTestRunHandler)
+	http.HandleFunc("/results", resultsRedirectHandler)
+	http.HandleFunc("/", testHandler)
 }

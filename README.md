@@ -71,7 +71,7 @@ All test result data is public. There are two types of gzipped JSON data files w
 These are of the pattern: `{sha[0:10]}/{platform_id}-summary.json.gz`
 
 - `sha[0:10]`: the first 10 characters of the WPT commit hash that run was tested against
-- `platform_id`: the key of the platform configuration in `gae/browsers.json`
+- `platform_id`: the key of the platform configuration in `webapp/browsers.json`
 
 Example: https://storage.googleapis.com/wptd/791e95323d/firefox-56.0-linux-summary.json.gz
 
