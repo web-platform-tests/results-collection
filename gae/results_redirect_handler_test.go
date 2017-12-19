@@ -17,7 +17,7 @@ package gae
 import (
 	"testing"
 
-	base "github.com/w3c/wptdashboard"
+	base "github.com/w3c/wptdashboard/shared"
 )
 
 type Case struct {

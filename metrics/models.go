@@ -17,7 +17,7 @@ package metrics
 import (
 	"time"
 
-	base "github.com/w3c/wptdashboard"
+	base "github.com/w3c/wptdashboard/shared"
 )
 
 //

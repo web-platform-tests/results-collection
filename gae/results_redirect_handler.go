@@ -22,7 +22,7 @@ import (
 	"regexp"
 	"strings"
 
-	models "github.com/w3c/wptdashboard"
+	models "github.com/w3c/wptdashboard/shared"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 )

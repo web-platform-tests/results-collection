@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	models "github.com/w3c/wptdashboard"
+	models "github.com/w3c/wptdashboard/shared"
 )
 
 var browsers map[string]models.Browser

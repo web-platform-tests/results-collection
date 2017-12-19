@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	mapset "github.com/deckarep/golang-set"
-	models "github.com/w3c/wptdashboard"
+	models "github.com/w3c/wptdashboard/shared"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"

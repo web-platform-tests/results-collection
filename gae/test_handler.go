@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
-	models "github.com/w3c/wptdashboard"
+	models "github.com/w3c/wptdashboard/shared"
 )
 
 // This handler is responsible for all pages that display test results.

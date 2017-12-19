@@ -18,7 +18,7 @@ import (
 	"log"
 	"strings"
 
-	base "github.com/w3c/wptdashboard"
+	base "github.com/w3c/wptdashboard/shared"
 	"github.com/w3c/wptdashboard/metrics"
 )
 
