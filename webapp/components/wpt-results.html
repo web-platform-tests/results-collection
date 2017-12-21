@@ -153,9 +153,11 @@ found in the LICENSE file.
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
                 <td style="{{ _testResultStyle(node, testRun) }}">
-                  {{ _resultForNode(node, testRun, 'passing') }}
-                  /
-                  {{ _resultForNode(node, testRun, 'total') }}
+                  <template is="dom-if" if="{{ _hasResults(node, testRun) }}">
+                    {{ _resultForNode(node, testRun, 'passing') }}
+                    /
+                    {{ _resultForNode(node, testRun, 'total') }}
+                  </template>
                 </td>
               </template>
 
@@ -408,6 +410,10 @@ found in the LICENSE file.
 
       _relPath (path) {
         return path.replace(this.path + '/', '')
+      }
+
+      _hasResults (node, testRun) {
+        return typeof (node.results[testRun.results_url]) !== "undefined"
       }
 
       _resultForNode (node, testRun, property) {
