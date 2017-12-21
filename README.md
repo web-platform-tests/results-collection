@@ -5,8 +5,8 @@ A dashboard of cross-browser results for [web-platform-tests](https://github.com
 It consists of 3 parts:
 
 - **Running**: VMs scheduled to [run tests locally and on Sauce](run/run.py) daily
-- **Serving**: An [App Engine app](main.go) for storing test run metadata and serving HTML
-- **Visualizing**: [Polymer elements](components/wpt-results.html) for loading and visualizing test results
+- **Serving**: An [App Engine app](webapp/main.go) for storing test run metadata and serving HTML
+- **Visualizing**: [Polymer elements](webapp/components/wpt-results.html) for loading and visualizing test results
 
 ## Setting up your environment
 
@@ -93,7 +93,7 @@ An object where the key is the test file name and the value is a list of the typ
 These are of the pattern: `{sha[0:10]}/{platform_id}/{test_file_path}`
 
 - `sha[0:10]`: the first 10 characters of the WPT commit hash that run was tested against
-- `platform_id`: the key of the platform configuration in `browsers.json`
+- `platform_id`: the key of the platform configuration in `webapp/browsers.json`
 - `test_file_path`: the full WPT path of the test file
 
 Example: https://storage.googleapis.com/wptd/b12daf6ead/safari-10-macos-10.12-sauce/IndexedDB/abort-in-initial-upgradeneeded.html
@@ -151,4 +151,4 @@ This doesn't work with some HTTPS tests. Also be advised that the server is not 
 
 ### Platform ID
 
-These are the keys in [`browsers.json`](browsers.json). They're used to identify a tuple (browser name, browser version, os name, os version).
+These are the keys in [`webapp/browsers.json`](webapp/browsers.json). They're used to identify a tuple (browser name, browser version, os name, os version).
