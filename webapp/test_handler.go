@@ -53,7 +53,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf(singleRunURL, after.Revision, after.Platform),
 		}
 	} else {
-		const sourceURL = `/api/runs?sha=%s`
+		const sourceURL = `/api/runs?sha=%s&complete=true`
 		testRunSources = []string{fmt.Sprintf(sourceURL, runSHA)}
 	}
 
