@@ -6,7 +6,6 @@ found in the LICENSE file.
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
-<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
 
 <!--
 `<test-run>` is a stateless component for displaying the details of a TestRun.
@@ -51,9 +50,11 @@ See models.go for more details.
     <div>
       <div><img src="/static/{{testRun.browser_name}}_64x64.png" /></div>
       <div>{{testRun.browser_name}} {{testRun.browser_version}}</div>
-      <div>{{testRun.os_name}} {{testRun.os_version}}</div>
-      <div class="revision">@<a href="?sha={{testRun.revision}}">{{testRun.revision}}</a></div>
-      <div>{{dateFormat(testRun.created_at)}}</div>
+      <template is="dom-if" if="{{ !isDiff(testRun.browser_name) }}">
+        <div>{{testRun.os_name}} {{testRun.os_version}}</div>
+        <div class="revision">@<a href="?sha={{testRun.revision}}">{{testRun.revision}}</a></div>
+        <div>{{dateFormat(testRun.created_at)}}</div>
+      </template>
     </div>
   </template>
 
@@ -71,6 +72,10 @@ See models.go for more details.
 
       dateFormat (dateStr) {
         return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
+      }
+
+      isDiff(browserName) {
+        return browserName === "Diff"
       }
     }
 
