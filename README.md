@@ -4,7 +4,7 @@ A dashboard of cross-browser results for [web-platform-tests](https://github.com
 
 It consists of 3 parts:
 
-- **Running**: VMs scheduled to [run tests locally and on Sauce](run/run.py) daily
+- **Running**: VMs scheduled to [run tests locally and on Sauce](run/run.py) daily (thanks to [Sauce Labs](https://saucelabs.com) for providing us with infrastructure to run Edge + Safari builds)
 - **Serving**: An [App Engine app](webapp/main.go) for storing test run metadata and serving HTML
 - **Visualizing**: [Polymer elements](webapp/components/wpt-results.html) for loading and visualizing test results
 
