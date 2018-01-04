@@ -135,7 +135,7 @@ found in the LICENSE file.
       }
 
       resultsURL (testRun, testFile) {
-        if (testRun.revision == 'diff') {
+        if (testRun.revision === 'diff') {
           return testRun.results_url + '&path=' + encodeURI(testFile)
         }
         // This is relying on the assumption that result files are under a directory named SHA[0:10].

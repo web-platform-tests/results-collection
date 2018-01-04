@@ -356,7 +356,7 @@ found in the LICENSE file.
               : '&'
           path += 'sha=' + this.sha
         }
-        var diffRuns = this.testRuns.filter(r => r.revision == 'diff')
+        var diffRuns = this.testRuns.filter(r => r.revision === 'diff')
         if (diffRuns.length > 0) {
           path += path.indexOf('?') < 0
                   ? '?'
@@ -413,7 +413,7 @@ found in the LICENSE file.
       }
 
       _hasResults (node, testRun) {
-        return typeof (node.results[testRun.results_url]) !== "undefined"
+        return typeof (node.results[testRun.results_url]) !== 'undefined'
       }
 
       _resultForNode (node, testRun, property) {
