@@ -76,7 +76,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		const diffRunURL = `/api/diff?before=%s&after=%s`
 		diffRun := models.TestRun{
 			Revision:    "diff",
-			BrowserName: "Diff",
+			BrowserName: "diff",
 			ResultsURL:  fmt.Sprintf(diffRunURL, specBefore, specAfter),
 		}
 		var marshaled []byte
