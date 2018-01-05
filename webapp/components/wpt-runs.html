@@ -90,9 +90,9 @@ found in the LICENSE file.
   <script>
     /* global TestRunsBase */
     class WPTRuns extends TestRunsBase {
-      static get is () { return 'wpt-runs' }
+      static get is() { return 'wpt-runs'; }
 
-      static get properties () {
+      static get properties() {
         return {
           // Array({ sha, Array({ platform, run, sum }))
           testResults: {
@@ -105,10 +105,10 @@ found in the LICENSE file.
             type: Array,
             value: []
           }
-        }
+        };
       }
 
-      _computeMonthName (date) {
+      _computeMonthName(date) {
         return [
           'January',
           'February',
@@ -122,61 +122,61 @@ found in the LICENSE file.
           'October',
           'November',
           'December'
-        ][date.getMonth()]
+        ][date.getMonth()];
       }
 
-      _computeDateTooltip (date) {
-        return date && date.toDateString()
+      _computeDateTooltip(date) {
+        return date && date.toDateString();
       }
 
-      async connectedCallback () {
-        await super.connectedCallback()
+      async connectedCallback() {
+        await super.connectedCallback();
 
-        let browsers = new Set()
+        let browsers = new Set();
         // Group the runs by their revision/SHA
-        let testRunsBySha = {}
+        let testRunsBySha = {};
         this.testRuns
-            .forEach(results => {
-              browsers.add(results.browser_name)
-              if (!testRunsBySha[results.revision]) {
-                testRunsBySha[results.revision] = {}
-              }
-              if (!testRunsBySha[results.revision][results.browser_name]) {
-                testRunsBySha[results.revision][results.browser_name] = results
-              }
-            })
+          .forEach(results => {
+            browsers.add(results.browser_name);
+            if (!testRunsBySha[results.revision]) {
+              testRunsBySha[results.revision] = {};
+            }
+            if (!testRunsBySha[results.revision][results.browser_name]) {
+              testRunsBySha[results.revision][results.browser_name] = results;
+            }
+          });
 
         // We flatten into an array of objects so Polymer can deal with them.
-        const firstRunTime = x => Object.values(x.runs)[0].created_at
+        const firstRunTime = x => Object.values(x.runs)[0].created_at;
         const flattened = Object.entries(testRunsBySha)
-            .map(entry => ({ sha: entry[0], runs: entry[1] }))
-            .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1)
+          .map(entry => ({ sha: entry[0], runs: entry[1] }))
+          .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1);
 
         // Append time (month) metadata.
         if (flattened.length > 1) {
-          let previousMonth = -1
+          let previousMonth = -1;
           for (var i = 0; i < flattened.length; i++) {
-            let current = new Date(firstRunTime(flattened[i]))
-            flattened[i]['date'] = current
+            let current = new Date(firstRunTime(flattened[i]));
+            flattened[i]['date'] = current;
             if (previousMonth !== current.getMonth()) {
-              flattened[i]['month_boundary'] = true
+              flattened[i]['month_boundary'] = true;
             }
-            previousMonth = current.getMonth()
+            previousMonth = current.getMonth();
           }
         }
-        this.testResults = flattened
-        this.browsers = Array.from(browsers).sort()
+        this.testResults = flattened;
+        this.browsers = Array.from(browsers).sort();
       }
 
-      _runClass (testRuns, browser) {
-        let testRun = testRuns[browser]
+      _runClass(testRuns, browser) {
+        let testRun = testRuns[browser];
         if (!testRun) {
-          return 'missing'
+          return 'missing';
         }
-        return 'present'
+        return 'present';
       }
     }
 
-    window.customElements.define(WPTRuns.is, WPTRuns)
+    window.customElements.define(WPTRuns.is, WPTRuns);
   </script>
 </dom-module>

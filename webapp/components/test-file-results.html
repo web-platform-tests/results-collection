@@ -68,9 +68,9 @@ found in the LICENSE file.
   <script>
     /* global TestRunsBase */
     class TestFileResults extends TestRunsBase {
-      static get is () { return 'test-file-results' }
+      static get is() { return 'test-file-results'; }
 
-      static get properties () {
+      static get properties() {
         return {
           testFile: {
             type: String,
@@ -80,88 +80,88 @@ found in the LICENSE file.
             type: Array,
             value: []
           }
-        }
+        };
       }
 
-      async connectedCallback () {
-        await super.connectedCallback()
-        console.assert(this.testFile)
-        console.assert(this.testFile[0] === '/')
-        console.assert(this.testRuns)
-        console.assert(this.testRuns.length > 0)
+      async connectedCallback() {
+        await super.connectedCallback();
+        console.assert(this.testFile);
+        console.assert(this.testFile[0] === '/');
+        console.assert(this.testRuns);
+        console.assert(this.testRuns.length > 0);
 
-        this.fetchTestFile()
+        this.fetchTestFile();
       }
 
-      async fetchTestFile () {
-        if (!this.testRuns) return
-        const resultPerTestRun = await Promise.all(this.testRuns.map(tr => this.loadResultFile(tr)))
+      async fetchTestFile() {
+        if (!this.testRuns) return;
+        const resultPerTestRun = await Promise.all(this.testRuns.map(tr => this.loadResultFile(tr)));
 
         resultPerTestRun.forEach((resultData, i) => {
           if (!resultData) {
-            this.testRuns[i].subtests = {}
-            this.testRuns[i].subtests['Test file'] = { status: '(results not found)' }
-            return
+            this.testRuns[i].subtests = {};
+            this.testRuns[i].subtests['Test file'] = { status: '(results not found)' };
+            return;
           }
-          this.testRuns[i].subtests = {}
-          this.testRuns[i].subtests['Test file'] = { status: resultData.status }
+          this.testRuns[i].subtests = {};
+          this.testRuns[i].subtests['Test file'] = { status: resultData.status };
 
           if (!this.subtestNames.includes('Test file')) {
-            this.subtestNames = this.subtestNames.concat(['Test file'])
+            this.subtestNames = this.subtestNames.concat(['Test file']);
           }
 
           for (let subtestResult of resultData.subtests) {
-            this.testRuns[i].subtests[subtestResult.name] = subtestResult
+            this.testRuns[i].subtests[subtestResult.name] = subtestResult;
             if (!this.subtestNames.includes(subtestResult.name)) {
-              this.subtestNames = this.subtestNames.concat([subtestResult.name])
+              this.subtestNames = this.subtestNames.concat([subtestResult.name]);
             }
           }
-        })
+        });
       }
 
-      _testFileChanged () {
-        this.subtestNames = []
-        this.fetchTestFile()
+      _testFileChanged() {
+        this.subtestNames = [];
+        this.fetchTestFile();
       }
 
-      async loadResultFile (testRun) {
-        const url = this.resultsURL(testRun, this.testFile)
-        const response = await window.fetch(url)
+      async loadResultFile(testRun) {
+        const url = this.resultsURL(testRun, this.testFile);
+        const response = await window.fetch(url);
         if (response.status !== 200) {
-          console.error(`Got non-200 status for url: ${url}`)
-          return Promise.resolve(null)
+          console.error(`Got non-200 status for url: ${url}`);
+          return Promise.resolve(null);
         }
-        return response.json()
+        return response.json();
       }
 
-      resultsURL (testRun, testFile) {
+      resultsURL(testRun, testFile) {
         if (testRun.revision == 'diff') {
-          return `${testRun.results_url}&path=${encodeURI(testFile)}`
+          return `${testRun.results_url}&path=${encodeURI(testFile)}`;
         }
         // This is relying on the assumption that result files are under a directory named SHA[0:10].
-        const resultsBase = testRun.results_url.split(`/${testRun.revision}`)[0]
+        const resultsBase = testRun.results_url.split('/' + testRun.revision)[0];
         // This is currently a hack to extract the platform ID from the summary URL.
         // A platform ID is any valid key from browsers.json.
-        const platformID = testRun.results_url.split('/').pop().replace('-summary.json.gz', '')
+        const platformID = testRun.results_url.split('/').pop().replace('-summary.json.gz', '');
         // Test file results are currently stored as JSON files with the following scheme:
         // {GS bucket}/{WPT SHA[0:10]}/{platform ID}/{test file path}
 
-        return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`
+        return `${resultsBase}/${testRun.revision}/${platformID}${testFile}`;
       }
 
-      _subtestResultForTestRun (testRun, subtestName) {
-        if (!testRun) return null
-        if (!testRun.subtests) return null
-        if (!testRun.subtests[subtestName]) return null
-        if (testRun.subtests[subtestName].status === 'OK') return 'OK'
-        if (testRun.subtests[subtestName].status === 'PASS') return 'PASS'
+      _subtestResultForTestRun(testRun, subtestName) {
+        if (!testRun) return null;
+        if (!testRun.subtests) return null;
+        if (!testRun.subtests[subtestName]) return null;
+        if (testRun.subtests[subtestName].status === 'OK') return 'OK';
+        if (testRun.subtests[subtestName].status === 'PASS') return 'PASS';
         if (testRun.subtests[subtestName].message) {
-          return `Failure message: ${testRun.subtests[subtestName].message}`
+          return `Failure message: ${testRun.subtests[subtestName].message}`;
         }
-        return testRun.subtests[subtestName].status
+        return testRun.subtests[subtestName].status;
       }
     }
 
-    window.customElements.define(TestFileResults.is, TestFileResults)
+    window.customElements.define(TestFileResults.is, TestFileResults);
   </script>
 </dom-module>
