@@ -361,9 +361,11 @@ found in the LICENSE file.
           path += path.indexOf('?') < 0
             ? '?'
             : '&';
-          let [before, after] = this.testRuns;
-          path += `before=${before.browser_name}@${before.revision}`;
-          path += `&after=${after.browser_name}@${after.revision}`;
+
+          let [before, after] = this.testRuns.slice(0, 2)
+            .map(JSON.stringify)
+            .map(btoa);
+          path += `before=${before}&after=${after}`;
         }
         window.history.pushState({}, '', path);
 

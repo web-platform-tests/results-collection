@@ -5,6 +5,7 @@
 package webapp
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,9 +48,17 @@ func parsePlatformAtRevisionSpec(spec string) (platformAtRevision platformAtRevi
 }
 
 func fetchRunResultsJSONForParam(
-	ctx context.Context, r *http.Request, revision string) (results map[string][]int, err error) {
+	ctx context.Context, r *http.Request, param string) (results map[string][]int, err error) {
+	afterDecoded, err := base64.URLEncoding.DecodeString(param)
+	if err == nil {
+		var run models.TestRun
+		if err = json.Unmarshal([]byte(afterDecoded), &run); err != nil {
+			return nil, err
+		}
+		return fetchRunResultsJSON(ctx, r, run)
+	}
 	var spec platformAtRevision
-	if spec, err = parsePlatformAtRevisionSpec(revision); err != nil {
+	if spec, err = parsePlatformAtRevisionSpec(param); err != nil {
 		return nil, err
 	}
 	return fetchRunResultsJSONForSpec(ctx, r, spec)
