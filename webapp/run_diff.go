@@ -134,12 +134,13 @@ func getResultsDiff(before map[string][]int, after map[string][]int, filter Diff
 				}
 				diff[test] = []int{resultsBefore[1], resultsBefore[1]}
 			} else {
-				if !filter.Changed {
+				if !filter.Changed && !filter.Unchanged {
 					continue
 				}
 				passDiff := abs(resultsBefore[0] - resultsAfter[0])
 				countDiff := abs(resultsBefore[1] - resultsAfter[1])
-				if countDiff == 0 && passDiff == 0 {
+				changed := passDiff != 0 || countDiff != 0
+				if (!changed && !filter.Unchanged) || changed && !filter.Changed {
 					continue
 				}
 				// Changed tests is at most the number of different outcomes,

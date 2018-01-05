@@ -73,11 +73,12 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if specBefore != "" || specAfter != "" {
-		const diffRunURL = `/api/diff?before=%s&after=%s`
+		filter := "ACDU" // Added, Changed, Deleted, Unchanged
+		const diffRunURL = `/api/diff?before=%s&after=%s&filter=%s`
 		diffRun := models.TestRun{
 			Revision:    "diff",
 			BrowserName: "diff",
-			ResultsURL:  fmt.Sprintf(diffRunURL, specBefore, specAfter),
+			ResultsURL:  fmt.Sprintf(diffRunURL, specBefore, specAfter, filter),
 		}
 		var marshaled []byte
 		if marshaled, err = json.Marshal([]models.TestRun{diffRun}); err != nil {

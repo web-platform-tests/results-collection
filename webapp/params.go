@@ -126,6 +126,10 @@ type DiffFilterParam struct {
 	// but the number of passes, failures, or total tests has changed.
 	Changed bool
 
+	// Unchanged tests are present in both the 'before' and 'after' states of the diff,
+	// and the number of passes, failures, or total tests is unchanged.
+	Unchanged bool
+
 	// Set of test paths to include, or include all tests if nil.
 	Paths mapset.Set
 }
@@ -149,6 +153,8 @@ func ParseDiffFilterParams(r *http.Request) (param DiffFilterParam, err error) {
 				param.Deleted = true
 			case 'C':
 				param.Changed = true
+			case 'U':
+				param.Unchanged = true
 			default:
 				return param, fmt.Errorf("invalid filter character %c", char)
 			}
