@@ -4,6 +4,11 @@
 
 sudo: required
 
+# Don't cap the git depth @50 (default), we check the nov 21 sha-of-the-day
+# in a py_test.
+git:
+  depth: false
+
 services:
   - docker
 
