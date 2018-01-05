@@ -173,9 +173,9 @@ found in the LICENSE file.
   <script>
     /* global TestRunsBase */
     class WPTResults extends TestRunsBase {
-      static get is () { return 'wpt-results' }
+      static get is() { return 'wpt-results'; }
 
-      static get properties () {
+      static get properties() {
         return {
           query: {
             type: String,
@@ -205,226 +205,226 @@ found in the LICENSE file.
             type: Array,
             value: []
           }
-        }
+        };
       }
 
-      async connectedCallback () {
-        await super.connectedCallback()
+      async connectedCallback() {
+        await super.connectedCallback();
 
-        window.onpopstate = (event) => {
-          this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1')
-          this._refreshDisplayedNodes()
-        }
+        window.onpopstate = () => {
+          this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1');
+          this._refreshDisplayedNodes();
+        };
 
         // Fetch the results JSON for the TestRuns
         const testFileResults = await Promise.all(
           this.testRuns.map(async json => this._fetchResults(json.results_url))
-        )
+        );
 
         testFileResults.forEach(result => {
-          const resultsURL = result.resultsURL
+          const resultsURL = result.resultsURL;
 
           Object.keys(result.testFiles).forEach(testFileName => {
             if (!(testFileName in this.testFiles)) {
-              this.testFiles[testFileName] = {}
+              this.testFiles[testFileName] = {};
             }
-            this.testFiles[testFileName][resultsURL] = result.testFiles[testFileName]
-          })
-        })
+            this.testFiles[testFileName][resultsURL] = result.testFiles[testFileName];
+          });
+        });
 
-        this._refreshDisplayedNodes()
+        this._refreshDisplayedNodes();
       }
 
       _computeIsLatest (sha) {
-        return !sha || sha === 'latest'
+        return !sha || sha === 'latest';
       }
 
       _computePathIsATestFile (path) {
         return path.endsWith('.html') || path.endsWith('.htm') ||
                path.endsWith('.py') || path.endsWith('.svg') ||
                path.endsWith('.xhtml') || path.endsWith('.xht') ||
-               path.endsWith('.xml')
+               path.endsWith('.xml');
       }
 
       _nodeSort (a, b) {
-        if (a.path < b.path) return -1
-        if (a.path > b.path) return 1
-        return 0
+        if (a.path < b.path) return -1;
+        if (a.path > b.path) return 1;
+        return 0;
       }
 
       _resultWithRunIndex (results, runIndex) {
         for (var key in results) {
           if (results[key].runIndex === runIndex) {
-            return results[key]
+            return results[key];
           }
         }
       }
 
       _specFromTestPath (path) {
-        return path.split('/')[1]
+        return path.split('/')[1];
       }
 
       async _fetchResults (url) {
-        const response = await window.fetch(url)
-        const testFiles = await response.json()
-        return {testFiles: testFiles, resultsURL: url}
+        const response = await window.fetch(url);
+        const testFiles = await response.json();
+        return {testFiles: testFiles, resultsURL: url};
       }
 
-      _queryChanged () {
-        this._refreshDisplayedNodes()
+      _queryChanged() {
+        this._refreshDisplayedNodes();
       }
 
-      _refreshDisplayedNodes () {
+      _refreshDisplayedNodes() {
         /* Recomputes the list of displayed directories and test files. */
-        const displayedNodeMap = new Map()
-        const currentPathParts = this._splitIntoLinkedParts(this.path)
+        const displayedNodeMap = new Map();
+        const currentPathParts = this._splitIntoLinkedParts(this.path);
 
         const updateResults = (testFileName, dirPath, isDir) => {
           if (!displayedNodeMap.has(dirPath)) {
-            displayedNodeMap.set(dirPath, {isDir: isDir, results: {}})
+            displayedNodeMap.set(dirPath, {isDir: isDir, results: {}});
           }
-          let results = this.testFiles[testFileName]
+          let results = this.testFiles[testFileName];
           Object.keys(results).forEach(resultURL => {
             if (!(resultURL in displayedNodeMap.get(dirPath).results)) {
-              displayedNodeMap.get(dirPath).results[resultURL] = {passing: 0, total: 0}
+              displayedNodeMap.get(dirPath).results[resultURL] = {passing: 0, total: 0};
             }
-            displayedNodeMap.get(dirPath).results[resultURL].passing += results[resultURL][0]
-            displayedNodeMap.get(dirPath).results[resultURL].total += results[resultURL][1]
-          })
-        }
+            displayedNodeMap.get(dirPath).results[resultURL].passing += results[resultURL][0];
+            displayedNodeMap.get(dirPath).results[resultURL].total += results[resultURL][1];
+          });
+        };
 
         Object.keys(this.testFiles).forEach(testFileName => {
           if (this.path !== '/' && !testFileName.startsWith(this.path + '/')) {
-            return
+            return;
           }
 
           if (this.query.length > 0) {
-            const matchesQuery = testFileName.toLowerCase().includes(this.query.toLowerCase())
+            const matchesQuery = testFileName.toLowerCase().includes(this.query.toLowerCase());
             if (!matchesQuery) {
-              return
+              return;
             }
           }
 
-          let parts = this._splitIntoLinkedParts(testFileName)
+          let parts = this._splitIntoLinkedParts(testFileName);
 
           // If at the top-level, add all directories
           if (this.path === '/' && parts.length === 2) {
-            let dirParts = [parts[0]]
-            let dirPath = dirParts[dirParts.length - 1].path
-            updateResults(testFileName, dirPath, true)
+            let dirParts = [parts[0]];
+            let dirPath = dirParts[dirParts.length - 1].path;
+            updateResults(testFileName, dirPath, true);
 
-          // Add test files in current directory
+            // Add test files in current directory
           } else if (parts.length === currentPathParts.length + 1) {
-            let path = parts[parts.length - 1].path
-            updateResults(testFileName, path, false)
+            let path = parts[parts.length - 1].path;
+            updateResults(testFileName, path, false);
 
-          // Add subdirectories in current directory
+            // Add subdirectories in current directory
           } else if (parts.length > currentPathParts.length + 1) {
-            let dirParts
+            let dirParts;
             if (this.path === '/') {
-              dirParts = [parts[0]]
+              dirParts = [parts[0]];
             } else {
-              dirParts = parts.slice(0, currentPathParts.length + 1)
+              dirParts = parts.slice(0, currentPathParts.length + 1);
             }
-            let dirPath = dirParts[dirParts.length - 1].path
-            updateResults(testFileName, dirPath, true)
+            let dirPath = dirParts[dirParts.length - 1].path;
+            updateResults(testFileName, dirPath, true);
           }
-        })
+        });
 
         let displayedNodes = Array.from(displayedNodeMap.keys()).map(key => (
           {path: key, isDir: displayedNodeMap.get(key).isDir, results: displayedNodeMap.get(key).results}
-        ))
-        displayedNodes.sort(this._nodeSort)
-        this.displayedNodes = displayedNodes
+        ));
+        displayedNodes.sort(this._nodeSort);
+        this.displayedNodes = displayedNodes;
       }
 
       _platformID (testRun) {
-        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`
+        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`;
       }
 
       _navigate (event) {
-        event.preventDefault()
-        let path = event.target.pathname.replace(/(.+)(\/)$/, '$1')
+        event.preventDefault();
+        let path = event.target.pathname.replace(/(.+)(\/)$/, '$1');
         if (path === this.path) {
-          return
+          return;
         }
-        this.path = path
-        this._refreshDisplayedNodes()
+        this.path = path;
+        this._refreshDisplayedNodes();
         if (this.sha && this.sha !== '' && this.sha !== 'latest') {
           path += path.indexOf('?') < 0
-              ? '?'
-              : '&'
-          path += 'sha=' + this.sha
+            ? '?'
+            : '&';
+          path += 'sha=' + this.sha;
         }
-        var diffRuns = this.testRuns.filter(r => r.revision == 'diff')
+        var diffRuns = this.testRuns.filter(r => r.revision == 'diff');
         if (diffRuns.length > 0) {
           path += path.indexOf('?') < 0
-                  ? '?'
-                  : '&'
-          let [before, after] = this.testRuns
-          path += `before=${before.browser_name}@${before.revision}`
-          path += `&after=${after.browser_name}@${after.revision}`
+            ? '?'
+            : '&';
+          let [before, after] = this.testRuns;
+          path += `before=${before.browser_name}@${before.revision}`;
+          path += `&after=${after.browser_name}@${after.revision}`;
         }
-        window.history.pushState({}, '', path)
+        window.history.pushState({}, '', path);
 
         // Send Google Analytics pageview event
         if ('ga' in window) {
-          window.ga('send', 'pageview', path)
+          window.ga('send', 'pageview', path);
         }
       }
 
       _splitIntoLinkedParts (path) {
-        const parts = path.split('/').slice(1)
-        let pathSoFar = ''
+        const parts = path.split('/').slice(1);
+        let pathSoFar = '';
         return parts.map(part => {
-          pathSoFar += '/' + part
+          pathSoFar += '/' + part;
           return {
             name: part,
             path: pathSoFar
-          }
-        })
+          };
+        });
       }
 
       _testResultStyle (node, testRun) {
-        if (!node) return
-        if (!testRun) return
-        if (!(testRun.results_url in node.results)) return
-        const result = node.results[testRun.results_url]
+        if (!node) return;
+        if (!testRun) return;
+        if (!(testRun.results_url in node.results)) return;
+        const result = node.results[testRun.results_url];
 
         if (this.path === '/') {
           // Do not add color to top-level directories
-          return 'background-color: #eee'
+          return 'background-color: #eee';
         }
 
         // Need saturation between 65-100, reversed (range 35)
-        const passRate = result.passing / result.total
+        const passRate = result.passing / result.total;
         if (passRate === 1) {
           // Green
-          return 'background-color: hsl(129, 85%, 65%)'
+          return 'background-color: hsl(129, 85%, 65%)';
         } else {
-          const luminance = 65 + passRate * 20
+          const luminance = 65 + passRate * 20;
           // Some shade of red
-          return `background-color: hsl(0, 85%, ${luminance}%)`
+          return `background-color: hsl(0, 85%, ${luminance}%)`;
         }
       }
 
       _relPath (path) {
-        return path.replace(this.path + '/', '')
+        return path.replace(this.path + '/', '');
       }
 
       _hasResults (node, testRun) {
-        return typeof (node.results[testRun.results_url]) !== "undefined"
+        return typeof (node.results[testRun.results_url]) !== 'undefined';
       }
 
       _resultForNode (node, testRun, property) {
         if (testRun.results_url in node.results) {
-          return node.results[testRun.results_url][property]
+          return node.results[testRun.results_url][property];
         }
       }
 
-      _clearSearch () {
-        this.query = ''
-        this._refreshDisplayedNodes()
+      _clearSearch() {
+        this.query = '';
+        this._refreshDisplayedNodes();
       }
 
       /* Function for getting total numbers.
@@ -432,34 +432,34 @@ found in the LICENSE file.
        * To generate, open your console and run:
        * document.querySelector('wpt-results').generateTotalPassNumbers()
        */
-      generateTotalPassNumbers () {
-        const totals = {}
+      generateTotalPassNumbers() {
+        const totals = {};
 
         this.testRuns.forEach(testRun => {
-          const testRunID = this._platformID(testRun)
-          totals[testRunID] = {passing: 0, total: 0}
+          const testRunID = this._platformID(testRun);
+          totals[testRunID] = {passing: 0, total: 0};
 
           Object.keys(this.specDirs).forEach(specKey => {
-            totals[testRunID].passing += this.specDirs[specKey].results[testRun.results_url].passing
-            totals[testRunID].total += this.specDirs[specKey].results[testRun.results_url].total
-          })
-        })
+            totals[testRunID].passing += this.specDirs[specKey].results[testRun.results_url].passing;
+            totals[testRunID].total += this.specDirs[specKey].results[testRun.results_url].total;
+          });
+        });
 
         Object.keys(totals).forEach(key => {
-          totals[key].percent = (totals[key].passing / totals[key].total) * 100
-        })
+          totals[key].percent = (totals[key].passing / totals[key].total) * 100;
+        });
 
         console.table(Object.keys(totals).map(k => ({
           platformID: k,
           passing: totals[k].passing,
           total: totals[k].total,
           percent: totals[k].percent
-        })))
+        })));
 
-        console.log('JSON version:', JSON.stringify(totals))
+        console.log('JSON version:', JSON.stringify(totals));
       }
     }
 
-    window.customElements.define(WPTResults.is, WPTResults)
+    window.customElements.define(WPTResults.is, WPTResults);
   </script>
 </dom-module>

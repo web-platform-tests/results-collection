@@ -59,21 +59,21 @@ See models.go for more details.
 
   <script>
     class TestRun extends window.Polymer.Element {
-      static get is () { return 'test-run' }
+      static get is() { return 'test-run'; }
 
-      static get properties () {
+      static get properties() {
         return {
           testRun: {
             type: Object
           }
-        }
+        };
       }
 
-      dateFormat (dateStr) {
-        return String(new Date(dateStr)).match(/^\w+ (\w+ \w+ \w+)/)[1]
+      dateFormat(isoDate) {
+        return String(new Date(isoDate)).match(/^\w+ (\w+ \w+ \w+)/)[1];
       }
     }
 
-    window.customElements.define(TestRun.is, TestRun)
+    window.customElements.define(TestRun.is, TestRun);
   </script>
 </dom-module>

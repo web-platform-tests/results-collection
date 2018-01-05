@@ -1,10 +1,11 @@
 {
   "name": "wptdashboard",
   "devDependencies": {
-    "standard": "^10.0.3",
+    "babel-eslint": "^8.1.2",
+    "eslint": "^4.14.0",
     "eslint-plugin-html": "^3.2.2"
   },
   "scripts": {
-    "test": "standard --plugin html 'components/*.html'"
+    "test": "./node_modules/.bin/eslint --plugin html 'components/*.html' --fix"
   }
 }
