@@ -8,6 +8,7 @@ import logging
 import mock
 import os
 import shas
+import subprocess
 import unittest
 
 from datetime import date
@@ -19,6 +20,15 @@ wptd_dir = os.path.join(here, '../')
 class TestSHAFinder(unittest.TestCase):
 
     def test_nov_21st(self):
+        # Travis only pulls git history depth 50 by default
+        command = [
+            'git',
+            'fetch',
+            '--unshallow',
+        ]
+        abspath = os.path.abspath(wptd_dir)
+        subprocess.call(command, cwd=abspath)
+
         # ~5 commits that day, ensure first is result.
         logger = mock.Mock(logging.Logger)
 
