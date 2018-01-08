@@ -266,7 +266,7 @@ found in the LICENSE file.
 
       async _fetchResults (url) {
         const response = await window.fetch(url);
-        const testFiles = await response.json();
+        const testFiles = response.ok ? await response.json() : {};
         return {testFiles: testFiles, resultsURL: url};
       }
 
