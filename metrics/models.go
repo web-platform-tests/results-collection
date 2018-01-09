@@ -176,6 +176,10 @@ type TestRunStatus struct {
 	Status CompleteTestStatus
 }
 
+// Metadata capturing:
+// - When metric run was performed;
+// - What test runs are part of the metric run;
+// - Where the metric run results reside (a URL).
 type PassRateMetadata struct {
 	StartTime time.Time      `json:"start_time"`
 	EndTime   time.Time      `json:"end_time"`
@@ -183,6 +187,11 @@ type PassRateMetadata struct {
 	DataUrl   string         `json:"url"`
 }
 
+// Metadata capturing:
+// - When failures report was gathered;
+// - What test runs are part of the failures report;
+// - Where the failures report resids (a URL);
+// - What browser is described in the report.
 type FailuresMetadata struct {
 	StartTime   time.Time      `json:"start_time"`
 	EndTime     time.Time      `json:"end_time"`
