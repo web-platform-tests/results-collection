@@ -71,13 +71,13 @@ found in the LICENSE file.
       <template is="dom-repeat" items="{{ testResults }}" as="results">
         <tr data-boundary$="{{ results.month_boundary }}">
           <td>
-            <a href="/?sha={{ results.sha }}" title="{{ _computeDateTooltip(results.date) }}">{{ results.sha }}</a>
+            <a href="/?sha={{ results.sha }}" title="{{ computeDateTooltip(results.date) }}">{{ results.sha }}</a>
           </td>
           <template is="dom-repeat" items="{{ browsers }}" as="browser">
-            <td class$="{{ _runClass(results.runs, browser) }}"></td>
+            <td class$="{{ runClass(results.runs, browser) }}"></td>
           </template>
           <template is="dom-if" if="{{ results.month_boundary }}">
-            <td class="month">{{ _computeMonthName(results.date) }}</td>
+            <td class="month">{{ computeMonthName(results.date) }}</td>
           </template>
         </tr>
       </template>
@@ -108,7 +108,7 @@ found in the LICENSE file.
         };
       }
 
-      _computeMonthName(date) {
+      computeMonthName(date) {
         return [
           'January',
           'February',
@@ -125,7 +125,7 @@ found in the LICENSE file.
         ][date.getMonth()];
       }
 
-      _computeDateTooltip(date) {
+      computeDateTooltip(date) {
         return date && date.toDateString();
       }
 
@@ -134,32 +134,32 @@ found in the LICENSE file.
 
         let browsers = new Set();
         // Group the runs by their revision/SHA
-        let testRunsBySha = {};
-        this.testRuns
-          .forEach(results => {
-            browsers.add(results.browser_name);
-            if (!testRunsBySha[results.revision]) {
-              testRunsBySha[results.revision] = {};
-            }
-            if (!testRunsBySha[results.revision][results.browser_name]) {
-              testRunsBySha[results.revision][results.browser_name] = results;
-            }
-          });
+        let testRunsBySha = this.testRuns.reduce((accum, results) => {
+          browsers.add(results.browser_name);
+          if (!accum[results.revision]) {
+            accum[results.revision] = {};
+          }
+          if (!accum[results.revision][results.browser_name]) {
+            accum[results.revision][results.browser_name] = results;
+          }
+          return accum;
+        }, {});
 
         // We flatten into an array of objects so Polymer can deal with them.
         const firstRunTime = x => Object.values(x.runs)[0].created_at;
         const flattened = Object.entries(testRunsBySha)
-          .map(entry => ({ sha: entry[0], runs: entry[1] }))
+          .map(({0: sha, 1: runs}) => ({ sha, runs }))
           .sort((a, b) => firstRunTime(a) < firstRunTime(b) ? 1 : -1);
+
 
         // Append time (month) metadata.
         if (flattened.length > 1) {
           let previousMonth = -1;
-          for (var i = 0; i < flattened.length; i++) {
+          for (let i = 0; i < flattened.length; i++) {
             let current = new Date(firstRunTime(flattened[i]));
-            flattened[i]['date'] = current;
+            flattened[i].date = current;
             if (previousMonth !== current.getMonth()) {
-              flattened[i]['month_boundary'] = true;
+              flattened[i].month_boundary = true;
             }
             previousMonth = current.getMonth();
           }
@@ -168,7 +168,7 @@ found in the LICENSE file.
         this.browsers = Array.from(browsers).sort();
       }
 
-      _runClass(testRuns, browser) {
+      runClass(testRuns, browser) {
         let testRun = testRuns[browser];
         if (!testRun) {
           return 'missing';
