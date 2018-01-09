@@ -21,7 +21,7 @@ type Passes func(*metrics.CompleteTestStatus) bool
 // Passes functions
 //
 
-func OkAndUnknonwOrPasses(status *metrics.CompleteTestStatus) bool {
+func OkAndUnknownOrPasses(status *metrics.CompleteTestStatus) bool {
 	return status.Status == metrics.TestStatus_TEST_OK &&
 		(status.SubStatus ==
 			metrics.SubTestStatus_SUB_TEST_STATUS_UNKNOWN ||
