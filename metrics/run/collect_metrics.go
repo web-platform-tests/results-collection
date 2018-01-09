@@ -17,10 +17,13 @@ import (
 	"sync"
 	"time"
 
+	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/datastore"
 	gcs "cloud.google.com/go/storage"
 	"github.com/w3c/wptdashboard/metrics"
 	"github.com/w3c/wptdashboard/metrics/compute"
 	"github.com/w3c/wptdashboard/metrics/storage"
+	base "github.com/w3c/wptdashboard/shared"
 	"golang.org/x/net/context"
 )
 
@@ -29,30 +32,15 @@ var projectId *string
 var inputGcsBucket *string
 var outputGcsBucket *string
 var wptdHost *string
-
-func getRuns() metrics.TestRunSlice {
-	url := "https://" + *wptdHost + "/api/runs"
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		log.Fatal(errors.New("Bad response code from " + url + ": " +
-			strconv.Itoa(resp.StatusCode)))
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var runs metrics.TestRunSlice
-	if err := json.Unmarshal(body, &runs); err != nil {
-		log.Fatal(err)
-	}
-	return runs
-}
+var outputBQMetadataDataset *string
+var outputBQDataDataset *string
+var outputBQPassRateTable *string
+var outputBQPassRateMetadataTable *string
+var outputBQFailuresTable *string
+var outputBQFailuresMetadataTable *string
 
 func init() {
+	unixNow := time.Now().Unix()
 	wptDataPath = flag.String("wpt_data_path", os.Getenv("HOME")+
 		"/wpt-data", "Path to data directory for local data copied "+
 		"from Google Cloud Storage")
@@ -62,6 +50,24 @@ func init() {
 		"Google Cloud Storage bucket where test results are stored")
 	outputGcsBucket = flag.String("output_gcs_bucket", "wptd-metrics",
 		"Google Cloud Storage bucket where metrics are stored")
+	outputBQMetadataDataset = flag.String("output_bq_metadata_dataset",
+		fmt.Sprintf("wptd_metrics_%d", unixNow),
+		"BigQuery dataset where metrics metadata are stored")
+	outputBQDataDataset = flag.String("output_bq_data_dataset",
+		fmt.Sprintf("wptd_metrics_%d", unixNow),
+		"BigQuery dataset where metrics data are stored")
+	outputBQPassRateTable = flag.String("output_bq_pass_rate_table",
+		fmt.Sprintf("PassRates_%d", unixNow),
+		"BigQuery table where pass rate metrics are stored")
+	outputBQPassRateMetadataTable = flag.String("output_bq_pass_rate_metadata_table",
+		fmt.Sprintf("PassRateMetadata_%d", unixNow),
+		"BigQuery table where pass rate metrics are stored")
+	outputBQFailuresTable = flag.String("output_bq_failures_table",
+		fmt.Sprintf("Failures_%d", unixNow),
+		"BigQuery table where test failure lists are stored")
+	outputBQFailuresMetadataTable = flag.String("output_bq_failures_metadata_table",
+		fmt.Sprintf("FailuresMetadata_%d", unixNow),
+		"BigQuery table where pass rate metrics are stored")
 	wptdHost = flag.String("wptd_host", "wpt.fyi",
 		"Hostname of endpoint that serves WPT Dashboard data API")
 }
@@ -85,11 +91,10 @@ func main() {
 		log.Fatal(err)
 	}
 	inputBucket := gcsClient.Bucket(*inputGcsBucket)
-	inputCtx := storage.Context{
+	inputCtx := storage.GCSDatastoreContext{
 		Context: ctx,
-		Client:  gcsClient,
-		Bucket: &storage.Bucket{
-			Name:   inputGcsBucket,
+		Bucket: storage.Bucket{
+			Name:   *inputGcsBucket,
 			Handle: inputBucket,
 		},
 	}
@@ -138,89 +143,199 @@ func main() {
 	wg.Wait()
 
 	log.Println("Computed metrics")
-	log.Printf("Writing metrics to Google Cloud Storage bucket: %s\n",
-		*outputGcsBucket)
+	log.Println("Uploading metrics")
 
 	outputBucket := gcsClient.Bucket(*outputGcsBucket)
-	outputCtx := storage.Context{
-		Context: ctx,
-		Client:  gcsClient,
-		Bucket: &storage.Bucket{
-			Name:   outputGcsBucket,
-			Handle: outputBucket,
+	datastoreClient, err := datastore.NewClient(ctx, *projectId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bigqueryClient, err := bigquery.NewClient(ctx, *projectId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	outputters := [2]storage.Outputter{
+		storage.GCSDatastoreContext{
+			Context: ctx,
+			Bucket: storage.Bucket{
+				Name:   *outputGcsBucket,
+				Handle: outputBucket,
+			},
+			Client: datastoreClient,
+		},
+		storage.BQContext{
+			Context: ctx,
+			Client:  bigqueryClient,
 		},
 	}
-	metricsRun := metrics.MetricsRun{
-		StartTime: &readStartTime,
-		EndTime:   &readEndTime,
-		TestRuns:  &runs,
+
+	gcsDir := fmt.Sprintf("%d-%d", readStartTime.Unix(),
+		readEndTime.Unix())
+	passRatesBasename := "pass-rates"
+	passRateGCSPath := fmt.Sprintf("%s/%s.json.gz", gcsDir,
+		passRatesBasename)
+	passRatesUrl := fmt.Sprintf(
+		"https://storage.cloud.google.com/%s/%s",
+		*outputGcsBucket,
+		passRateGCSPath)
+	failuresBasenamef := func(browserName string) string {
+		return fmt.Sprintf("%s-failures", browserName)
+	}
+	failuresGCSPathf := func(browserName string) string {
+		return fmt.Sprintf("%s/%s.json.gz", gcsDir,
+			failuresBasenamef(browserName))
+	}
+	failuresUrlf := func(browserName string) string {
+		return fmt.Sprintf(
+			"https://storage.cloud.google.com/%s/%s",
+			*outputGcsBucket,
+			failuresGCSPathf(browserName))
+	}
+	passRateMetadata := metrics.PassRateMetadata{
+		StartTime: readStartTime,
+		EndTime:   readEndTime,
+		TestRuns:  runs,
+		DataUrl:   passRatesUrl,
 	}
 
-	outputDir := fmt.Sprintf("%d-%d", metricsRun.StartTime.Unix(),
-		metricsRun.EndTime.Unix())
-	outputErrs := make(chan error)
-	log.Printf("Writing to bucket directory %s\n", outputDir)
-	wg.Add(2 + len(failuresMetrics))
-	go func() {
-		defer wg.Done()
-		objName := fmt.Sprintf("%s/pass-rates.json.gz", outputDir)
-		passRateSummary := metrics.MetricsRunData{
-			MetricsRun: &metricsRun,
-			Data:       &passRateMetric,
+	wg.Add((1 + len(failuresMetrics)) * len(outputters))
+	processUploadErrors := func(errs []error) {
+		for _, err := range errs {
+			log.Printf("Upload error: %v", err)
 		}
-		err := storage.UploadMetricsRunData(&outputCtx, &objName,
-			&passRateSummary)
-		if err != nil {
-			log.Println(err)
-			outputErrs <- err
+		if len(errs) > 0 {
+			log.Fatal(err)
 		}
-	}()
-	go func() {
-		defer wg.Done()
-		objName := fmt.Sprintf("%d-%d/test-counts.json.gz",
-			metricsRun.StartTime.Unix(),
-			metricsRun.EndTime.Unix())
-		totalsSummary := metrics.MetricsRunData{
-			MetricsRun: &metricsRun,
-			Data:       &totals,
-		}
-		err := storage.UploadMetricsRunData(&outputCtx, &objName,
-			&totalsSummary)
-		if err != nil {
-			log.Println(err)
-			outputErrs <- err
-		}
-	}()
-	for browserName, values := range failuresMetrics {
-		go func(browserName string, values [][]*metrics.TestId) {
+	}
+	for _, outputter := range outputters {
+		go func(outputter storage.Outputter) {
 			defer wg.Done()
-			objName := fmt.Sprintf("%d-%d/failures-%s.json.gz",
-				metricsRun.StartTime.Unix(),
-				metricsRun.EndTime.Unix(),
-				browserName)
-			failureSummary := metrics.MetricsRunData{
-				MetricsRun: &metricsRun,
-				Data:       &values,
+			outputId := storage.OutputId{
+				MetadataLocation: storage.OutputLocation{
+					BQDatasetName: *outputBQMetadataDataset,
+					BQTableName:   *outputBQPassRateMetadataTable,
+				},
+				DataLocation: storage.OutputLocation{
+					GCSObjectPath: passRateGCSPath,
+					BQDatasetName: *outputBQDataDataset,
+					BQTableName:   *outputBQPassRateTable,
+				},
 			}
-			err := storage.UploadMetricsRunData(&outputCtx,
-				&objName, &failureSummary)
-			if err != nil {
-				log.Println(err)
-				outputErrs <- err
-			}
-		}(browserName, values)
+			_, _, errs := uploadTotalsAndPassRateMetric(
+				&passRateMetadata, outputter, outputId, totals,
+				passRateMetric)
+			processUploadErrors(errs)
+		}(outputter)
+		for browserName, failuresMetric := range failuresMetrics {
+			go func(browserName string, failuresMetric [][]*metrics.TestId, outputter storage.Outputter) {
+				defer wg.Done()
+				failuresMetadata := metrics.FailuresMetadata{
+					StartTime:   readStartTime,
+					EndTime:     readEndTime,
+					TestRuns:    runs,
+					DataUrl:     failuresUrlf(browserName),
+					BrowserName: browserName,
+				}
+				outputId := storage.OutputId{
+					MetadataLocation: storage.OutputLocation{
+						BQDatasetName: *outputBQMetadataDataset,
+						BQTableName:   *outputBQFailuresMetadataTable,
+					},
+					DataLocation: storage.OutputLocation{
+						GCSObjectPath: gcsDir +
+							"/" +
+							failuresBasenamef(browserName) +
+							".json.gz",
+						BQDatasetName: *outputBQDataDataset,
+						BQTableName:   *outputBQFailuresTable,
+					},
+				}
+				_, _, errs := uploadFailureLists(&failuresMetadata,
+					outputter, outputId, browserName,
+					failuresMetric)
+				processUploadErrors(errs)
+			}(browserName, failuresMetric, outputter)
+		}
 	}
 	wg.Wait()
 
-	close(outputErrs)
-	outputErrsSlice := make([]error, 0)
-	for err := range outputErrs {
-		outputErrsSlice = append(outputErrsSlice, err)
-	}
-	if len(outputErrsSlice) > 0 {
-		log.Fatal(outputErrsSlice)
-	}
+	log.Printf("Uploaded metrics")
+}
 
-	log.Printf("Wrote metrics to Google Cloud Storage bucket: %s\n",
-		*outputGcsBucket)
+func getRuns() []base.TestRun {
+	url := "https://" + *wptdHost + "/api/runs"
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatal(errors.New("Bad response code from " + url + ": " +
+			strconv.Itoa(resp.StatusCode)))
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var runs []base.TestRun
+	if err := json.Unmarshal(body, &runs); err != nil {
+		log.Fatal(err)
+	}
+	return runs
+}
+
+func failureListsToRows(browserName string, failureLists [][]*metrics.TestId) (
+	rows []interface{}) {
+	type FailureListsRow struct {
+		BrowserName      string         `json:"browser_name"`
+		NumOtherFailures int            `json:"num_other_failures"`
+		Tests            metrics.TestId `json:"test"`
+	}
+	numRows := 0
+	for _, failureList := range failureLists {
+		numRows += len(failureList)
+	}
+	rows = make([]interface{}, 0, numRows)
+	for i, failuresPtrList := range failureLists {
+		for _, failure := range failuresPtrList {
+			rows = append(rows, FailureListsRow{
+				browserName,
+				i,
+				*failure,
+			})
+		}
+	}
+	return rows
+}
+
+func totalsAndPassRateMetricToRows(totals map[string]int,
+	passRateMetric map[string][]int) (
+	rows []interface{}) {
+	type PassRateMetricRow struct {
+		Dir       string `json:"dir"`
+		PassRates []int  `json:"pass_rates"`
+		Total     int    `json:"total"`
+	}
+	rows = make([]interface{}, 0, len(passRateMetric))
+	for dir, passRates := range passRateMetric {
+		rows = append(rows, PassRateMetricRow{dir, passRates,
+			totals[dir]})
+	}
+	return rows
+}
+
+func uploadTotalsAndPassRateMetric(metricsRun *metrics.PassRateMetadata,
+	outputter storage.Outputter, id storage.OutputId,
+	totals map[string]int, passRateMetric map[string][]int) (
+	interface{}, []interface{}, []error) {
+	rows := totalsAndPassRateMetricToRows(totals, passRateMetric)
+	return outputter.Output(id, metricsRun, rows)
+}
+
+func uploadFailureLists(metricsRun *metrics.FailuresMetadata,
+	outputter storage.Outputter, id storage.OutputId,
+	browserName string, failureLists [][]*metrics.TestId) (
+	interface{}, []interface{}, []error) {
+	rows := failureListsToRows(browserName, failureLists)
+	return outputter.Output(id, metricsRun, rows)
 }

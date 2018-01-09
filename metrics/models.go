@@ -176,15 +176,24 @@ type TestRunStatus struct {
 	Status CompleteTestStatus
 }
 
-type MetricsRun struct {
-	StartTime *time.Time    `json:"start_time"`
-	EndTime   *time.Time    `json:"end_time"`
-	TestRuns  *TestRunSlice `json:"test_runs"`
+type PassRateMetadata struct {
+	StartTime time.Time      `json:"start_time"`
+	EndTime   time.Time      `json:"end_time"`
+	TestRuns  []base.TestRun `json:"test_runs"`
+	DataUrl   string         `json:"url"`
+}
+
+type FailuresMetadata struct {
+	StartTime   time.Time      `json:"start_time"`
+	EndTime     time.Time      `json:"end_time"`
+	TestRuns    []base.TestRun `json:"test_runs"`
+	DataUrl     string         `json:"url"`
+	BrowserName string         `json:"browser_name"`
 }
 
 // Output type for metrics: Include runs as metadata, and arbitrary content
 // as data.
 type MetricsRunData struct {
-	MetricsRun *MetricsRun `json:"metrics_run"`
-	Data       interface{} `json:"data"`
+	Metadata interface{} `json:"metadata"`
+	Data     interface{} `json:"data"`
 }
