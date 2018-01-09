@@ -94,10 +94,10 @@ found in the LICENSE file.
         class="query"
         placeholder="Search test files, like cors/allow-headers.htm">
       <div class="path">
-        <a href="/" on-click="_navigate">WPT</a>
-        <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
+        <a href="/" on-click="navigate">WPT</a>
+        <template is="dom-repeat" items="{{ splitPathIntoLinkedParts(path) }}" as="part">
           <span class="path-separator">/</span>
-          <a href="{{ part.path }}" on-click="_navigate">{{ part.name }}</a>
+          <a href="{{ part.path }}" on-click="navigate">{{ part.name }}</a>
         </template>
 
         <template is="dom-if" if="{{ !isLatest }}">
@@ -144,19 +144,19 @@ found in the LICENSE file.
             <tr>
               <td>
                 <template is="dom-if" if="{{ node.isDir }}">
-                  <b><a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a></b>
+                  <b><a href="{{ node.path }}" on-click="navigate">{{ relativePath(node.path) }}</a></b>
                 </template>
                 <template is="dom-if" if="{{ !node.isDir }}">
-                  <a href="{{ node.path }}" on-click="_navigate">{{ _relPath(node.path) }}</a>
+                  <a href="{{ node.path }}" on-click="navigate">{{ relativePath(node.path) }}</a>
                 </template>
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
-                <td style="{{ _testResultStyle(node, testRun) }}">
-                  <template is="dom-if" if="{{ _hasResults(node, testRun) }}">
-                    {{ _resultForNode(node, testRun, 'passing') }}
+                <td style="{{ testResultStyle(node, testRun) }}">
+                  <template is="dom-if" if="{{ hasResults(node, testRun) }}">
+                    {{ getNodeResultDataByPropertyName(node, testRun, 'passing') }}
                     /
-                    {{ _resultForNode(node, testRun, 'total') }}
+                    {{ getNodeResultDataByPropertyName(node, testRun, 'total') }}
                   </template>
                 </td>
               </template>
@@ -180,14 +180,14 @@ found in the LICENSE file.
           query: {
             type: String,
             value: '',
-            observer: '_queryChanged'
+            observer: 'refreshDisplayedNodes'
           },
           sha: {
             type: String
           },
           isLatest: {
             type: Boolean,
-            computed: '_computeIsLatest(sha)'
+            computed: 'computeIsLatest(sha)'
           },
           path: {
             type: String,
@@ -195,7 +195,7 @@ found in the LICENSE file.
           },
           pathIsATestFile: {
             type: Boolean,
-            computed: '_computePathIsATestFile(path)'
+            computed: 'computePathIsATestFile(path)'
           },
           testFiles: {
             type: Object,
@@ -208,160 +208,146 @@ found in the LICENSE file.
         };
       }
 
-      async connectedCallback() {
-        await super.connectedCallback();
-
-        window.onpopstate = () => {
-          this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1');
-          this._refreshDisplayedNodes();
-        };
-
-        // Fetch the results JSON for the TestRuns
-        const testFileResults = await Promise.all(
-          this.testRuns.map(async json => this._fetchResults(json.results_url))
-        );
-
-        testFileResults.forEach(result => {
-          const resultsURL = result.resultsURL;
-
-          Object.keys(result.testFiles).forEach(testFileName => {
-            if (!(testFileName in this.testFiles)) {
-              this.testFiles[testFileName] = {};
-            }
-            this.testFiles[testFileName][resultsURL] = result.testFiles[testFileName];
-          });
-        });
-
-        this._refreshDisplayedNodes();
-      }
-
-      _computeIsLatest (sha) {
+      computeIsLatest(sha) {
         return !sha || sha === 'latest';
       }
 
-      _computePathIsATestFile (path) {
+      computePathIsATestFile(path) {
         return path.endsWith('.html') || path.endsWith('.htm') ||
                path.endsWith('.py') || path.endsWith('.svg') ||
                path.endsWith('.xhtml') || path.endsWith('.xht') ||
                path.endsWith('.xml');
       }
 
-      _nodeSort (a, b) {
-        if (a.path < b.path) return -1;
-        if (a.path > b.path) return 1;
+      async connectedCallback() {
+        await super.connectedCallback();
+
+        window.onpopstate = () => {
+          this.path = window.location.pathname.replace(/(.+)(\/)$/, '$1');
+          this.refreshDisplayedNodes();
+        };
+
+        // Fetch the results JSON for the TestRuns
+        const testFileResults = await Promise.all(
+          this.testRuns.map(async json => this.fetchResults(json.results_url))
+        );
+
+        testFileResults.forEach(result => {
+          const {testFiles, resultsURL} = result;
+
+          Object.keys(testFiles).forEach(testFileName => {
+            if (!this.testFiles[testFileName]) {
+              this.testFiles[testFileName] = {};
+            }
+            this.testFiles[testFileName][resultsURL] = testFiles[testFileName];
+          });
+        });
+
+        this.refreshDisplayedNodes();
+      }
+
+      async fetchResults(resultsURL) {
+        const response = await window.fetch(resultsURL);
+        const testFiles = response.ok ? await response.json() : {};
+        return {testFiles, resultsURL};
+      }
+
+      nodeSort(a, b) {
+        if (a.path < b.path) {
+          return -1;
+        }
+        if (a.path > b.path) {
+          return 1;
+        }
         return 0;
       }
 
-      _resultWithRunIndex (results, runIndex) {
-        for (var key in results) {
-          if (results[key].runIndex === runIndex) {
-            return results[key];
-          }
-        }
-      }
-
-      _specFromTestPath (path) {
-        return path.split('/')[1];
-      }
-
-      async _fetchResults (url) {
-        const response = await window.fetch(url);
-        const testFiles = response.ok ? await response.json() : {};
-        return {testFiles: testFiles, resultsURL: url};
-      }
-
-      _queryChanged() {
-        this._refreshDisplayedNodes();
-      }
-
-      _refreshDisplayedNodes() {
+      refreshDisplayedNodes() {
         /* Recomputes the list of displayed directories and test files. */
         const displayedNodeMap = new Map();
-        const currentPathParts = this._splitIntoLinkedParts(this.path);
+        const currentPathParts = this.splitPathIntoLinkedParts(this.path);
 
-        const updateResults = (testFileName, dirPath, isDir) => {
-          if (!displayedNodeMap.has(dirPath)) {
-            displayedNodeMap.set(dirPath, {isDir: isDir, results: {}});
+        const updateResults = ({testFileName, path, isDir}) => {
+          if (!displayedNodeMap.has(path)) {
+            displayedNodeMap.set(path, {isDir, results: {}});
           }
           let results = this.testFiles[testFileName];
           Object.keys(results).forEach(resultURL => {
-            if (!(resultURL in displayedNodeMap.get(dirPath).results)) {
-              displayedNodeMap.get(dirPath).results[resultURL] = {passing: 0, total: 0};
+            let displayedNode = displayedNodeMap.get(path);
+
+            if (!displayedNode.results[resultURL]) {
+              displayedNode.results[resultURL] = {passing: 0, total: 0};
             }
-            displayedNodeMap.get(dirPath).results[resultURL].passing += results[resultURL][0];
-            displayedNodeMap.get(dirPath).results[resultURL].total += results[resultURL][1];
+            displayedNode.results[resultURL].passing += results[resultURL][0];
+            displayedNode.results[resultURL].total += results[resultURL][1];
           });
         };
 
         Object.keys(this.testFiles).forEach(testFileName => {
-          if (this.path !== '/' && !testFileName.startsWith(this.path + '/')) {
+          if (this.path !== '/' && !testFileName.startsWith(`${this.path}/`)) {
             return;
           }
 
           if (this.query.length > 0) {
-            const matchesQuery = testFileName.toLowerCase().includes(this.query.toLowerCase());
-            if (!matchesQuery) {
+            if (!testFileName.toLowerCase().includes(this.query.toLowerCase())) {
               return;
             }
           }
 
-          let parts = this._splitIntoLinkedParts(testFileName);
+          let parts = this.splitPathIntoLinkedParts(testFileName);
+          let isDir = true;
 
           // If at the top-level, add all directories
           if (this.path === '/' && parts.length === 2) {
-            let dirParts = [parts[0]];
-            let dirPath = dirParts[dirParts.length - 1].path;
-            updateResults(testFileName, dirPath, true);
+            let path = parts[0].path;
+
+            updateResults({testFileName, path, isDir});
 
             // Add test files in current directory
           } else if (parts.length === currentPathParts.length + 1) {
             let path = parts[parts.length - 1].path;
-            updateResults(testFileName, path, false);
+
+            updateResults({testFileName, path, isDir: false});
 
             // Add subdirectories in current directory
           } else if (parts.length > currentPathParts.length + 1) {
-            let dirParts;
-            if (this.path === '/') {
-              dirParts = [parts[0]];
-            } else {
-              dirParts = parts.slice(0, currentPathParts.length + 1);
-            }
-            let dirPath = dirParts[dirParts.length - 1].path;
-            updateResults(testFileName, dirPath, true);
+            let path = this.path === '/' ?
+              parts[0].path :
+              parts.slice(0, currentPathParts.length + 1)[0].path;
+
+            updateResults({testFileName, path, isDir});
           }
         });
 
-        let displayedNodes = Array.from(displayedNodeMap.keys()).map(key => (
-          {path: key, isDir: displayedNodeMap.get(key).isDir, results: displayedNodeMap.get(key).results}
-        ));
-        displayedNodes.sort(this._nodeSort);
-        this.displayedNodes = displayedNodes;
+        this.displayedNodes = Array.from(displayedNodeMap.keys()).map(key => ({
+          path: key,
+          isDir: displayedNodeMap.get(key).isDir,
+          results: displayedNodeMap.get(key).results
+        }));
+
+        this.displayedNodes.sort(this.nodeSort);
       }
 
-      _platformID (testRun) {
-        return `${testRun.browser_name}-${testRun.browser_version}-${testRun.os_name}-${testRun.os_version}`;
+      platformID({browser_name, browser_version, os_name, os_version}) {
+        return `${browser_name}-${browser_version}-${os_name}-${os_version}`;
       }
 
-      _navigate (event) {
+      navigate(event) {
         event.preventDefault();
         let path = event.target.pathname.replace(/(.+)(\/)$/, '$1');
         if (path === this.path) {
           return;
         }
         this.path = path;
-        this._refreshDisplayedNodes();
+        this.refreshDisplayedNodes();
         if (this.sha && this.sha !== '' && this.sha !== 'latest') {
-          path += path.indexOf('?') < 0
-            ? '?'
-            : '&';
+          path += !path.startsWith('?') ? '?' : '&';
           path += 'sha=' + this.sha;
         }
-        var diffRuns = this.testRuns.filter(r => r.revision == 'diff');
+        let diffRuns = this.testRuns.filter(r => r.revision == 'diff');
         if (diffRuns.length > 0) {
-          path += path.indexOf('?') < 0
-            ? '?'
-            : '&';
           let [before, after] = this.testRuns;
+          path += !path.startsWith('?') ? '?' : '&';
           path += `before=${before.browser_name}@${before.revision}`;
           path += `&after=${after.browser_name}@${after.revision}`;
         }
@@ -373,19 +359,18 @@ found in the LICENSE file.
         }
       }
 
-      _splitIntoLinkedParts (path) {
-        const parts = path.split('/').slice(1);
-        let pathSoFar = '';
-        return parts.map(part => {
-          pathSoFar += '/' + part;
+      splitPathIntoLinkedParts(input) {
+        const parts = input.split('/').slice(1);
+        let path = '';
+        return parts.map(name => {
+          path += `/${name}`;
           return {
-            name: part,
-            path: pathSoFar
+            name, path
           };
         });
       }
 
-      _testResultStyle (node, testRun) {
+      testResultStyle(node, testRun) {
         if (!node) return;
         if (!testRun) return;
         if (!(testRun.results_url in node.results)) return;
@@ -408,23 +393,18 @@ found in the LICENSE file.
         }
       }
 
-      _relPath (path) {
+      relativePath(path) {
         return path.replace(this.path + '/', '');
       }
 
-      _hasResults (node, testRun) {
-        return typeof (node.results[testRun.results_url]) !== 'undefined';
+      hasResults(node, testRun) {
+        return typeof node.results[testRun.results_url] !== 'undefined';
       }
 
-      _resultForNode (node, testRun, property) {
+      getNodeResultDataByPropertyName(node, testRun, property) {
         if (testRun.results_url in node.results) {
           return node.results[testRun.results_url][property];
         }
-      }
-
-      _clearSearch() {
-        this.query = '';
-        this._refreshDisplayedNodes();
       }
 
       /* Function for getting total numbers.
@@ -436,12 +416,14 @@ found in the LICENSE file.
         const totals = {};
 
         this.testRuns.forEach(testRun => {
-          const testRunID = this._platformID(testRun);
+          const testRunID = this.platformID(testRun);
           totals[testRunID] = {passing: 0, total: 0};
 
           Object.keys(this.specDirs).forEach(specKey => {
-            totals[testRunID].passing += this.specDirs[specKey].results[testRun.results_url].passing;
-            totals[testRunID].total += this.specDirs[specKey].results[testRun.results_url].total;
+            let { passing, total } = this.specDirs[specKey].results[testRun.results_url];
+
+            totals[testRunID].passing += passing;
+            totals[testRunID].total += total;
           });
         });
 
