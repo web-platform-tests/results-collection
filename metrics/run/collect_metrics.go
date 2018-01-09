@@ -204,7 +204,7 @@ func main() {
 			log.Printf("Upload error: %v", err)
 		}
 		if len(errs) > 0 {
-			log.Fatal(err)
+			log.Fatal(errs[len(errs)-1])
 		}
 	}
 	for _, outputter := range outputters {
