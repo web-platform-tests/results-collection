@@ -5,7 +5,9 @@
 package webapp
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -27,39 +29,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var testRunSources []string
-
-	specBefore := r.URL.Query().Get("before")
-	specAfter := r.URL.Query().Get("after")
-	if specBefore != "" || specAfter != "" {
-		if specBefore == "" {
-			http.Error(w, "after param provided, but before param missing", http.StatusBadRequest)
-			return
-		} else if specAfter == "" {
-			http.Error(w, "before param provided, but after param missing", http.StatusBadRequest)
-			return
-		}
-		var before platformAtRevision
-		var after platformAtRevision
-		if before, err = parsePlatformAtRevisionSpec(specBefore); err != nil {
-			http.Error(w, "invalid before param", http.StatusBadRequest)
-			return
-		} else if after, err = parsePlatformAtRevisionSpec(specAfter); err != nil {
-			http.Error(w, "invalid after param", http.StatusBadRequest)
-			return
-		}
-		const singleRunURL = `/api/run?sha=%s&browser=%s`
-		testRunSources = []string{
-			fmt.Sprintf(singleRunURL, before.Revision, before.Platform),
-			fmt.Sprintf(singleRunURL, after.Revision, after.Platform),
-		}
-	} else {
-		const sourceURL = `/api/runs?sha=%s`
-		testRunSources = []string{fmt.Sprintf(sourceURL, runSHA)}
-	}
-
-	testRunSourcesBytes, err := json.Marshal(testRunSources)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var testRuns []models.TestRun
+	if testRunSources, testRuns, err = getTestRunsAndSources(r, runSHA); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -68,20 +40,23 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		TestRunSources string
 		SHA            string
 	}{
-		TestRunSources: string(testRunSourcesBytes),
-		SHA:            runSHA,
+		SHA: runSHA,
 	}
 
-	if specBefore != "" || specAfter != "" {
-		filter := "ACDU" // Added, Changed, Deleted, Unchanged
-		const diffRunURL = `/api/diff?before=%s&after=%s&filter=%s`
-		diffRun := models.TestRun{
-			Revision:    "diff",
-			BrowserName: "diff",
-			ResultsURL:  fmt.Sprintf(diffRunURL, specBefore, specAfter, filter),
-		}
+	// Run source URLs
+	if testRunSources != nil && len(testRunSources) > 0 {
 		var marshaled []byte
-		if marshaled, err = json.Marshal([]models.TestRun{diffRun}); err != nil {
+		if marshaled, err = json.Marshal(testRunSources); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data.TestRunSources = string(marshaled)
+	}
+
+	// Runs by base64-encoded param or spec param.
+	if testRuns != nil && len(testRuns) > 0 {
+		var marshaled []byte
+		if marshaled, err = json.Marshal(testRuns); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -92,4 +67,69 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+// getTestRunsAndSources gets the arrays of source urls and placeholder-TestRun-models from the parameters for the
+// current request. When diffing, 'before' and 'after' parameters can be test-run specs (i.e. [platform]@[sha]), or
+// base64 encoded TestRun JSON blobs for the results summaries.
+func getTestRunsAndSources(r *http.Request, runSHA string) (testRunSources []string, testRuns []models.TestRun, err error) {
+	before := r.URL.Query().Get("before")
+	after := r.URL.Query().Get("after")
+	filter := r.URL.Query().Get("filter")
+	if before != "" || after != "" {
+		if before == "" {
+			return nil, nil, errors.New("after param provided, but before param missing")
+		} else if after == "" {
+			return nil, nil, errors.New("before param provided, but after param missing")
+		}
+
+		const singleRunURL = `/api/run?sha=%s&browser=%s`
+
+		if beforeDecoded, err := base64.URLEncoding.DecodeString(before); err == nil {
+			var run models.TestRun
+			if err = json.Unmarshal([]byte(beforeDecoded), &run); err != nil {
+				return nil, nil, err
+			}
+			testRuns = append(testRuns, run)
+		} else {
+			var beforeSpec platformAtRevision
+			if beforeSpec, err = parsePlatformAtRevisionSpec(before); err != nil {
+				return nil, nil, errors.New("invalid before param")
+			}
+			testRunSources = append(testRunSources, fmt.Sprintf(singleRunURL, beforeSpec.Revision, beforeSpec.Platform))
+		}
+
+		if afterDecoded, err := base64.URLEncoding.DecodeString(after); err == nil {
+			var run models.TestRun
+			if err = json.Unmarshal([]byte(afterDecoded), &run); err != nil {
+				return nil, nil, err
+			}
+			testRuns = append(testRuns, run)
+		} else {
+			var afterSpec platformAtRevision
+			if afterSpec, err = parsePlatformAtRevisionSpec(after); err != nil {
+				return nil, nil, errors.New("invalid after param")
+			}
+			testRunSources = append(testRunSources, fmt.Sprintf(singleRunURL, afterSpec.Revision, afterSpec.Platform))
+		}
+	} else {
+		const sourceURL = `/api/runs?sha=%s`
+		testRunSources = []string{fmt.Sprintf(sourceURL, runSHA)}
+	}
+
+	if before != "" || after != "" {
+		const diffRunURL = `/api/diff?before=%s&after=%s`
+		resultsURL := fmt.Sprintf(diffRunURL, before, after)
+		if filter == "" {
+			filter = "ACDU" // Added, Changed, Deleted, Unchanged
+		}
+		resultsURL += "&filter=" + filter
+		diffRun := models.TestRun{
+			Revision:    "diff",
+			BrowserName: "diff",
+			ResultsURL:  resultsURL,
+		}
+		testRuns = append(testRuns, diffRun)
+	}
+	return testRunSources, testRuns, nil
 }
