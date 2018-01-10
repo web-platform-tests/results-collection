@@ -19,6 +19,12 @@ func init() {
 	// About wpt.fyi
 	http.HandleFunc("/about", aboutHandler)
 
+	// Test run results, viewed by pass-rate across the browsers
+	http.HandleFunc("/interop/", interopHandler)
+
+	// Lists of test run results which have poor interoperability
+	http.HandleFunc("/interop/anomalies", anomalyHandler)
+
 	// List of all test runs, by SHA[0:10]
 	http.HandleFunc("/test-runs", testRunsHandler)
 
