@@ -94,44 +94,34 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Setting up WPT checkout')
 
-    wpt_setup_commands = [
-        ['git', 'reset', '--hard', 'HEAD'],  # For wpt.patch
-        ['git', 'checkout', 'master'],
-        ['git', 'pull'],
-        ['./wpt', 'manifest', '--work'],
-    ]
-    for command in wpt_setup_commands:
-        return_code = subprocess.check_call(command, cwd=config['wpt_path'])
-        assert return_code == 0, (
-            'Got non-0 return code: '
-            '%d from command %s' % (return_code, command))
+    wpt_sha = setup_wpt(args, platform, config, logger)
 
-    patch_wpt(config, platform)
-
-    wpt_path = config['wpt_path']
-    sha_finder = shas.SHAFinder(logger)
-    WPT_SHA = (sha_finder.get_todays_sha(wpt_path)
-               or sha_finder.get_head_sha(wpt_path))
-    print('Current WPT SHA: %s' % WPT_SHA)
+    print('Current WPT SHA: %s' % wpt_sha)
 
     return_code = subprocess.check_call(
-        ['git', 'checkout', WPT_SHA], cwd=config['wpt_path'])
+        ['git', 'checkout', wpt_sha], cwd=config['wpt_path'])
     assert return_code == 0, (
         'Got non-0 return code: '
         '%d from command %s' % (return_code, command))
 
-    SHORT_SHA = WPT_SHA[0:10]
+    short_wpt_sha = wpt_sha[0:10]
 
-    LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (
-        config['build_path'], SHORT_SHA, platform_id
+    abs_report_log_path = "%s/wptd-%s-%s-report.log" % (
+        config['build_path'], short_wpt_sha, platform_id
     )
-    SUMMARY_PATH = '%s/%s-summary.json.gz' % (SHORT_SHA, platform_id)
-    LOCAL_SUMMARY_GZ_FILEPATH = "%s/%s" % (config['build_path'], SUMMARY_PATH)
-    GS_RESULTS_FILEPATH_BASE = "%s/%s/%s" % (
-        config['build_path'], SHORT_SHA, platform_id
+
+    sha_summary_gz_path = '%s/%s-summary.json.gz' % (
+        short_wpt_sha, platform_id
     )
-    GS_HTTP_RESULTS_URL = 'https://storage.googleapis.com/%s/%s' % (
-        config['gs_results_bucket'], SUMMARY_PATH
+    abs_sha_summary_gz_path = "%s/%s" % (
+        config['build_path'], sha_summary_gz_path
+    )
+
+    gs_results_base_path = "%s/%s/%s" % (
+        config['build_path'], short_wpt_sha, platform_id
+    )
+    gs_results_url = 'https://storage.googleapis.com/%s/%s' % (
+        config['gs_results_bucket'], sha_summary_gz_path
     )
 
     print('==================================================')
@@ -175,7 +165,7 @@ def main(platform_id, platform, args, config):
             command.extend(['--setpref', 'media.navigator.streams.fake=true'])
 
     command.append('--log-mach=-')
-    command.extend(['--log-wptreport', LOCAL_REPORT_FILEPATH])
+    command.extend(['--log-wptreport', abs_report_log_path])
     command.append('--install-fonts')
 
     return_code = subprocess.call(command, cwd=config['wpt_path'])
@@ -189,7 +179,7 @@ def main(platform_id, platform, args, config):
         firefox_path = '%s/_venv/firefox/firefox' % config['wpt_path']
         verify_browser_binary_version(platform, firefox_path)
 
-    with open(LOCAL_REPORT_FILEPATH) as f:
+    with open(abs_report_log_path) as f:
         report = json.load(f)
 
     assert len(report['results']) > 0, (
@@ -199,14 +189,14 @@ def main(platform_id, platform, args, config):
 
     print('==================================================')
     print('Writing summary.json.gz to local filesystem')
-    write_gzip_json(LOCAL_SUMMARY_GZ_FILEPATH, summary)
-    print('Wrote file %s' % LOCAL_SUMMARY_GZ_FILEPATH)
+    write_gzip_json(abs_sha_summary_gz_path, summary)
+    print('Wrote file %s' % abs_sha_summary_gz_path)
 
     print('==================================================')
     print('Writing individual result files to local filesystem')
     for result in report['results']:
         test_file = result['test']
-        filepath = '%s%s' % (GS_RESULTS_FILEPATH_BASE, test_file)
+        filepath = '%s%s' % (gs_results_base_path, test_file)
         write_gzip_json(filepath, result)
         print('Wrote file %s' % filepath)
 
@@ -218,11 +208,11 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Uploading results to gs://%s' % config['gs_results_bucket'])
     command = ['gsutil', '-m', '-h', 'Content-Encoding:gzip',
-               'rsync', '-r', SHORT_SHA, 'gs://wptd/%s' % SHORT_SHA]
+               'rsync', '-r', short_wpt_sha, 'gs://wptd/%s' % short_wpt_sha]
     return_code = subprocess.check_call(command, cwd=config['build_path'])
     assert return_code == 0
     print('Successfully uploaded!')
-    print('HTTP summary URL: %s' % GS_HTTP_RESULTS_URL)
+    print('HTTP summary URL: %s' % gs_results_url)
 
     if not args.create_testrun:
         print('==================================================')
@@ -241,8 +231,8 @@ def main(platform_id, platform, args, config):
             'browser_version': platform['browser_version'],
             'os_name': platform['os_name'],
             'os_version': platform['os_version'],
-            'revision': SHORT_SHA,
-            'results_url': GS_HTTP_RESULTS_URL
+            'revision': short_wpt_sha,
+            'results_url': gs_results_url
         }
     ))
     if response.status_code == 201:
@@ -252,6 +242,29 @@ def main(platform_id, platform, args, config):
 
     print('Response status code:', response.status_code)
     print('Response text:', response.text)
+
+
+def setup_wpt(mainargs, platform, config, logger):
+    wpt_setup_commands = [
+        ['git', 'reset', '--hard', 'HEAD'],  # For wpt.patch
+        ['git', 'checkout', 'master'],
+        ['git', 'pull'],
+        ['./wpt', 'manifest', '--work'],
+    ]
+    for command in wpt_setup_commands:
+        return_code = subprocess.check_call(command, cwd=config['wpt_path'])
+        assert return_code == 0, (
+            'Got non-0 return code: '
+            '%d from command %s' % (return_code, command))
+
+    patch_wpt(config, platform)
+
+    if mainargs.wpt_sha:
+        return mainargs.wpt_sha
+    else:
+        sha_finder = shas.SHAFinder(logger)
+        return (sha_finder.get_todays_sha(config['wpt_path'])
+                or sha_finder.get_head_sha(config['wpt_path']))
 
 
 def get_and_validate_platform(platform_id):
@@ -418,6 +431,10 @@ def parse_args():
         type=str,
         default='INFO',
         help='Log level to output'
+    )
+    parser.add_argument(
+        '--wpt_sha',
+        help='https://github.com/w3c/web-platform-tests commit SHA to test.'
     )
     args = parser.parse_args()
 

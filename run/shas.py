@@ -58,7 +58,7 @@ class SHAFinder(object):
         command = [
             'git',
             'rev-parse',
-            'HEAD',
+            'origin/HEAD',
         ]
         abspath = os.path.abspath(path)
         self.logger.debug('Using dir ' + abspath)
