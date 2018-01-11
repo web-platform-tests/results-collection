@@ -25,4 +25,5 @@ docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance \
     --admin_port=8000 \
     --api_host=$WPTD_CONTAINER_HOST \
     --api_port=9999 \
+    -A=wptdashboard \
     webapp
