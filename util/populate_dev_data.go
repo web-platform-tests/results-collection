@@ -1,0 +1,163 @@
+// Copyright 2017 The WPT Dashboard Project. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package main
+
+import (
+	"fmt"
+	"github.com/w3c/wptdashboard/metrics"
+	base "github.com/w3c/wptdashboard/shared"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/remote_api"
+	"log"
+	"time"
+)
+
+// populate_dev_data.go populates a local running webapp instance with some
+// of the latest production entities, so that there's data to view.
+//
+// It uses the AppEngine Remote API, which requires credentials; see:
+// https://cloud.google.com/appengine/docs/standard/go/tools/remoteapi/
+// https://developers.google.com/identity/protocols/application-default-credentials
+//
+// Usage (from util/):
+// go run populate_dev_data.go
+func main() {
+	ctx, err := getRemoteApiContext()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tokens := []interface{}{&base.Token{}}
+	staticDataTime, _ := time.Parse(time.RFC3339, "2017-10-18T00:00:00Z")
+
+	// Follow pattern established in run/*.py data collection code.
+	const summaryUrlFmtString = "/static/wptd/%s/%s"
+	properTestRuns := []base.TestRun{
+		{
+			BrowserName:    "chrome",
+			BrowserVersion: "63.0",
+			OSName:         "linux",
+			OSVersion:      "3.16",
+			Revision:       "b952881825",
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "b952881825", "chrome-63.0-linux-summary.json.gz"),
+			CreatedAt:      staticDataTime,
+		},
+		{
+			BrowserName:    "edge",
+			BrowserVersion: "15",
+			OSName:         "windows",
+			OSVersion:      "10",
+			Revision:       "b952881825",
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "5d55258739", "windows-10-sauce-summary.json.gz"),
+			CreatedAt:      staticDataTime,
+		},
+		{
+			BrowserName:    "firefox",
+			BrowserVersion: "57.0",
+			OSName:         "linux",
+			OSVersion:      "*",
+			Revision:       "b952881825",
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "fc70df1f75", "firefox-57.0-linux-summary.json.gz"),
+			CreatedAt:      staticDataTime,
+		},
+		{
+			BrowserName:    "safari",
+			BrowserVersion: "10",
+			OSName:         "macos",
+			OSVersion:      "10.12",
+			Revision:       "b952881825",
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "fc2e57a502", "safari-11.0-macos-10.12-sauce-summary.json.gz"),
+			CreatedAt:      staticDataTime,
+		},
+	}
+
+	timeZero := time.Unix(0, 0)
+	// Follow pattern established in metrics/run/*.go data collection code.
+	// Use unzipped JSON for local dev.
+	const metricsUrlFmtString = "/static/wptd-metrics/0-0/%s.json"
+	testRuns := make([]interface{}, len(properTestRuns))
+	for i, testRun := range properTestRuns {
+		testRuns[i] = &testRun
+	}
+	passRateMetadata := []interface{}{
+		&metrics.PassRateMetadata{
+			StartTime: timeZero,
+			EndTime:   timeZero,
+			TestRuns:  properTestRuns,
+			DataUrl:   fmt.Sprintf(metricsUrlFmtString, "pass-rates"),
+		},
+	}
+
+	failuresMetadata := []interface{}{
+		&metrics.FailuresMetadata{
+			StartTime:   timeZero,
+			EndTime:     timeZero,
+			TestRuns:    properTestRuns,
+			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "chrome-failures"),
+			BrowserName: "chrome",
+		},
+		&metrics.FailuresMetadata{
+			StartTime:   timeZero,
+			EndTime:     timeZero,
+			TestRuns:    properTestRuns,
+			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "edge-failures"),
+			BrowserName: "edge",
+		},
+		&metrics.FailuresMetadata{
+			StartTime:   timeZero,
+			EndTime:     timeZero,
+			TestRuns:    properTestRuns,
+			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "firefox-failures"),
+			BrowserName: "firefox",
+		},
+		&metrics.FailuresMetadata{
+			StartTime:   timeZero,
+			EndTime:     timeZero,
+			TestRuns:    properTestRuns,
+			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "safari-failures"),
+			BrowserName: "safari",
+		},
+	}
+
+	tokenKindName := "Token"
+	testRunKindName := "TestRun"
+	passRateMetadataKindName := metrics.GetDatastoreKindName(
+		metrics.PassRateMetadata{})
+	failuresMetadataKindName := metrics.GetDatastoreKindName(
+		metrics.FailuresMetadata{})
+
+	addData(ctx, tokenKindName, tokens)
+	addData(ctx, testRunKindName, testRuns)
+	addData(ctx, passRateMetadataKindName, passRateMetadata)
+	addData(ctx, failuresMetadataKindName, failuresMetadata)
+}
+
+func addData(ctx context.Context, kindName string, data []interface{}) {
+	keys := make([]*datastore.Key, len(data))
+	for i := range data {
+		keys[i] = datastore.NewIncompleteKey(ctx, kindName, nil)
+	}
+	if _, err := datastore.PutMulti(ctx, keys, data); err != nil {
+		log.Fatalf("Failed to add %s entities: %s", kindName, err.Error())
+	}
+	log.Printf("Added %v %s entities", len(data), kindName)
+}
+
+func getRemoteApiContext() (context.Context, error) {
+	const host = "localhost:9999"
+	ctx := context.Background()
+
+	hc, err := google.DefaultClient(ctx,
+		"https://www.googleapis.com/auth/appengine.apis",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var remoteContext context.Context
+	remoteContext, err = remote_api.NewRemoteContext(host, hc)
+	return remoteContext, err
+}
