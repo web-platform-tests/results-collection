@@ -150,10 +150,10 @@ func main() {
 			Handle: outputBucket,
 		},
 	}
-	metricsRun := metrics.MetricsRun{
-		StartTime: &readStartTime,
-		EndTime:   &readEndTime,
-		TestRuns:  &runs,
+	metricsRun := metrics.PassRateMetadata{
+		StartTime: readStartTime,
+		EndTime:   readEndTime,
+		TestRuns:  runs,
 	}
 
 	outputDir := fmt.Sprintf("%d-%d", metricsRun.StartTime.Unix(),
@@ -165,8 +165,8 @@ func main() {
 		defer wg.Done()
 		objName := fmt.Sprintf("%s/pass-rates.json.gz", outputDir)
 		passRateSummary := metrics.MetricsRunData{
-			MetricsRun: &metricsRun,
-			Data:       &passRateMetric,
+			Metadata: metricsRun,
+			Data:     passRateMetric,
 		}
 		err := storage.UploadMetricsRunData(&outputCtx, &objName,
 			&passRateSummary)
@@ -181,8 +181,8 @@ func main() {
 			metricsRun.StartTime.Unix(),
 			metricsRun.EndTime.Unix())
 		totalsSummary := metrics.MetricsRunData{
-			MetricsRun: &metricsRun,
-			Data:       &totals,
+			Metadata: &metricsRun,
+			Data:     &totals,
 		}
 		err := storage.UploadMetricsRunData(&outputCtx, &objName,
 			&totalsSummary)
@@ -199,8 +199,8 @@ func main() {
 				metricsRun.EndTime.Unix(),
 				browserName)
 			failureSummary := metrics.MetricsRunData{
-				MetricsRun: &metricsRun,
-				Data:       &values,
+				Metadata: &metricsRun,
+				Data:     &values,
 			}
 			err := storage.UploadMetricsRunData(&outputCtx,
 				&objName, &failureSummary)
