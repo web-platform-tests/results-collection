@@ -267,19 +267,18 @@ found in the LICENSE file.
         const displayedNodeMap = new Map();
         const currentPathParts = this.splitPathIntoLinkedParts(this.path);
 
-        const updateResults = ({testFileName, path, isDir}) => {
-          if (!displayedNodeMap.has(path)) {
-            displayedNodeMap.set(path, {isDir, results: {}});
+
+        const updateResults = (testFileName, dirPath, isDir) => {
+          if (!displayedNodeMap.has(dirPath)) {
+            displayedNodeMap.set(dirPath, {isDir: isDir, results: {}});
           }
           let results = this.testFiles[testFileName];
           Object.keys(results).forEach(resultURL => {
-            let displayedNode = displayedNodeMap.get(path);
-
-            if (!displayedNode.results[resultURL]) {
-              displayedNode.results[resultURL] = {passing: 0, total: 0};
+            if (!(resultURL in displayedNodeMap.get(dirPath).results)) {
+              displayedNodeMap.get(dirPath).results[resultURL] = {passing: 0, total: 0};
             }
-            displayedNode.results[resultURL].passing += results[resultURL][0];
-            displayedNode.results[resultURL].total += results[resultURL][1];
+            displayedNodeMap.get(dirPath).results[resultURL].passing += results[resultURL][0];
+            displayedNodeMap.get(dirPath).results[resultURL].total += results[resultURL][1];
           });
         };
 
@@ -295,27 +294,27 @@ found in the LICENSE file.
           }
 
           let parts = this.splitPathIntoLinkedParts(testFileName);
-          let isDir = true;
 
-          // If at the top-level, add all directories
           if (this.path === '/' && parts.length === 2) {
-            let path = parts[0].path;
-
-            updateResults({testFileName, path, isDir});
+            let dirParts = [parts[0]];
+            let dirPath = dirParts[dirParts.length - 1].path;
+            updateResults(testFileName, dirPath, true);
 
             // Add test files in current directory
           } else if (parts.length === currentPathParts.length + 1) {
             let path = parts[parts.length - 1].path;
-
-            updateResults({testFileName, path, isDir: false});
+            updateResults(testFileName, path, false);
 
             // Add subdirectories in current directory
           } else if (parts.length > currentPathParts.length + 1) {
-            let path = this.path === '/' ?
-              parts[0].path :
-              parts.slice(0, currentPathParts.length + 1)[0].path;
-
-            updateResults({testFileName, path, isDir});
+            let dirParts;
+            if (this.path === '/') {
+              dirParts = [parts[0]];
+            } else {
+              dirParts = parts.slice(0, currentPathParts.length + 1);
+            }
+            let dirPath = dirParts[dirParts.length - 1].path;
+            updateResults(testFileName, dirPath, true);
           }
         });
 
