@@ -17,6 +17,7 @@ Make sure you have the latest code and deploy the app.
 
 ```sh
 git pull
+cd webapp/
 gcloud app deploy
 ```
 
