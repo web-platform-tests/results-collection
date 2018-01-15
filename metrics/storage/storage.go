@@ -293,11 +293,11 @@ func LoadTestRunResults(ctx *GCSDatastoreContext, runs []base.TestRun) (
 			}
 			progress[testRun] = progress[testRun] + 1
 
-			keys := make(metrics.TestRunSlice, 0, len(progress))
+			keys := make([]base.TestRun, 0, len(progress))
 			for key := range progress {
 				keys = append(keys, key)
 			}
-			sort.Sort(keys)
+			sort.Sort(metrics.ByCreatedDate(keys))
 
 			tm.Clear()
 			tm.MoveCursor(1, 1)

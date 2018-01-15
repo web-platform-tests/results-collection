@@ -10,45 +10,26 @@ import (
 	base "github.com/w3c/wptdashboard/shared"
 )
 
-//
-// Sortable slices of test runs
-//
-type TestRunSlice []base.TestRun
+// ByCreatedDate sorts tests by run's CreatedAt date (descending)
+// then by platform alphabetically (ascending).
+type ByCreatedDate []base.TestRun
 
-func (s TestRunSlice) Len() int {
-	return len(s)
-}
-
-func (s TestRunSlice) Less(i int, j int) bool {
-	if s[i].Revision < s[j].Revision {
-		return true
+func (s ByCreatedDate) Len() int          { return len(s) }
+func (s ByCreatedDate) Swap(i int, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByCreatedDate) Less(i int, j int) bool {
+	if s[i].Revision != s[j].Revision {
+		return s[i].CreatedAt.After(s[j].CreatedAt)
 	}
-	if s[i].Revision > s[j].Revision {
-		return false
+	if s[i].BrowserName != s[j].BrowserName {
+		return s[i].BrowserName < s[j].BrowserName
 	}
-	if s[i].BrowserName < s[j].BrowserName {
-		return true
+	if s[i].BrowserVersion != s[j].BrowserVersion {
+		return s[i].BrowserVersion < s[j].BrowserVersion
 	}
-	if s[i].BrowserName > s[j].BrowserName {
-		return false
-	}
-	if s[i].BrowserVersion < s[j].BrowserVersion {
-		return true
-	}
-	if s[i].BrowserVersion > s[j].BrowserVersion {
-		return false
-	}
-	if s[i].OSName < s[j].OSName {
-		return true
-	}
-	if s[i].OSName > s[j].OSName {
-		return false
+	if s[i].OSName != s[j].OSName {
+		return s[i].OSName < s[j].OSName
 	}
 	return s[i].OSVersion < s[j].OSVersion
-}
-
-func (s TestRunSlice) Swap(i int, j int) {
-	s[i], s[j] = s[j], s[i]
 }
 
 type SubTest struct {
@@ -74,24 +55,16 @@ type TestId struct {
 	Name string `json:"name"`
 }
 
-type TestIdSlice []TestId
+// ByTestPath sorts test ids by their test path, then name, descending.
+type ByTestPath []TestId
 
-func (s TestIdSlice) Len() int {
-	return len(s)
-}
-
-func (s TestIdSlice) Less(i int, j int) bool {
-	if s[i].Test < s[j].Test {
-		return true
-	}
-	if s[i].Test > s[j].Test {
-		return false
+func (s ByTestPath) Len() int          { return len(s) }
+func (s ByTestPath) Swap(i int, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByTestPath) Less(i int, j int) bool {
+	if s[i].Test != s[j].Test {
+		return s[i].Test < s[j].Test
 	}
 	return s[i].Name < s[j].Name
-}
-
-func (s TestIdSlice) Swap(i int, j int) {
-	s[i], s[j] = s[j], s[i]
 }
 
 // Enum: Test status, according to legitimate string values in WPT results
