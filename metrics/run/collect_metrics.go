@@ -118,7 +118,7 @@ func main() {
 
 	var totals map[string]int
 	var passRateMetric map[string][]int
-	failuresMetrics := make(map[string][][]*metrics.TestId)
+	failuresMetrics := make(map[string][][]metrics.TestId)
 	var wg sync.WaitGroup
 	wg.Add(2 + len(runs))
 	go func() {
@@ -227,7 +227,7 @@ func main() {
 			processUploadErrors(errs)
 		}(outputter)
 		for browserName, failuresMetric := range failuresMetrics {
-			go func(browserName string, failuresMetric [][]*metrics.TestId, outputter storage.Outputter) {
+			go func(browserName string, failuresMetric [][]metrics.TestId, outputter storage.Outputter) {
 				defer wg.Done()
 				failuresMetadata := metrics.FailuresMetadata{
 					StartTime:   readStartTime,
@@ -284,7 +284,7 @@ func getRuns() []base.TestRun {
 	return runs
 }
 
-func failureListsToRows(browserName string, failureLists [][]*metrics.TestId) (
+func failureListsToRows(browserName string, failureLists [][]metrics.TestId) (
 	rows []interface{}) {
 	type FailureListsRow struct {
 		BrowserName      string         `json:"browser_name"`
@@ -301,7 +301,7 @@ func failureListsToRows(browserName string, failureLists [][]*metrics.TestId) (
 			rows = append(rows, FailureListsRow{
 				browserName,
 				i,
-				*failure,
+				failure,
 			})
 		}
 	}
@@ -334,7 +334,7 @@ func uploadTotalsAndPassRateMetric(metricsRun *metrics.PassRateMetadata,
 
 func uploadFailureLists(metricsRun *metrics.FailuresMetadata,
 	outputter storage.Outputter, id storage.OutputId,
-	browserName string, failureLists [][]*metrics.TestId) (
+	browserName string, failureLists [][]metrics.TestId) (
 	interface{}, []interface{}, []error) {
 	rows := failureListsToRows(browserName, failureLists)
 	return outputter.Output(id, metricsRun, rows)

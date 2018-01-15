@@ -111,8 +111,8 @@ func ComputeTotals(results *TestRunsStatus) (metrics map[string]int) {
 //  [TestIds of tests browserName + n other browsers fail],
 // ]
 func ComputeBrowserFailureList(numRuns int, browserName string,
-	results *TestRunsStatus, passes Passes) (failures [][]*metrics.TestId) {
-	failures = make([][]*metrics.TestId, numRuns)
+	results *TestRunsStatus, passes Passes) (failures [][]metrics.TestId) {
+	failures = make([][]metrics.TestId, numRuns)
 
 	for testId, runStatuses := range *results {
 		numOtherFailures := 0
@@ -129,8 +129,7 @@ func ComputeBrowserFailureList(numRuns int, browserName string,
 		if !browserFailed {
 			continue
 		}
-		failures[numOtherFailures] = append(failures[numOtherFailures],
-			&testId)
+		failures[numOtherFailures] = append(failures[numOtherFailures], testId)
 	}
 
 	return failures
