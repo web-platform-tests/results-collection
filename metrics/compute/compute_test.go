@@ -58,23 +58,17 @@ func TestGatherResultsById_TwoRuns_SameTest(t *testing.T) {
 		},
 	}
 	gathered := GatherResultsById(results)
-	assert.Equal(t, len(gathered), 1) // Merged to single TestId: {"A test",""}.
+	assert.Equal(t, 1, len(gathered)) // Merged to single TestId: {"A test",""}.
 	for testId, runStatusMap := range gathered {
 		assert.Equal(t, testId, metrics.TestId{"A test", ""})
-		for testRun, testStatus := range runStatusMap {
-			if testRun == runA {
-				assert.Equal(t, testStatus, metrics.CompleteTestStatus{
-					metrics.TestStatus_fromString("OK"),
-					metrics.SubTestStatus_fromString("STATUS_UNKNOWN"),
-				})
-			} else if testRun == runB {
-				assert.Equal(t, testStatus, metrics.CompleteTestStatus{
-					metrics.TestStatus_fromString("ERROR"),
-					metrics.SubTestStatus_fromString("STATUS_UNKNOWN"),
-				})
-			} else {
-				assert.Fail(t, "Invalid test run in GatherResultsById output")
-			}
-		}
+		assert.Equal(t, 2, len(runStatusMap))
+		assert.Equal(t, runStatusMap[runA], metrics.CompleteTestStatus{
+			metrics.TestStatus_fromString("OK"),
+			metrics.SubTestStatus_fromString("STATUS_UNKNOWN"),
+		})
+		assert.Equal(t, runStatusMap[runB], metrics.CompleteTestStatus{
+			metrics.TestStatus_fromString("ERROR"),
+			metrics.SubTestStatus_fromString("STATUS_UNKNOWN"),
+		})
 	}
 }
