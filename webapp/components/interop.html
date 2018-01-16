@@ -1,0 +1,417 @@
+<!--
+Copyright 2017 The WPT Dashboard Project. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="runs.html">
+<link rel="import" href="test-run.html">
+
+<dom-module id="wpt-interop">
+<template>
+  <style>
+    :host {
+      display: block;
+      font-size: 15px;
+    }
+
+    section.runs {
+      padding: 1em 0;
+      margin: 1em;
+    }
+
+    section.search {
+      border-bottom: solid 1px #ccc;
+      padding-bottom: 1em;
+      margin-bottom: 1em;
+    }
+
+    section.search .path {
+      margin-top: 1em;
+    }
+
+    input.query {
+      font-size: 16px;
+      display: block;
+      padding: 0.5em 0;
+      width: 100%;
+    }
+
+    a {
+      text-decoration: none;
+      color: #0d5de6;
+      font-family: monospace;
+    }
+
+    a:hover {
+      cursor: pointer;
+      color: #226ff3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    tr.spec {
+      background-color: #eee;
+    }
+
+    tr td {
+      padding: 0 0.5em;
+    }
+
+    tr.spec td {
+      padding: 0.2em 0.5em;
+      border: solid 1px #ccc;
+    }
+
+    .path-separator {
+      padding: 0 0.1em;
+    }
+
+    .links {
+      margin-bottom: 1em;
+    }
+
+    .caveat {
+      padding: 0.5em;
+      background-color: #fde2e3;
+      margin-bottom: 1em;
+      border-left: solid 4px #f47477;
+    }
+
+    .info {
+      padding: 0.5em;
+      background-color: #e2e3fd;
+      margin-bottom: 1em;
+      margin-top: 2em;
+      border-left: solid 4px #7477f4;
+    }
+
+    .info small {
+      float: right;
+    }
+
+    @media (max-width: 800px) {
+      table tr td:first-child::after {
+        content: "";
+        display: inline-block;
+        vertical-align: top;
+        min-height: 30px;
+      }
+    }
+  </style>
+
+  <h2>Interoperability</h2>
+
+  <section class="caveat">
+    Data below are intended for web platform implementers and do not contain
+    useful metrics for evaluation or comparison of web platform features. Also
+    note that tested Edge and Safari are not pre-release versions (<a
+          href="https://github.com/w3c/wptdashboard/issues/109">#109</a>, <a
+          href="https://github.com/w3c/wptdashboard/issues/110">#110</a>).
+  </section>
+
+  <section class="runs">
+    <table>
+      <thead>
+      <tr>
+        <template is="dom-repeat" items="{{ allMetrics.metadata.test_runs }}"
+                  as="testRun">
+          <th>
+            <test-run test-run="[[testRun]]"></test-run>
+          </th>
+        </template>
+      </tr>
+      </head>
+    </table>
+  </section>
+
+  <section class="search">
+    <template is="dom-if" if="{{ !pathIsATestFile }}">
+      <input value="{{ query::input }}"
+             class="query"
+             placeholder="{{ queryPlaceholder }}"
+             data-foo="bar">
+    </template>
+    <div class="path">
+      <a href="/interop/" on-click="_navigate">WPT</a>
+      <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
+        <span class="path-separator">/</span>
+        <a href="/interop{{ part.path }}"  on-click="_navigate">{{ part.name }}</a>
+      </template>
+    </div>
+  </section>
+
+  <template is="dom-if" if="{{ pathIsATestFile }}">
+    <div class="links">
+      <ul>
+        <li>
+          <a href$="https://github.com/w3c/web-platform-tests/blob/master[[path]]"
+             target="_blank">View source on GitHub</a></li>
+        <li><a href$="https://w3c-test.org[[path]]" target="_blank">Run in your
+          browser on w3c-test.org</a></li>
+      </ul>
+    </div>
+  </template>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Passing:</th>
+        <template is="dom-repeat" items="{{ thLabels }}" as="label">
+          <th>{{ label }}</th>
+        </template>
+      </tr>
+    </thead>
+    <tbody>
+      <template is="dom-repeat" items="{{ metrics.data }}" as="node">
+        <tr>
+          <td>
+            <template is="dom-if" if="{{ !_computePathIsATestFile(node.dir) }}">
+              <b><a href="/interop{{ node.dir }}" on-click="_navigate">{{ _relPath(node.dir) }}</a></b>
+            </template>
+            <template is="dom-if" if="{{ _computePathIsATestFile(node.dir) }}">
+              <a href="/interop{{ node.dir }}" on-click="_navigate">{{ _relPath(node.dir) }}</a>
+            </template>
+          </td>
+
+          <template is="dom-repeat" items="{{node.pass_rates}}" as="passRate">
+            <td style="{{ _passRateStyle(node, passRate) }}">{{ passRate }} / {{ node.total }}</td>
+          </template>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+
+</template>
+
+<script>
+  'use strict';
+  const urlToMetricsPath = url => url.pathname.replace(/\/interop(.+)(\/)?$/, '$1');
+  const urlToQuery = url => {
+    // Drop initial "?" from url.search.
+    const search = url.search;
+    if (!search) {
+      return '';
+    }
+    const match = search.match(/[^a-zA-Z0-9%]q=([^&]+)/);
+    if (!match) {
+      return '';
+    }
+    const subMatch = match[1];
+    const decodedMatch = window.decodeURIComponent(subMatch);
+    return decodedMatch;
+  };
+
+  class WPTInterop extends window.Polymer.Element {
+    static get is () { return 'wpt-interop' }
+    static get properties () {
+      return {
+        passRateMetadata: Object,
+        allMetrics: Object,
+        metrics: {
+          type: Object,
+          computed: '_computeMetrics(path, pathIsATestFile, query, allMetrics, currentNode)'
+        },
+        path: {
+          type: String,
+          value: urlToMetricsPath(window.location)
+        },
+        currentNode: {
+          type: Object,
+          computed: '_computeCurrentNode(allMetrics, path)'
+        },
+        query: {
+          type: String,
+          value: urlToQuery(window.location),
+          observer: '_queryChanged'
+        },
+        pathIsATestFile: {
+          type: Boolean,
+          computed: '_computePathIsATestFile(path)'
+        },
+        thLabels: {
+          type: Array,
+          computed: '_computeThLabels(allMetrics)'
+        },
+        queryPlaceholder: {
+          type: String,
+          computed: '_computeQueryPlaceholder(currentNode)'
+        },
+        _queryTimeoutId: {
+          type: Number,
+          value: 0
+        },
+      }
+    }
+
+    async connectedCallback() {
+      await super.connectedCallback();
+      window.addEventListener('popstate', event => {
+        const state = event.state;
+        this.path = state.path || '/';
+        this.query = state.query || '';
+      });
+      this._initState({path: this.path, query: this.query});
+      this.allMetrics = await this._fetchMetrics(this.passRateMetadata.url);
+    }
+
+    async _fetchMetrics(url) {
+      const response = await window.fetch(url);
+      return await response.json();
+    }
+
+    _splitIntoLinkedParts (path) {
+      const parts = path.split('/').slice(1)
+      let pathSoFar = ''
+      return parts.map(part => {
+        pathSoFar += '/' + part
+        return {
+          name: part,
+          path: pathSoFar
+        }
+      })
+    }
+
+    _navigate (event) {
+      event.preventDefault();
+      let path = urlToMetricsPath(event.target);
+      if (path === this.path) {
+        return
+      }
+      this.path = path;
+      // Clear query when navigating to a new path.
+      this.query = '';
+      this._navigateState({path: this.path, query: this.query});
+      // Send Google Analytics pageview event
+      if ('ga' in window) {
+        window.ga('send', 'pageview', path)
+      }
+    }
+
+    _initState(state) {
+      this._doState(window.history.replaceState.bind(window.history), state);
+    }
+
+    _navigateState(state) {
+      this._doState(window.history.pushState.bind(window.history), state);
+    }
+
+    _doState(stateFunc, state) {
+      const path = state.path;
+      const query = state.query;
+      if (!query) {
+        stateFunc(state, '', `/interop${path}`);
+        return;
+      }
+      const encodedQuery = window.encodeURIComponent(query);
+      stateFunc(state, '', `/interop${path}?q=${encodedQuery}`);
+    }
+
+    _computePathIsATestFile(path) {
+      return path.endsWith('.html') || path.endsWith('.htm') ||
+              path.endsWith('.py') || path.endsWith('.svg') ||
+              path.endsWith('.xhtml') || path.endsWith('.xht') ||
+              path.endsWith('.xml');
+    }
+
+    _computeThLabels (allMetrics) {
+      const numLabels = allMetrics.metadata.test_runs.length + 1;
+      let labels = new Array();
+      for (let i = 0; i < numLabels; i++) {
+        labels[i] = `${i} / ${numLabels - 1} browsers`;
+      }
+      return labels;
+    }
+
+    _computeMetrics (path, pathIsATestFile, query, allMetrics, currentNode) {
+      if (!path || !allMetrics) {
+        return null;
+      }
+      if (pathIsATestFile) {
+        return {
+          metadata: allMetrics.metadata,
+          data: allMetrics.data.filter(node => node.dir === path)
+        }
+      } else {
+        return {
+          metadata: allMetrics.metadata,
+          data: allMetrics.data.filter(this._filterNode.bind(this, path === '/' ? path : `${this.path}/`, query))
+        }
+      }
+    }
+
+    _filterNode (path, query, node) {
+      const dir = node.dir;
+      if (dir.indexOf(path) !== 0) {
+        return false;
+      }
+      const subdir = dir.substr(path.length);
+      if (!query) {
+        return subdir.indexOf('/') === -1
+      }
+      let test;
+      try {
+        const re = new RegExp(query.replace(/\//g, '\\/'), 'i');
+        test = re.test.bind(re);
+      } catch (e) {
+        test = str => str.indexOf(query) !== -1
+      }
+      return this._shouldQueryAll()
+        ? test(subdir)
+        : subdir.indexOf('/') === -1 && test(subdir);
+    }
+
+    _relPath(path) {
+      return path.replace(this.path + '/', '');
+    }
+
+    _passRateStyle(node, passRate) {
+      const fraction = passRate / node.total;
+      const rounded = Math.round(fraction * 1000) / 1000;
+      return `background-color: rgba(170, 136, 255, ${rounded})`;
+    }
+
+    _queryChanged (_, oldQuery) {
+      // Debounce first initialization.
+      if (oldQuery === undefined) {
+        return
+      }
+      if (this._queryTimeoutId) {
+        window.clearTimeout(this._queryTimeoutId);
+      }
+      this._queryTimeoutId = window.setTimeout(this._updateQueryState.bind(this), 500);
+    }
+
+    _updateQueryState() {
+      this._navigateState({path: this.path, query: this.query});
+    }
+
+    _computeQueryPlaceholder (currentNode) {
+      if (this._shouldQueryAll()) {
+        return 'Search test files, like cors/allow-headers.htm';
+      } else {
+        return 'Search direct sub-folders and test files';
+      }
+    }
+
+    _computeCurrentNode(allMetrics, path) {
+      if (!allMetrics || !path || path === '/') {
+        return null;
+      }
+      const currentNode = allMetrics.data.filter(node => node.dir === path)[0];
+      return currentNode || null;
+    }
+
+    _shouldQueryAll() {
+      return this.currentNode && this.currentNode.total < 10000 || false
+    }
+  }
+  window.customElements.define(WPTInterop.is, WPTInterop)
+</script>
+</dom-module>
