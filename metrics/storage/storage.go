@@ -92,11 +92,12 @@ func (ctx GCSDatastoreContext) Output(id OutputId, metadata interface{},
 	objWriter := obj.NewWriter(ctx.Context)
 	if err := func() error {
 		gzWriter := gzip.NewWriter(objWriter)
+		defer gzWriter.Close()
 		encoder := json.NewEncoder(gzWriter)
 		if err := encoder.Encode(gcsData); err != nil {
+			objWriter.Close()
 			return err
 		}
-		gzWriter.Close()
 		return objWriter.Close()
 	}(); err != nil {
 		log.Printf("Error writing %s to Google Cloud Storage: %v\n",
