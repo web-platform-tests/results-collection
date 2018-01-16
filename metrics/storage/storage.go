@@ -95,7 +95,7 @@ func (ctx GCSDatastoreContext) Output(id OutputId, metadata interface{},
 		defer gzWriter.Close()
 		encoder := json.NewEncoder(gzWriter)
 		if err := encoder.Encode(gcsData); err != nil {
-			objWriter.Close()
+			objWriter.CloseWithError(err)
 			return err
 		}
 		return objWriter.Close()
