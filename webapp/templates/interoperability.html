@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html>
-{{ template "_head.html" }}
+<head>
+  {{ template "_head_common.html" }}
+  <link rel="import" href="/components/interop.html">
+</head>
 <body>
 <div id="content">
 {{ template "_header.html" }}
-    <div>
-        Interoperability view coming soon.
-    </div>
+  <div>
+    <wpt-interop pass-rate-metadata="{{ .Metadata }}"></wpt-interop>
+  </div>
 </div>
 {{ template "_ga.html" }}
 </body>
