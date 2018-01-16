@@ -1,6 +1,6 @@
 # UI Development
 
-The UI consists of base HTML templates served by the Go App Engine app in `templates/` and Polymer 2 components in `components/`.
+The UI consists of base HTML templates served by the Go App Engine app in `webapp/templates/` and Polymer 2 components in `webapp/components/`.
 
 ## UI Principles
 
