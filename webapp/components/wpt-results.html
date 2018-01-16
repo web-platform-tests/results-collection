@@ -143,12 +143,7 @@ found in the LICENSE file.
           <template is="dom-repeat" items="{{displayedNodes}}" as="node">
             <tr>
               <td>
-                <template is="dom-if" if="{{ node.isDir }}">
-                  <b><a href="{{ node.path }}" on-click="navigate">{{ relativePath(node.path) }}/</a></b>
-                </template>
-                <template is="dom-if" if="{{ !node.isDir }}">
-                  <a href="{{ node.path }}" on-click="navigate">{{ relativePath(node.path) }}</a>
-                </template>
+                <a style="{{ relativePathStyle(node) }}" href="{{ node.path }}" on-click="navigate">{{ displayableRelativePath(node) }}</a>
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
@@ -393,9 +388,13 @@ found in the LICENSE file.
         }
       }
 
-      relativePath(path) {
-        const prefix = this.path == '/' ? '/' : this.path + '/';
-        return path.replace(prefix, '');
+      displayableRelativePath(node) {
+        const prefix = this.path === '/' ? '/' : `${this.path}/`;
+        return `${node.path.replace(prefix, '')}${node.isDir ? '/' : ''}`;
+      }
+
+      relativePathStyle(node) {
+        return node.isDir ? 'font-weight: bold;' : '';
       }
 
       hasResults(node, testRun) {
