@@ -46,6 +46,13 @@ See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local developmen
 
 We run the tests in the development environment with a Python script [`run/run.py`](run/run.py) which is a thin wrapper around WPT's [`wpt run`](https://github.com/w3c/web-platform-tests/#running-tests-automatically). If you're triaging test failures, use `wpt run`.
 
+### Installing dependencies
+You will need to install python libraries and checkout web-platform-tests on the container before you run anything:
+```sh
+docker exec -it -u $(id -u $USER):$(id -g $USER) wptd-dev-instance\
+    make py_deps jenkins_install
+```
+
 ### Running
 
 Ensure that the Docker development image is running (`./util/docker-dev/run.sh`). To run a directory of WPT, pass the [platform ID](#platform-id) and a test path to `run/run.py` on the development server:
