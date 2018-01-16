@@ -148,11 +148,7 @@ found in the LICENSE file.
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
                 <td style="{{ testResultStyle(node, testRun) }}">
-                  <template is="dom-if" if="{{ hasResults(node, testRun) }}">
-                    {{ getNodeResultDataByPropertyName(node, testRun, 'passing') }}
-                    /
-                    {{ getNodeResultDataByPropertyName(node, testRun, 'total') }}
-                  </template>
+                  {{ displayableTestResult(node, testRun) }}
                 </td>
               </template>
 
@@ -365,6 +361,15 @@ found in the LICENSE file.
         });
       }
 
+      displayableTestResult(node, testRun) {
+        let results = node.results[testRun.results_url];
+
+        if (typeof results === 'undefined') {
+          return '(results not found)';
+        }
+        return `${results.passing} / ${results.total}`;
+      }
+
       testResultStyle(node, testRun) {
         if (!node) return;
         if (!testRun) return;
@@ -395,16 +400,6 @@ found in the LICENSE file.
 
       relativePathStyle(node) {
         return node.isDir ? 'font-weight: bold;' : '';
-      }
-
-      hasResults(node, testRun) {
-        return typeof node.results[testRun.results_url] !== 'undefined';
-      }
-
-      getNodeResultDataByPropertyName(node, testRun, property) {
-        if (testRun.results_url in node.results) {
-          return node.results[testRun.results_url][property];
-        }
       }
 
       /* Function for getting total numbers.
