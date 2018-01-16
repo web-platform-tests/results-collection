@@ -25,6 +25,7 @@ import (
 	"github.com/w3c/wptdashboard/metrics/storage"
 	base "github.com/w3c/wptdashboard/shared"
 	"golang.org/x/net/context"
+	"sort"
 )
 
 var wptDataPath *string
@@ -284,13 +285,21 @@ func getRuns() []base.TestRun {
 	return runs
 }
 
+type FailureListsRow struct {
+	BrowserName      string         `json:"browser_name"`
+	NumOtherFailures int            `json:"num_other_failures"`
+	Tests            metrics.TestId `json:"test"`
+}
+type ByTestId []interface{}
+
+func (s ByTestId) Len() int          { return len(s) }
+func (s ByTestId) Swap(i int, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByTestId) Less(i int, j int) bool {
+	return s[i].(FailureListsRow).Tests.Test < s[j].(FailureListsRow).Tests.Test
+}
+
 func failureListsToRows(browserName string, failureLists [][]metrics.TestId) (
 	rows []interface{}) {
-	type FailureListsRow struct {
-		BrowserName      string         `json:"browser_name"`
-		NumOtherFailures int            `json:"num_other_failures"`
-		Tests            metrics.TestId `json:"test"`
-	}
 	numRows := 0
 	for _, failureList := range failureLists {
 		numRows += len(failureList)
@@ -305,22 +314,33 @@ func failureListsToRows(browserName string, failureLists [][]metrics.TestId) (
 			})
 		}
 	}
+	sort.Sort(ByTestId(rows))
 	return rows
+}
+
+type PassRateMetricRow struct {
+	Dir       string `json:"dir"`
+	PassRates []int  `json:"pass_rates"`
+	Total     int    `json:"total"`
+}
+type ByDir []interface{}
+
+func (s ByDir) Len() int          { return len(s) }
+func (s ByDir) Swap(i int, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByDir) Less(i int, j int) bool {
+	return s[i].(PassRateMetricRow).Dir < s[j].(PassRateMetricRow).Dir
 }
 
 func totalsAndPassRateMetricToRows(totals map[string]int,
 	passRateMetric map[string][]int) (
 	rows []interface{}) {
-	type PassRateMetricRow struct {
-		Dir       string `json:"dir"`
-		PassRates []int  `json:"pass_rates"`
-		Total     int    `json:"total"`
-	}
+
 	rows = make([]interface{}, 0, len(passRateMetric))
 	for dir, passRates := range passRateMetric {
 		rows = append(rows, PassRateMetricRow{dir, passRates,
 			totals[dir]})
 	}
+	sort.Sort(ByDir(rows))
 	return rows
 }
 
