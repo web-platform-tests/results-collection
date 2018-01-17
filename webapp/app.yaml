@@ -21,3 +21,8 @@ handlers:
 - url: /.*
   script: _go_app
   secure: always
+
+# Don't upload mock-data static files to AppEngine
+skip_files:
+- static/b952881825/
+- static/wptd-metrics/
