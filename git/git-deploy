@@ -19,7 +19,7 @@ while getopts ':ph' flag; do
 done
 
 BRANCH_NAME="$(git rev-parse --abbrev-ref HEAD)"
-USER="$(git remote -v get-url origin | sed -E 's#https?:\/\/github.com\/##' | sed 's#/.*$##')"
+USER="$(git remote -v get-url origin | sed -E 's#(https?:\/\/|git@)github.com(\/|:)##' | sed 's#/.*$##')"
 VERSION="${USER}-${BRANCH_NAME}"
 PROMOTE="--no-promote"
 
