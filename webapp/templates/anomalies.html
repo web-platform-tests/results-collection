@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html>
-{{ template "_head.html" }}
+<head>
+  {{ template "_head_common.html" }}
+  <link rel="import" href="/components/anomalies.html">
+</head>
 <body>
 <div id="content">
   {{ template "_header.html" }}
   <div>
-    Interoperability anomalies view coming soon.
+    <wpt-anomalies pass-rate-metadata="{{ .Metadata }}" browser="{{ .Browser }}"></wpt-anomalies>
   </div>
 </div>
 {{ template "_ga.html" }}

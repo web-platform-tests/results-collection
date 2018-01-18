@@ -52,3 +52,8 @@ indexes:
   - name: CreatedAt
     direction: desc
   - name: Revision
+- kind: github.com.w3c.wptdashboard.metrics.FailuresMetadata
+  properties:
+  - name: BrowserName
+  - name: StartTime
+    direction: desc
