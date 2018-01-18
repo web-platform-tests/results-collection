@@ -5,27 +5,21 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"strconv"
-	"sync"
-	"time"
-
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/datastore"
 	gcs "cloud.google.com/go/storage"
+	"flag"
+	"fmt"
 	"github.com/w3c/wptdashboard/metrics"
 	"github.com/w3c/wptdashboard/metrics/compute"
 	"github.com/w3c/wptdashboard/metrics/storage"
 	base "github.com/w3c/wptdashboard/shared"
 	"golang.org/x/net/context"
+	"log"
+	"os"
 	"sort"
+	"sync"
+	"time"
 )
 
 var wptDataPath *string
@@ -104,7 +98,7 @@ func main() {
 		*inputGcsBucket)
 
 	readStartTime := time.Now()
-	runs := getRuns()
+	runs := base.FetchLatestRuns(*wptdHost)
 	allResults := storage.LoadTestRunResults(&inputCtx, runs)
 	readEndTime := time.Now()
 
@@ -261,28 +255,6 @@ func main() {
 	wg.Wait()
 
 	log.Printf("Uploaded metrics")
-}
-
-func getRuns() []base.TestRun {
-	url := "https://" + *wptdHost + "/api/runs"
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		log.Fatal(errors.New("Bad response code from " + url + ": " +
-			strconv.Itoa(resp.StatusCode)))
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var runs []base.TestRun
-	if err := json.Unmarshal(body, &runs); err != nil {
-		log.Fatal(err)
-	}
-	return runs
 }
 
 type FailureListsRow struct {

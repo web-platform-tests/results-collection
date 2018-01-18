@@ -31,12 +31,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	tokens := []interface{}{&base.Token{}}
+	emptySecretToken := []interface{}{&base.Token{}}
 	staticDataTime, _ := time.Parse(time.RFC3339, "2017-10-18T00:00:00Z")
 
 	// Follow pattern established in run/*.py data collection code.
 	const summaryUrlFmtString = "/static/wptd/%s/%s"
-	properTestRuns := []base.TestRun{
+	staticTestRuns := []base.TestRun{
 		{
 			BrowserName:    "chrome",
 			BrowserVersion: "63.0",
@@ -79,45 +79,45 @@ func main() {
 	// Follow pattern established in metrics/run/*.go data collection code.
 	// Use unzipped JSON for local dev.
 	const metricsUrlFmtString = "/static/wptd-metrics/0-0/%s.json"
-	testRuns := make([]interface{}, len(properTestRuns))
-	for i, testRun := range properTestRuns {
-		testRuns[i] = &testRun
+	staticTestRunMetadata := make([]interface{}, len(staticTestRuns))
+	for i := range staticTestRuns {
+		staticTestRunMetadata[i] = &staticTestRuns[i]
 	}
-	passRateMetadata := []interface{}{
+	staticPassRateMetadata := []interface{}{
 		&metrics.PassRateMetadata{
 			StartTime: timeZero,
 			EndTime:   timeZero,
-			TestRuns:  properTestRuns,
+			TestRuns:  staticTestRuns,
 			DataUrl:   fmt.Sprintf(metricsUrlFmtString, "pass-rates"),
 		},
 	}
 
-	failuresMetadata := []interface{}{
+	staticFailuresMetadata := []interface{}{
 		&metrics.FailuresMetadata{
 			StartTime:   timeZero,
 			EndTime:     timeZero,
-			TestRuns:    properTestRuns,
+			TestRuns:    staticTestRuns,
 			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "chrome-failures"),
 			BrowserName: "chrome",
 		},
 		&metrics.FailuresMetadata{
 			StartTime:   timeZero,
 			EndTime:     timeZero,
-			TestRuns:    properTestRuns,
+			TestRuns:    staticTestRuns,
 			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "edge-failures"),
 			BrowserName: "edge",
 		},
 		&metrics.FailuresMetadata{
 			StartTime:   timeZero,
 			EndTime:     timeZero,
-			TestRuns:    properTestRuns,
+			TestRuns:    staticTestRuns,
 			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "firefox-failures"),
 			BrowserName: "firefox",
 		},
 		&metrics.FailuresMetadata{
 			StartTime:   timeZero,
 			EndTime:     timeZero,
-			TestRuns:    properTestRuns,
+			TestRuns:    staticTestRuns,
 			DataUrl:     fmt.Sprintf(metricsUrlFmtString, "safari-failures"),
 			BrowserName: "safari",
 		},
@@ -130,10 +130,19 @@ func main() {
 	failuresMetadataKindName := metrics.GetDatastoreKindName(
 		metrics.FailuresMetadata{})
 
-	addData(ctx, tokenKindName, tokens)
-	addData(ctx, testRunKindName, testRuns)
-	addData(ctx, passRateMetadataKindName, passRateMetadata)
-	addData(ctx, failuresMetadataKindName, failuresMetadata)
+	log.Print("Adding local mock data (static/)...")
+	addData(ctx, tokenKindName, emptySecretToken)
+	addData(ctx, testRunKindName, staticTestRunMetadata)
+	addData(ctx, passRateMetadataKindName, staticPassRateMetadata)
+	addData(ctx, failuresMetadataKindName, staticFailuresMetadata)
+
+	log.Print("Adding latest production TestRun data...")
+	prodTestRuns := base.FetchLatestRuns("wpt.fyi")
+	latestProductionTestRunMetadata := make([]interface{}, len(prodTestRuns))
+	for i := range prodTestRuns {
+		latestProductionTestRunMetadata[i] = &prodTestRuns[i]
+	}
+	addData(ctx, testRunKindName, latestProductionTestRunMetadata)
 }
 
 func addData(ctx context.Context, kindName string, data []interface{}) {
