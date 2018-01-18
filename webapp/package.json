@@ -6,6 +6,8 @@
     "eslint-plugin-html": "^3.2.2"
   },
   "scripts": {
-    "test": "./node_modules/.bin/eslint --plugin html 'components/*.html' --fix"
+    "test": "npm run lint",
+    "lint": "./node_modules/.bin/eslint --plugin html components/*.html",
+    "lint-fix": "./node_modules/.bin/eslint --plugin html components/*.html --fix"
   }
 }
