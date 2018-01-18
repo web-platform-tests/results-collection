@@ -24,5 +24,8 @@ handlers:
 
 # Don't upload mock-data static files to AppEngine
 skip_files:
+- bower_components/web-component-tester/
+- node_modules/
 - static/b952881825/
 - static/wptd-metrics/
+- test/

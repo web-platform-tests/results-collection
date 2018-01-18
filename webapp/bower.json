@@ -1,7 +1,10 @@
 {
-  "name": "polymer-2-carousel",
+  "name": "wpt.fyi",
   "private": true,
   "dependencies": {
     "polymer": "Polymer/polymer#2"
+  },
+  "devDependencies": {
+    "web-component-tester": "^6.4.3"
   }
 }

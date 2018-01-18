@@ -46,7 +46,9 @@ found in the LICENSE file.
      * (i.e. pass in some, but not all, browsers).
      */
     class WPTAnomalies extends window.Polymer.Element {
-      static get is() { return 'wpt-anomalies'; }
+      static get is() {
+        return 'wpt-anomalies';
+      }
 
       static get properties() {
         return {
@@ -86,7 +88,7 @@ found in the LICENSE file.
         if (!this.browser) {
           anomalies = anomalies.filter(d => isTestFile(d.dir));
         }
-        
+
         const totalBrowsers = metrics.metadata.test_runs.length;
 
         // For each pass-rate (browser count), build a tree of tests + directories.
@@ -105,7 +107,7 @@ found in the LICENSE file.
             : data.test.test;
           if (this.browser) {
             if (data.num_other_failures + 1 >= totalBrowsers) {
-              continue
+              continue;
             }
             anomalyGroups[data.num_other_failures].tests.push(testPath);
           } else {
@@ -113,30 +115,42 @@ found in the LICENSE file.
             for (let i in data.pass_rates) {
               const pass_rate = data.pass_rates[i];
               if (i < 1 || i >= totalBrowsers || pass_rate < 1) {
-                continue
+                continue;
               }
               anomalyGroups[i - 1].tests.push(testPath);
             }
           }
         }
-        this.anomalyGroups = anomalyGroups
+        this.anomalyGroups = anomalyGroups;
       }
 
-      async fetchResults (url) {
+      async fetchResults(url) {
         const response = await window.fetch(url);
         return response.ok ? await response.json() : {};
       }
 
       computeBrowserCount(count) {
-        if (count == 0) return "no browsers";
-        if (count == 1) return "1 browser";
-        if (count > 1) return `${count} browsers`;
+        if (count === 0) {
+          return 'no browsers';
+        }
+        if (count === 1) {
+          return '1 browser';
+        }
+        if (count > 1) {
+          return `${count} browsers`;
+        }
       }
 
       computeOtherBrowserCount(count) {
-        if (count == 0) return "no other browsers";
-        if (count == 1) return "1 other browser";
-        if (count > 1) return `${count} other browsers`;
+        if (count === 0) {
+          return 'no other browsers';
+        }
+        if (count === 1) {
+          return '1 other browser';
+        }
+        if (count > 1) {
+          return `${count} other browsers`;
+        }
       }
     }
 

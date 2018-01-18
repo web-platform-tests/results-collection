@@ -57,6 +57,11 @@ found in the LICENSE file.
       border-collapse: collapse;
     }
 
+    .th-label {
+      padding: 0.2em 0.5em;
+      text-align: left;
+    }
+
     tr.spec {
       background-color: #eee;
     }
@@ -144,7 +149,7 @@ found in the LICENSE file.
       <a href="/interop/" on-click="navigate">WPT</a>
       <template is="dom-repeat" items="{{ splitIntoLinkedParts(path) }}" as="part">
         <span class="path-separator">/</span>
-        <a href="/interop{{ part.path }}"  on-click="navigate">{{ part.name }}</a>
+        <a href="/interop{{ part.path }}" on-click="navigate">{{ part.name }}</a>
       </template>
     </div>
   </section>
@@ -164,9 +169,19 @@ found in the LICENSE file.
   <table>
     <thead>
       <tr>
-        <th>Passing:</th>
+        <th>Spec</th>
+        <template is="dom-if" if="{{ thLabels.length }}">
+          <th colspan="100">Browsers Passing</th>
+          <!--
+          <th colspan="100">Browsers Passing, out of {{ allMetrics.metadata.test_runs.length }}</th>
+          -->
+        </template>
+      </tr>
+      <tr>
+        <th>&nbsp;</th>
         <template is="dom-repeat" items="{{ thLabels }}" as="label">
-          <th>{{ label }}</th>
+          <!-- Repeats for as many different browser test runs are available, plus one -->
+          <th class="th-label">{{ label }}</th>
         </template>
       </tr>
     </thead>
@@ -178,7 +193,7 @@ found in the LICENSE file.
           </td>
 
           <template is="dom-repeat" items="{{node.pass_rates}}" as="passRate">
-            <td style="{{ passRateStyle(node, passRate) }}">{{ passRate }} / {{ node.total }}</td>
+            <td style="{{ passRateStyle(node.total, passRate) }}">{{ passRate }} / {{ node.total }}</td>
           </template>
         </tr>
       </template>
@@ -188,7 +203,7 @@ found in the LICENSE file.
 </template>
 
 <script>
-  'use strict';
+
   const urlToMetricsPath = location => location.pathname.replace(/\/interop(.+)(\/)?$/, '$1');
   const urlToQuery = location => {
     // Drop initial "?" from url.search.
@@ -206,8 +221,10 @@ found in the LICENSE file.
   const queryTimeoutId = Symbol('queryTimeoutId');
 
   class WPTInterop extends window.Polymer.Element {
-    static get is () { return 'wpt-interop' }
-    static get properties () {
+    static get is() {
+      return 'wpt-interop';
+    }
+    static get properties() {
       return {
         passRateMetadata: Object,
         allMetrics: Object,
@@ -238,18 +255,18 @@ found in the LICENSE file.
         },
         queryPlaceholder: {
           type: String,
-          computed: 'computeQueryPlaceholder(currentNode)'
+          computed: 'computeQueryPlaceholder()'
         },
         queryTimeoutId: {
           type: Number,
           value: 0
         },
-      }
+      };
     }
 
     async connectedCallback() {
       await super.connectedCallback();
-      window.onpopstate = () => {
+      window.onpopstate = (event) => {
         const state = event.state;
         this.path = state.path || '/';
         this.query = state.query || '';
@@ -273,27 +290,26 @@ found in the LICENSE file.
       return !this.computePathIsATestFile(node.dir) ? 'font-weight: bold;' : '';
     }
 
-    splitIntoLinkedParts (path) {
-      const parts = path.split('/').slice(1)
-      let pathSoFar = ''
-      return parts.map(part => {
-        pathSoFar += `/${part}`;
+    splitIntoLinkedParts(input) {
+      const parts = input.split('/').slice(1);
+      let path = '';
+      return parts.map(name => {
+        path += `/${name}`;
         return {
-          name: part,
-          path: pathSoFar
-        }
+          name, path
+        };
       });
     }
 
-    bindNavigate () {
+    bindNavigate() {
       return this.navigate.bind(this);
     }
 
-    navigate (event) {
+    navigate(event) {
       event.preventDefault();
       let path = urlToMetricsPath(event.target);
-      if (path === this.path) {
-        return
+      if (this.path === path) {
+        return;
       }
       this.path = path;
       // Clear query when navigating to a new path.
@@ -301,7 +317,7 @@ found in the LICENSE file.
       this.navigateState({path: this.path, query: this.query});
       // Send Google Analytics pageview event
       if ('ga' in window) {
-        window.ga('send', 'pageview', path)
+        window.ga('send', 'pageview', path);
       }
     }
 
@@ -328,67 +344,63 @@ found in the LICENSE file.
       return /(\.(html|htm|py|svg|xhtml|xht|xml)$)/.test(path);
     }
 
-    computeThLabels (allMetrics) {
+    computeThLabels(allMetrics) {
       const numLabels = allMetrics.metadata.test_runs.length + 1;
       let labels = [];
       for (let i = 0; i < numLabels; i++) {
-        labels[i] = `${i} / ${numLabels - 1} browsers`;
+        labels[i] = `${i} / ${numLabels - 1}`;
       }
       return labels;
     }
 
-    computeMetrics (path, query, allMetrics) {
+    computeMetrics(path, query, allMetrics) {
       if (!path || !allMetrics) {
         return null;
       }
+      let { data, metadata } = allMetrics;
+
       if (this.computePathIsATestFile(path)) {
-        return {
-          metadata: allMetrics.metadata,
-          data: allMetrics.data.filter(node => node.dir === path)
-        }
+        data = data.filter(node => node.dir === path);
       } else {
-        return {
-          metadata: allMetrics.metadata,
-          data: allMetrics.data.filter(this.filterNode.bind(this, path === '/' ? path : `${this.path}/`, query))
-        }
+        data = data.filter(node => this.filterNode(path === '/' ? path : `${this.path}/`, query, node));
       }
+
+      return {
+        metadata, data
+      };
     }
 
-    filterNode (path, query, node) {
-      const dir = node.dir;
-      if (dir.indexOf(path) !== 0) {
+    filterNode(path, query, node) {
+      if (!node.dir.startsWith(path)) {
         return false;
       }
-      const subdir = dir.substr(path.length);
+      const subdir = node.dir.substr(path.length);
       if (!query) {
-        return subdir.indexOf('/') === -1
+        return !subdir.includes('/');
       }
       let test;
       try {
         const re = new RegExp(query.replace(/\//g, '\\/'), 'i');
         test = re.test.bind(re);
       } catch (e) {
-        test = str => str.indexOf(query) !== -1
+        test = str => str.includes(query);
       }
-      return this.shouldQueryAll()
-        ? test(subdir)
-        : subdir.indexOf('/') === -1 && test(subdir);
+
+      return this.shouldQueryAll() ?
+        test(subdir) :
+        (!subdir.includes('/') && test(subdir));
     }
 
-    relPath(path) {
-      return path.replace(`${this.path}/`, '');
-    }
-
-    passRateStyle(node, passRate) {
-      const fraction = passRate / node.total;
+    passRateStyle(total, passRate) {
+      const fraction = passRate / total;
       const rounded = Math.round(fraction * 1000) / 1000;
       return `background-color: rgba(170, 136, 255, ${rounded})`;
     }
 
-    queryChanged (_, oldQuery) {
+    queryChanged(_, oldQuery) {
       // Debounce first initialization.
       if (oldQuery === undefined) {
-        return
+        return;
       }
       if (this[queryTimeoutId]) {
         window.clearTimeout(this[queryTimeoutId]);
@@ -400,7 +412,7 @@ found in the LICENSE file.
       this.navigateState({path: this.path, query: this.query});
     }
 
-    computeQueryPlaceholder (currentNode) {
+    computeQueryPlaceholder() {
       if (this.shouldQueryAll()) {
         return 'Search test files, like cors/allow-headers.htm';
       } else {
@@ -417,9 +429,9 @@ found in the LICENSE file.
     }
 
     shouldQueryAll() {
-      return this.currentNode && this.currentNode.total < 10000 || false
+      return (this.currentNode && this.currentNode.total < 10000) || false;
     }
   }
-  window.customElements.define(WPTInterop.is, WPTInterop)
+  window.customElements.define(WPTInterop.is, WPTInterop);
 </script>
 </dom-module>

@@ -5,3 +5,5 @@ run/running.ini
 run/protos/*_pb2.py
 bq-schema
 generated
+webapp/bower_components/*
+!webapp/bower_components/{polymer,shadycss,webcomponentsjs}

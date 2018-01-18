@@ -60,7 +60,9 @@ See models.go for more details.
 
   <script>
     class TestRun extends window.Polymer.Element {
-      static get is() { return 'test-run'; }
+      static get is() {
+        return 'test-run';
+      }
 
       static get properties() {
         return {
@@ -75,7 +77,7 @@ See models.go for more details.
       }
 
       isDiff(browserName) {
-        return browserName === 'Diff';
+        return browserName.toLowerCase() === 'diff';
       }
     }
 
