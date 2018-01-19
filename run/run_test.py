@@ -80,17 +80,14 @@ class TestRun(unittest.TestCase):
         run.patch_wpt = stub_patch_wpt
         subprocess.check_call = stub_check_call
 
-        originalSHAFinder = shas.SHAFinder
-        shas.SHAFinder = mock.Mock(shas.SHAFinder)
+        with mock.patch('shas.SHAFinder') as mock_sha_finder:
+            args = Args()
+            args.wpt_sha = None
+            config = {'wpt_path': os.path.dirname(os.path.realpath(__file__))}
 
-        args = Args()
-        args.wpt_sha = None
-        config = {'wpt_path': os.path.dirname(os.path.realpath(__file__))}
-
-        self.assertNotEqual(setup_wpt(args, {}, config, logger), args.wpt_sha)
-        self.assertEqual(shas.SHAFinder.called, True)
-
-        shas.SHAFinder = originalSHAFinder
+            wpt_sha = setup_wpt(args, {}, config, logger)
+            self.assertNotEqual(wpt_sha, args.wpt_sha)
+            self.assertTrue(mock_sha_finder.called)
 
     def test_setup_wpt_calls_patch_wpt(self):
         run.patch_wpt = mock.Mock(run.patch_wpt)
