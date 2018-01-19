@@ -140,7 +140,7 @@ found in the LICENSE file.
     </template>
     <div class="path">
       <a href="/interop/" on-click="_navigate">WPT</a>
-      <template is="dom-repeat" items="{{ _splitIntoLinkedParts(path) }}" as="part">
+      <template is="dom-repeat" items="{{ splitIntoLinkedParts(path) }}" as="part">
         <span class="path-separator">/</span>
         <a href="/interop{{ part.path }}"  on-click="_navigate">{{ part.name }}</a>
       </template>
@@ -172,16 +172,16 @@ found in the LICENSE file.
       <template is="dom-repeat" items="{{ metrics.data }}" as="node">
         <tr>
           <td>
-            <template is="dom-if" if="{{ !_computePathIsATestFile(node.dir) }}">
-              <b><a href="/interop{{ node.dir }}" on-click="_navigate">{{ _relPath(node.dir) }}</a></b>
+            <template is="dom-if" if="{{ !computePathIsATestFile(node.dir) }}">
+              <b><a href="/interop{{ node.dir }}" on-click="navigate">{{ relPath(node.dir) }}</a></b>
             </template>
-            <template is="dom-if" if="{{ _computePathIsATestFile(node.dir) }}">
-              <a href="/interop{{ node.dir }}" on-click="_navigate">{{ _relPath(node.dir) }}</a>
+            <template is="dom-if" if="{{ computePathIsATestFile(node.dir) }}">
+              <a href="/interop{{ node.dir }}" on-click="navigate">{{ relPath(node.dir) }}</a>
             </template>
           </td>
 
           <template is="dom-repeat" items="{{node.pass_rates}}" as="passRate">
-            <td style="{{ _passRateStyle(node, passRate) }}">{{ passRate }} / {{ node.total }}</td>
+            <td style="{{ passRateStyle(node, passRate) }}">{{ passRate }} / {{ node.total }}</td>
           </template>
         </tr>
       </template>
@@ -192,10 +192,10 @@ found in the LICENSE file.
 
 <script>
   'use strict';
-  const urlToMetricsPath = url => url.pathname.replace(/\/interop(.+)(\/)?$/, '$1');
-  const urlToQuery = url => {
+  const urlToMetricsPath = location => location.pathname.replace(/\/interop(.+)(\/)?$/, '$1');
+  const urlToQuery = location => {
     // Drop initial "?" from url.search.
-    const search = url.search;
+    const search = location.search;
     if (!search) {
       return '';
     }
@@ -203,9 +203,7 @@ found in the LICENSE file.
     if (!match) {
       return '';
     }
-    const subMatch = match[1];
-    const decodedMatch = window.decodeURIComponent(subMatch);
-    return decodedMatch;
+    return window.decodeURIComponent(match[1]);
   };
 
   class WPTInterop extends window.Polymer.Element {
@@ -216,7 +214,7 @@ found in the LICENSE file.
         allMetrics: Object,
         metrics: {
           type: Object,
-          computed: '_computeMetrics(path, pathIsATestFile, query, allMetrics, currentNode)'
+          computed: 'computeMetrics(path, pathIsATestFile, query, allMetrics, currentNode)'
         },
         path: {
           type: String,
@@ -224,26 +222,26 @@ found in the LICENSE file.
         },
         currentNode: {
           type: Object,
-          computed: '_computeCurrentNode(allMetrics, path)'
+          computed: 'computeCurrentNode(allMetrics, path)'
         },
         query: {
           type: String,
           value: urlToQuery(window.location),
-          observer: '_queryChanged'
+          observer: 'queryChanged'
         },
         pathIsATestFile: {
           type: Boolean,
-          computed: '_computePathIsATestFile(path)'
+          computed: 'computePathIsATestFile(path)'
         },
         thLabels: {
           type: Array,
-          computed: '_computeThLabels(allMetrics)'
+          computed: 'computeThLabels(allMetrics)'
         },
         queryPlaceholder: {
           type: String,
-          computed: '_computeQueryPlaceholder(currentNode)'
+          computed: 'computeQueryPlaceholder(currentNode)'
         },
-        _queryTimeoutId: {
+        queryTimeoutId: {
           type: Number,
           value: 0
         },
@@ -252,33 +250,33 @@ found in the LICENSE file.
 
     async connectedCallback() {
       await super.connectedCallback();
-      window.addEventListener('popstate', event => {
+      window.onpopstate = () => {
         const state = event.state;
         this.path = state.path || '/';
         this.query = state.query || '';
-      });
-      this._initState({path: this.path, query: this.query});
-      this.allMetrics = await this._fetchMetrics(this.passRateMetadata.url);
+      };
+      this.initState({path: this.path, query: this.query});
+      this.allMetrics = await this.fetchMetrics(this.passRateMetadata.url);
     }
 
-    async _fetchMetrics(url) {
+    async fetchMetrics(url) {
       const response = await window.fetch(url);
       return await response.json();
     }
 
-    _splitIntoLinkedParts (path) {
+    splitIntoLinkedParts (path) {
       const parts = path.split('/').slice(1)
       let pathSoFar = ''
       return parts.map(part => {
-        pathSoFar += '/' + part
+        pathSoFar += `/${part}`;
         return {
           name: part,
           path: pathSoFar
         }
-      })
+      });
     }
 
-    _navigate (event) {
+    navigate (event) {
       event.preventDefault();
       let path = urlToMetricsPath(event.target);
       if (path === this.path) {
@@ -287,22 +285,22 @@ found in the LICENSE file.
       this.path = path;
       // Clear query when navigating to a new path.
       this.query = '';
-      this._navigateState({path: this.path, query: this.query});
+      this.navigateState({path: this.path, query: this.query});
       // Send Google Analytics pageview event
       if ('ga' in window) {
         window.ga('send', 'pageview', path)
       }
     }
 
-    _initState(state) {
-      this._doState(window.history.replaceState.bind(window.history), state);
+    initState(state) {
+      this.doState(window.history.replaceState.bind(window.history), state);
     }
 
-    _navigateState(state) {
-      this._doState(window.history.pushState.bind(window.history), state);
+    navigateState(state) {
+      this.doState(window.history.pushState.bind(window.history), state);
     }
 
-    _doState(stateFunc, state) {
+    doState(stateFunc, state) {
       const path = state.path;
       const query = state.query;
       if (!query) {
@@ -313,23 +311,20 @@ found in the LICENSE file.
       stateFunc(state, '', `/interop${path}?q=${encodedQuery}`);
     }
 
-    _computePathIsATestFile(path) {
-      return path.endsWith('.html') || path.endsWith('.htm') ||
-              path.endsWith('.py') || path.endsWith('.svg') ||
-              path.endsWith('.xhtml') || path.endsWith('.xht') ||
-              path.endsWith('.xml');
+    computePathIsATestFile(path) {
+      return /(\.(html|htm|py|svg|xhtml|xht|xml)$)/.test(path);
     }
 
-    _computeThLabels (allMetrics) {
+    computeThLabels (allMetrics) {
       const numLabels = allMetrics.metadata.test_runs.length + 1;
-      let labels = new Array();
+      let labels = [];
       for (let i = 0; i < numLabels; i++) {
         labels[i] = `${i} / ${numLabels - 1} browsers`;
       }
       return labels;
     }
 
-    _computeMetrics (path, pathIsATestFile, query, allMetrics, currentNode) {
+    computeMetrics (path, pathIsATestFile, query, allMetrics, currentNode) {
       if (!path || !allMetrics) {
         return null;
       }
@@ -341,12 +336,12 @@ found in the LICENSE file.
       } else {
         return {
           metadata: allMetrics.metadata,
-          data: allMetrics.data.filter(this._filterNode.bind(this, path === '/' ? path : `${this.path}/`, query))
+          data: allMetrics.data.filter(this.filterNode.bind(this, path === '/' ? path : `${this.path}/`, query))
         }
       }
     }
 
-    _filterNode (path, query, node) {
+    filterNode (path, query, node) {
       const dir = node.dir;
       if (dir.indexOf(path) !== 0) {
         return false;
@@ -362,22 +357,22 @@ found in the LICENSE file.
       } catch (e) {
         test = str => str.indexOf(query) !== -1
       }
-      return this._shouldQueryAll()
+      return this.shouldQueryAll()
         ? test(subdir)
         : subdir.indexOf('/') === -1 && test(subdir);
     }
 
-    _relPath(path) {
-      return path.replace(this.path + '/', '');
+    relPath(path) {
+      return path.replace(`${this.path}/`, '');
     }
 
-    _passRateStyle(node, passRate) {
+    passRateStyle(node, passRate) {
       const fraction = passRate / node.total;
       const rounded = Math.round(fraction * 1000) / 1000;
       return `background-color: rgba(170, 136, 255, ${rounded})`;
     }
 
-    _queryChanged (_, oldQuery) {
+    queryChanged (_, oldQuery) {
       // Debounce first initialization.
       if (oldQuery === undefined) {
         return
@@ -385,22 +380,22 @@ found in the LICENSE file.
       if (this._queryTimeoutId) {
         window.clearTimeout(this._queryTimeoutId);
       }
-      this._queryTimeoutId = window.setTimeout(this._updateQueryState.bind(this), 500);
+      this._queryTimeoutId = window.setTimeout(this.updateQueryState.bind(this), 500);
     }
 
-    _updateQueryState() {
-      this._navigateState({path: this.path, query: this.query});
+    updateQueryState() {
+      this.navigateState({path: this.path, query: this.query});
     }
 
-    _computeQueryPlaceholder (currentNode) {
-      if (this._shouldQueryAll()) {
+    computeQueryPlaceholder (currentNode) {
+      if (this.shouldQueryAll()) {
         return 'Search test files, like cors/allow-headers.htm';
       } else {
         return 'Search direct sub-folders and test files';
       }
     }
 
-    _computeCurrentNode(allMetrics, path) {
+    computeCurrentNode(allMetrics, path) {
       if (!allMetrics || !path || path === '/') {
         return null;
       }
@@ -408,7 +403,7 @@ found in the LICENSE file.
       return currentNode || null;
     }
 
-    _shouldQueryAll() {
+    shouldQueryAll() {
       return this.currentNode && this.currentNode.total < 10000 || false
     }
   }
