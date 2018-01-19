@@ -22,13 +22,13 @@ found in the LICENSE file.
 
     <template is="dom-repeat" items="{{anomalyGroups}}" as="anomalyGroup" itemsIndexAs="index">
       <template is="dom-if" if="{{browser}}">
-        <h2>Failing in [[browser]] and [[index]] other browsers</h2>
+        <h2>Failing in [[browser]] and [[computeOtherBrowserCount(index)]]</h2>
       </template>
       <template is="dom-if" if="{{!browser}}">
-        <h2>Passing in [[anomalyGroup.passingBrowsers]] browsers</h2>
+        <h2>Passing in [[computeBrowserCount(anomalyGroup.passingBrowsers)]]</h2>
       </template>
       <template is="dom-repeat" items="{{anomalyGroup.tests}}" as="test">
-        <a href="[[test]]">[[test]]</a><br />
+        <a href="[[test]]">[[test]]</a><br>
       </template>
     </template>
   </template>
@@ -119,6 +119,18 @@ found in the LICENSE file.
       async fetchResults (url) {
         const response = await window.fetch(url);
         return response.ok ? await response.json() : {};
+      }
+
+      computeBrowserCount(count) {
+        if (count == 0) return "no browsers";
+        if (count == 1) return "1 browser";
+        if (count > 1) return `${count} browsers`;
+      }
+
+      computeOtherBrowserCount(count) {
+        if (count == 0) return "no other browsers";
+        if (count == 1) return "1 other browser";
+        if (count > 1) return `${count} other browsers`;
       }
     }
 
