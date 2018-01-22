@@ -65,9 +65,9 @@ class TestRun(unittest.TestCase):
         self.assertEqual(version_string_to_major_minor('1.1'), '1.1')
         self.assertEqual(version_string_to_major_minor('1.1.1'), '1.1')
 
-    @mock.patch('run.patch_wpt', new=stub_patch_wpt)
-    @mock.patch('subprocess.check_call', new=stub_check_call)
-    def test_setup_wpt_explicit_sha(self):
+    @mock.patch('run.run.patch_wpt', side_effect=stub_patch_wpt)
+    @mock.patch('subprocess.check_call', side_effect=stub_check_call)
+    def test_setup_wpt_explicit_sha(self, mock_patch_wpt, mock_check_call):
         args = Args()
         args.wpt_sha = '1234567890'
         config = {'wpt_path': os.path.dirname(os.path.realpath(__file__))}
@@ -75,9 +75,12 @@ class TestRun(unittest.TestCase):
         self.assertEqual(setup_wpt(args, {}, config, logger), args.wpt_sha)
 
     @mock.patch('shas.SHAFinder')
-    @mock.patch('run.patch_wpt', new=stub_patch_wpt)
-    @mock.patch('subprocess.check_call', new=stub_check_call)
-    def test_setup_wpt_find_sha(self, mock_sha_finder):
+    @mock.patch('run.run.patch_wpt', side_effect=stub_patch_wpt)
+    @mock.patch('subprocess.check_call', side_effect=stub_check_call)
+    def test_setup_wpt_find_sha(self,
+                                mock_sha_finder,
+                                mock_patch_wpt,
+                                mock_check_call):
         args = Args()
         args.wpt_sha = None
         config = {'wpt_path': os.path.dirname(os.path.realpath(__file__))}
@@ -86,9 +89,9 @@ class TestRun(unittest.TestCase):
         self.assertNotEqual(wpt_sha, args.wpt_sha)
         self.assertTrue(mock_sha_finder.called)
 
-    @mock.patch('run.patch_wpt')
-    @mock.patch('subprocess.check_call', new=stub_check_call)
-    def test_setup_wpt_calls_patch_wpt(self, mock_patch_wpt):
+    @mock.patch('run.run.patch_wpt', side_effect=stub_patch_wpt)
+    @mock.patch('subprocess.check_call', side_effect=stub_check_call)
+    def test_setup_wpt_calls_patch_wpt(self, mock_patch_wpt, mock_check_call):
         args = Args()
         args.wpt_sha = '1234567890'
         config = {'wpt_path': os.path.dirname(os.path.realpath(__file__))}
