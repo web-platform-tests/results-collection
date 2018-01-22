@@ -22,23 +22,20 @@ This starts a Docker instance named `wptd-dev-instance`.
 
 ## Running locally
 
-In one terminal, start the web server:
+Once the instance is running, you can fire up the web server in another terminal:
 
 ```sh
 ./util/docker-dev/web_server.sh
 ```
 
 This will build dependencies and start the Google App Engine development server inside `wptd-dev-instance`.
-You'll also need to populate the app datastore with some initial data, using util/populate_dev_data.py.
+
+With the webserver running, you'll also need to populate the app datastore with some initial data. In another terminal,
+execute the script which leverages `util/populate_dev_data.go` by running:
 
 ```sh
-./util/populate_dev_data.py \
-    --server localhost:9999 \
-    --sdk-root /path/to/google-cloud-sdk \
-    --creds ~/Downloads/wptdashboard-creds-file.json
+./util/docker-dev/dev_data.sh
 ```
-
-Further instructions on using the populate util can be found with the --help flag.
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for more information on local development.
 
