@@ -94,15 +94,16 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Setting up WPT checkout')
 
-    wpt_sha = setup_wpt(args, platform, config, logger)
+    setup_wpt(config)
 
-    print('Current WPT SHA: %s' % wpt_sha)
+    print('Patching WPT')
+    patch_wpt(config, platform)
 
-    return_code = subprocess.check_call(
-        ['git', 'checkout', wpt_sha], cwd=config['wpt_path'])
-    assert return_code == 0, (
-        'Got non-0 return code: '
-        '%d from command %s' % (return_code, command))
+    print('Getting WPT commit SHA and Date')
+    wpt_sha, wpt_commit_date = get_commit_details(args, config, logger)
+
+    print('WPT SHA: %s' % wpt_sha)
+    print('WPT Commit Date: %s' % wpt_commit_date)
 
     short_wpt_sha = wpt_sha[0:10]
 
@@ -229,6 +230,7 @@ def main(platform_id, platform, args, config):
         data=json.dumps({
             'browser_name': platform['browser_name'],
             'browser_version': platform['browser_version'],
+            'commit_date': wpt_commit_date,
             'os_name': platform['os_name'],
             'os_version': platform['os_version'],
             'revision': short_wpt_sha,
@@ -244,7 +246,7 @@ def main(platform_id, platform, args, config):
     print('Response text:', response.text)
 
 
-def setup_wpt(mainargs, platform, config, logger):
+def setup_wpt(config):
     wpt_setup_commands = [
         ['git', 'reset', '--hard', 'HEAD'],  # For wpt.patch
         ['git', 'checkout', 'master'],
@@ -257,14 +259,28 @@ def setup_wpt(mainargs, platform, config, logger):
             'Got non-0 return code: '
             '%d from command %s' % (return_code, command))
 
-    patch_wpt(config, platform)
+    return 0
+
+
+def get_commit_details(mainargs, config, logger):
+    wpt_sha = ''
+    wpt_date = ''
 
     if mainargs.wpt_sha:
-        return mainargs.wpt_sha
+        wpt_sha = mainargs.wpt_sha
     else:
         sha_finder = shas.SHAFinder(logger)
-        return (sha_finder.get_todays_sha(config['wpt_path'])
-                or sha_finder.get_head_sha(config['wpt_path']))
+        wpt_sha = (sha_finder.get_todays_sha(config['wpt_path'])
+                   or sha_finder.get_head_sha(config['wpt_path']))
+
+    subprocess.call(['git', 'checkout', wpt_sha], cwd=config['wpt_path'])
+    output = subprocess.check_output(
+        ['git', 'log', '-1', '--format=%cd', '--date=iso-strict'],
+        cwd=config['wpt_path']
+    )
+    wpt_date = output.decode('UTF-8').strip()
+
+    return wpt_sha, wpt_date
 
 
 def get_and_validate_platform(platform_id):

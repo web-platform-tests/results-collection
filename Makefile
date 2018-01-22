@@ -45,7 +45,7 @@ lint: py_lint go_lint
 proto: bq_proto go_proto py_proto
 
 py_lint: py_proto py_deps
-	pycodestyle --exclude=*_pb2.py .
+	pycodestyle --exclude=webapp/node_modules/*,*_pb2.py .
 
 py_test: py_proto py_deps
 	python -m unittest discover -p '*_test.py'
