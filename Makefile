@@ -73,3 +73,7 @@ py_deps: $(find . -type f | grep '\.py$' | grep -v '\_pb.py$')
 
 go_deps: $(find .  -type f | grep '\.go$' | grep -v '\.pb.go$')
 	cd $(WPTD_GO_PATH); go get -t ./...
+
+dev_data:
+	cd $(WPTD_GO_PATH)/util; go get -t ./...
+	go run util/populate_dev_data.go
