@@ -7,6 +7,7 @@ found in the LICENSE file.
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="path-part.html">
 <link rel="import" href="runs.html">
 <link rel="import" href="test-file-results.html">
 <link rel="import" href="test-run.html">
@@ -32,14 +33,10 @@ found in the LICENSE file.
         padding: 0.5em 0;
         width: 100%;
       }
-      a {
+      path-part {
         text-decoration: none;
         color: #0d5de6;
         font-family: monospace;
-      }
-      a:hover {
-        cursor: pointer;
-        color: #226ff3;
       }
       table {
         width: 100%;
@@ -143,7 +140,7 @@ found in the LICENSE file.
           <template is="dom-repeat" items="{{displayedNodes}}" as="node">
             <tr>
               <td>
-                <a style="{{ relativePathStyle(node) }}" href="{{ node.path }}" on-click="navigate">{{ displayableRelativePath(node) }}</a>
+                <path-part path="{{ node.path }}" is-dir="{{ node.isDir }}"></path-part>
               </td>
 
               <template is="dom-repeat" items="{{testRuns}}" as="testRun">
@@ -383,15 +380,6 @@ found in the LICENSE file.
           // Some shade of red
           return `background-color: hsl(0, 85%, ${luminance}%)`;
         }
-      }
-
-      displayableRelativePath(node) {
-        const prefix = this.path === '/' ? '/' : `${this.path}/`;
-        return `${node.path.replace(prefix, '')}${node.isDir ? '/' : ''}`;
-      }
-
-      relativePathStyle(node) {
-        return node.isDir ? 'font-weight: bold;' : '';
       }
 
       hasResults(node, testRun) {
