@@ -2,10 +2,10 @@
 
 This document covers the HTTP REST endpoints available on [wpt.fyi](http://wpt.fyi).
 
- - [/api/run](#/api/run)
- - [/api/runs](#/api/runs)
- - [/api/diff](#/api/diff)
- - [/results](#/results)
+ - [/api/run](#apirun)
+ - [/api/runs](#apiruns)
+ - [/api/diff](#apidiff)
+ - [/results](#results)
  
 ### /api/run
 
