@@ -7,6 +7,7 @@ found in the LICENSE file.
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-if.html">
 <link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="path-part.html">
 <link rel="import" href="runs.html">
 <link rel="import" href="test-run.html">
 
@@ -172,9 +173,7 @@ found in the LICENSE file.
       <template is="dom-repeat" items="{{ metrics.data }}" as="node">
         <tr>
           <td>
-            <a style="{{ relativePathStyle(node) }}" href="{{ node.dir }}" on-click="navigate">
-              {{ displayableRelativePath(node) }}
-            </a>
+            <path-part path="{{ node.dir }}" is-dir="{{ !computePathIsATestFile(node.dir) }}" prefix="/interop"></path-part>
           </td>
 
           <template is="dom-repeat" items="{{node.pass_rates}}" as="passRate">
