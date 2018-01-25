@@ -21,7 +21,7 @@ found in the LICENSE file.
       }
     </style>
 
-    <a class$="{{ styleClass }}" href="{{ href }}" on-click="navigate">
+    <a class$="{{ styleClass }}" href="{{ href }}" onclick="{{ navigate }}">
       {{ relativePath }}
     </a>
   </template>
@@ -43,9 +43,12 @@ found in the LICENSE file.
           isDir: {
             type: Boolean
           },
+          navigate: {
+            type: Function
+          },
           relativePath: {
             type: String,
-            computed: 'computedDisplayableRelativePath()'
+            computed: 'computedDisplayableRelativePath(path)'
           },
           href: {
             type: String,
@@ -62,10 +65,10 @@ found in the LICENSE file.
         return `${prefix || ''}${path}`;
       }
 
-      computedDisplayableRelativePath() {
+      computedDisplayableRelativePath(path) {
         const windowPath = window.location.pathname.replace(`${this.prefix || ''}`, '');
         const pathPrefix = new RegExp(`^${windowPath}${windowPath.endsWith('/') ? '' : '/'}`);
-        return `${this.path.replace(pathPrefix, '')}${this.isDir ? '/' : ''}`;
+        return `${path.replace(pathPrefix, '')}${this.isDir ? '/' : ''}`;
       }
 
       computePathClass() {
