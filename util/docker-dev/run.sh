@@ -17,9 +17,7 @@ WPTDASHBOARD_HOST_API_WEB_PORT=${WPTDASHBOARD_HOST_API_WEB_PORT:-"9999"}
 # --rm                                      Auto-remove when stopped
 # -it                                       Interactive mode (Ctrl+c will halt
 #                                           instance)
-# -v /etc/{group|passwd}:ro                 READ-ONLY mount of user/group info
-#                                           on host machine
-# -v "${WPTD_PATH}":/wptdashboard    Mount the repository
+# -v "${WPTD_PATH}":/wptdashboard           Mount the repository
 # -u $(id -u $USER):$(id -g $USER)          Run as current user and group
 # -p "${WPTDASHBOARD_HOST_WEB_PORT}:8080"   Expose web server port
 # --name wptd-dev-instance                  Name the instance
@@ -28,8 +26,6 @@ WPTDASHBOARD_HOST_API_WEB_PORT=${WPTDASHBOARD_HOST_API_WEB_PORT:-"9999"}
 
 info "Creating docker instance for dev server. Instance name: wptd-dev-instance"
 docker run -t -d --entrypoint /bin/bash \
-    -v /etc/group:/etc/group:ro \
-    -v /etc/passwd:/etc/passwd:ro \
     -v "${WPTD_PATH}":/home/jenkins/wptdashboard \
     -u $(id -u $USER):$(id -g $USER) \
     -p "${WPTDASHBOARD_HOST_WEB_PORT}:8080" \
