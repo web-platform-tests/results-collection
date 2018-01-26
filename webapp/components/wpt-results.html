@@ -33,11 +33,6 @@ found in the LICENSE file.
         padding: 0.5em 0;
         width: 100%;
       }
-      path-part {
-        text-decoration: none;
-        color: #0d5de6;
-        font-family: monospace;
-      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -323,7 +318,7 @@ found in the LICENSE file.
       bindNavigate() {
         return this.navigate.bind(this);
       }
-      
+
       navigate(event) {
         event.preventDefault();
         let path = event.target.pathname.replace(/(.+)(\/)$/, '$1');
