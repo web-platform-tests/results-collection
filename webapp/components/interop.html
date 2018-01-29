@@ -173,7 +173,7 @@ found in the LICENSE file.
       <template is="dom-repeat" items="{{ metrics.data }}" as="node">
         <tr>
           <td>
-            <path-part path="{{ node.dir }}" is-dir="{{ !computePathIsATestFile(node.dir) }}" prefix="/interop"></path-part>
+            <path-part path="{{ node.dir }}" is-dir="{{ !computePathIsATestFile(node.dir) }}" prefix="/interop" navigate="{{ bindNavigate() }}"></path-part>
           </td>
 
           <template is="dom-repeat" items="{{node.pass_rates}}" as="passRate">
@@ -282,6 +282,10 @@ found in the LICENSE file.
           path: pathSoFar
         }
       });
+    }
+
+    bindNavigate () {
+      return this.navigate.bind(this);
     }
 
     navigate (event) {
