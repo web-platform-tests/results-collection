@@ -35,15 +35,16 @@ func main() {
 	staticDataTime, _ := time.Parse(time.RFC3339, "2017-10-18T00:00:00Z")
 
 	// Follow pattern established in run/*.py data collection code.
-	const summaryUrlFmtString = "/static/wptd/%s/%s"
+	const staticRunSHA = "b952881825"
+	const summaryUrlFmtString = "/static/wptd/" + staticRunSHA + "/%s"
 	staticTestRuns := []base.TestRun{
 		{
 			BrowserName:    "chrome",
 			BrowserVersion: "63.0",
 			OSName:         "linux",
 			OSVersion:      "3.16",
-			Revision:       "b952881825",
-			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "b952881825", "chrome-63.0-linux-summary.json.gz"),
+			Revision:       staticRunSHA,
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "chrome-63.0-linux-summary.json.gz"),
 			CreatedAt:      staticDataTime,
 		},
 		{
@@ -51,8 +52,8 @@ func main() {
 			BrowserVersion: "15",
 			OSName:         "windows",
 			OSVersion:      "10",
-			Revision:       "b952881825",
-			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "5d55258739", "windows-10-sauce-summary.json.gz"),
+			Revision:       staticRunSHA,
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "edge-15-windows-10-sauce-summary.json.gz"),
 			CreatedAt:      staticDataTime,
 		},
 		{
@@ -60,8 +61,8 @@ func main() {
 			BrowserVersion: "57.0",
 			OSName:         "linux",
 			OSVersion:      "*",
-			Revision:       "b952881825",
-			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "fc70df1f75", "firefox-57.0-linux-summary.json.gz"),
+			Revision:       staticRunSHA,
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "firefox-57.0-linux-summary.json.gz"),
 			CreatedAt:      staticDataTime,
 		},
 		{
@@ -69,8 +70,8 @@ func main() {
 			BrowserVersion: "10",
 			OSName:         "macos",
 			OSVersion:      "10.12",
-			Revision:       "b952881825",
-			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "fc2e57a502", "safari-11.0-macos-10.12-sauce-summary.json.gz"),
+			Revision:       staticRunSHA,
+			ResultsURL:     fmt.Sprintf(summaryUrlFmtString, "safari-10-macos-10.12-sauce-summary.json.gz"),
 			CreatedAt:      staticDataTime,
 		},
 	}
