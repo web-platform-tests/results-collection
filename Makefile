@@ -25,6 +25,10 @@ PB_GO_PKG_MAP ?= Mbq_table_name.proto=$(BQ_LIB_REPO)/protos
 
 PROTOS=$(wildcard $(PB_LOCAL_LIB_DIR)/*.proto)
 
+GO_FILES := $(wildcard $(WPTD_PATH)/**/*.go)
+GO_FILES := $(filter-out $(wildcard $(WPTD_PATH)/generated/**/*.go), $(GO_FILES))
+GO_FILES := $(filter-out $(wildcard $(WPTD_PATH)/vendor/**/*.go), $(GO_FILES))
+
 build: go_deps proto
 
 test: py_test go_test
@@ -47,9 +51,9 @@ py_test: py_proto py_deps
 	python -m unittest discover -p '*_test.py'
 
 go_lint: go_deps
-	cd $(WPTD_GO_PATH); golint -set_exit_status
+	cd $(WPTD_GO_PATH); golint -set_exit_status $(GO_FILES)
 	# Print differences between current/gofmt'd output, check empty.
-	cd $(WPTD_GO_PATH); ! gofmt -d . 2>&1 | read
+	cd $(WPTD_GO_PATH); ! gofmt -d $(GO_FILES) 2>&1 | read
 
 go_test: go_deps
 	cd $(WPTD_GO_PATH); go test -v ./...
