@@ -14,13 +14,14 @@ SHELL := /bin/bash
 WPTD_PATH ?= /home/jenkins/wptdashboard
 WPTD_GO_PATH ?= $(GOPATH)/src/github.com/w3c/wptdashboard
 
+BQ_LIB_REPO ?= github.com/GoogleCloudPlatform/protoc-gen-bq-schema
 PB_LIB_DIR ?= ../protobuf/src
-PB_BQ_LIB_DIR ?= ../protoc-gen-bq-schema
+PB_BQ_LIB_DIR ?= $(WPTD_PATH)/vendor/$(BQ_LIB_REPO)
 PB_LOCAL_LIB_DIR ?= protos
 PB_BQ_OUT_DIR ?= bq-schema
 PB_PY_OUT_DIR ?= run/protos
 PB_GO_OUT_DIR ?= generated
-PB_GO_PKG_MAP ?= Mbq_table_name.proto=github.com/GoogleCloudPlatform/protoc-gen-bq-schema/protos
+PB_GO_PKG_MAP ?= Mbq_table_name.proto=$(BQ_LIB_REPO)/protos
 
 PROTOS=$(wildcard $(PB_LOCAL_LIB_DIR)/*.proto)
 
