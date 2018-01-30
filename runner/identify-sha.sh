@@ -9,7 +9,7 @@
 # You should have Options +Includes, mod_include and XBitHack on in
 # your <VirtualHost> for the htdocs/index.html page to work.
 
-sha="$(git ls-remote https://github.com/w3c/web-platform-tests.git | head -1 | cut -f 1 | cut -c 1-10)"
+sha="$(git ls-remote https://github.com/w3c/web-platform-tests.git | head -1 | cut -f 1)"
 
 echo "${sha}"
 
