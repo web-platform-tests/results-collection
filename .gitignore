@@ -5,3 +5,6 @@ run/running.ini
 run/protos/*_pb2.py
 bq-schema
 generated
+webdriver/selenium-server-standalone*
+webdriver/geckodriver*
+webdriver/firefox-58.0*
