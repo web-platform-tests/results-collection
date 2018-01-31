@@ -62,7 +62,7 @@ def main(platform_id, platform, args, config):
     if args.path:
         print('Running tests in path: %s' % args.path)
     else:
-        print('Running all tests!')
+        exit()
 
     if args.upload:
         print('Setting up storage client')

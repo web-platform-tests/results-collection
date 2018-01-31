@@ -17,11 +17,12 @@ mkdir ~/tests-$stamp/__wptd__working__/
     find css/* -maxdepth 0 -type d
 ) | grep -vE '^(common|css|css/fonts|css/reference|css/support|css/vendor-imports|fonts|interfaces|media)$' | while read d; do
     if [[ -f "$d/OWNERS" ]]; then
-	if [[ -f "~/tests-$stamp/__wptd__working__/$d.tgz" ]]; then
-	    rm ~/tests-$stamp/__wptd__working__/$d.tgz 
+	directory=$(echo $d | sed -e 's/\//-/g')
+	if [[ -f "~/tests-$stamp/__wptd__working__/$directory.tgz" ]]; then
+	    rm ~/tests-$stamp/__wptd__working__/$directory.tgz 
 	fi
 	echo "Bundling $d tests..."
-        tar zcf ~/tests-$stamp/__wptd__working__/$d.tgz $d &> /dev/null
+        tar zcf ~/tests-$stamp/__wptd__working__/$directory.tgz $d &> /dev/null
         continue
     fi
     #grep -qF 'file://' "$d/OWNERS" && continue
