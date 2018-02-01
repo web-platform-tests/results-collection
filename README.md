@@ -30,10 +30,12 @@ Once the instance is running, you can fire up the web server in another terminal
 
 This will build dependencies and start the Google App Engine development server inside `wptd-dev-instance`.
 
-With the webserver running, you'll also need to populate the app datastore with some initial data. In another terminal,
-execute the script which leverages `util/populate_dev_data.go` by running:
+With the webserver running, you'll also need to populate the app datastore with some initial data. This leverages the [remote api](https://cloud.google.com/appengine/docs/standard/go/tools/remoteapi/), so requires authentication. In production, the authenticated account needs Administrator privileges; locally, it can be any account.
+
+In another terminal, execute the auth script, and then the data script which leverages `util/populate_dev_data.go`, by running:
 
 ```sh
+./util/docker-dev/dev_auth.sh
 ./util/docker-dev/dev_data.sh
 ```
 
