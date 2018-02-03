@@ -133,7 +133,7 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    for this_chunk in range(args.total_chunks - 2, args.total_chunks + 1):
+    for this_chunk in range(1, args.total_chunks + 1):
         if platform.get('sauce'):
             if platform['browser_name'] == 'edge':
                 sauce_browser_name = 'MicrosoftEdge'
