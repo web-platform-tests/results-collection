@@ -6,6 +6,7 @@
 
 import argparse
 import ConfigParser as configparser
+import glob
 import gzip
 import json
 import logging
@@ -15,6 +16,7 @@ import requests
 import shas
 import subprocess
 import sys
+import traceback
 import os
 
 """
@@ -110,6 +112,10 @@ def main(platform_id, platform, args, config):
     abs_report_log_path = "%s/wptd-%s-%s-report.log" % (
         config['build_path'], short_wpt_sha, platform_id
     )
+    abs_report_chunks_path = "%s/%s/%s-report-chunks" % (
+        config['build_path'], short_wpt_sha, platform_id
+    )
+    mkdirp(abs_report_chunks_path)
 
     sha_summary_gz_path = '%s/%s-summary.json.gz' % (
         short_wpt_sha, platform_id
@@ -128,65 +134,96 @@ def main(platform_id, platform, args, config):
     print('==================================================')
     print('Running WPT')
 
-    if platform.get('sauce'):
-        if platform['browser_name'] == 'edge':
-            sauce_browser_name = 'MicrosoftEdge'
+    for this_chunk in range(1, args.total_chunks + 1):
+        if platform.get('sauce'):
+            if platform['browser_name'] == 'edge':
+                sauce_browser_name = 'MicrosoftEdge'
+            else:
+                sauce_browser_name = platform['browser_name']
+
+            command = [
+                './wpt', 'run', 'sauce:%s:%s' % (
+                    sauce_browser_name, platform['browser_version']),
+                '--sauce-platform=%s' % platform['os_name'],
+                '--sauce-key=%s' % config['sauce_key'],
+                '--sauce-user=%s' % config['sauce_user'],
+                '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+                '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+                '--no-restart-on-unexpected',
+                '--processes=2',
+                '--run-by-dir=3',
+            ]
+            if args.path:
+                command.insert(3, args.path)
         else:
-            sauce_browser_name = platform['browser_name']
+            command = [
+                'xvfb-run', '--auto-servernum',
+                './wpt', 'run',
+                platform['browser_name'],
+            ]
 
-        command = [
-            './wpt', 'run', 'sauce:%s:%s' % (
-                sauce_browser_name, platform['browser_version']),
-            '--sauce-platform=%s' % platform['os_name'],
-            '--sauce-key=%s' % config['sauce_key'],
-            '--sauce-user=%s' % config['sauce_user'],
-            '--sauce-connect-binary=%s' % config['sauce_connect_path'],
-            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
-            '--no-restart-on-unexpected',
-            '--processes=2',
-            '--run-by-dir=3',
-        ]
-        if args.path:
-            command.insert(3, args.path)
-    else:
-        command = [
-            'xvfb-run', '--auto-servernum',
-            './wpt', 'run',
-            platform['browser_name'],
-        ]
+            if args.path:
+                command.insert(5, args.path)
+            if platform['browser_name'] == 'chrome':
+                command.extend(['--binary', browser_binary])
+            if platform['browser_name'] == 'firefox':
+                command.extend(['--install-browser', '--yes'])
+                command.append('--certutil-binary=certutil')
+                # temporary fix to allow WebRTC tests to call getUserMedia
+                command.extend([
+                    '--setpref', 'media.navigator.streams.fake=true'
+                ])
 
-        if args.path:
-            command.insert(5, args.path)
-        if platform['browser_name'] == 'chrome':
-            command.extend(['--binary', browser_binary])
-        if platform['browser_name'] == 'firefox':
-            command.extend(['--install-browser', '--yes'])
-            command.append('--certutil-binary=certutil')
-            # temporary fix to allow WebRTC tests to call getUserMedia
-            command.extend(['--setpref', 'media.navigator.streams.fake=true'])
+        command.append('--log-mach=-')
+        partial_report_filename = '%s/%s-of-%s.json' % (
+            abs_report_chunks_path, this_chunk, args.total_chunks
+        )
+        command.extend(['--log-wptreport', partial_report_filename])
+        command.append('--install-fonts')
+        command.extend([
+            '--this-chunk', str(this_chunk),
+            '--total-chunks', str(args.total_chunks)
+        ])
 
-    command.append('--log-mach=-')
-    command.extend(['--log-wptreport', abs_report_log_path])
-    command.append('--install-fonts')
+        for attempt_number in range(1, args.max_attempts + 1):
+            print('Running chunk %s of %s (attempt %s of %s)' % (
+                this_chunk, args.total_chunks, attempt_number,
+                args.max_attempts
+            ))
+            return_code = subprocess.call(command, cwd=config['wpt_path'])
 
-    return_code = subprocess.call(command, cwd=config['wpt_path'])
+            print('Return code from wptrunner: %s' % return_code)
+
+            try:
+                with open(partial_report_filename) as f:
+                    partial_report = json.load(f)
+
+                result_count = len(partial_report['results'])
+
+                print('Report contains %s results' % result_count)
+
+                if result_count > 0:
+                    break
+            except Exception:
+                print(traceback.format_exc())
 
     print('==================================================')
     print('Finished WPT run')
-    print('Return code from wptrunner: %s' % return_code)
 
     if platform['browser_name'] == 'firefox':
         print('Verifying installed firefox matches platform ID')
         firefox_path = '%s/_venv/firefox/firefox' % config['wpt_path']
         verify_browser_binary_version(platform, firefox_path)
 
-    with open(abs_report_log_path) as f:
-        report = json.load(f)
+    print('Consolidating results')
+    full_report = {'results': []}
+    for name in glob.glob('%s/*.json' % abs_report_chunks_path):
+        with open(name) as f:
+            partial_report = json.load(f)
 
-    assert len(report['results']) > 0, (
-        '0 test results, something went wrong, stopping.')
+        full_report['results'].extend(partial_report['results'])
 
-    summary = report_to_summary(report)
+    summary = report_to_summary(full_report)
 
     print('==================================================')
     print('Writing summary.json.gz to local filesystem')
@@ -195,7 +232,7 @@ def main(platform_id, platform, args, config):
 
     print('==================================================')
     print('Writing individual result files to local filesystem')
-    for result in report['results']:
+    for result in full_report['results']:
         test_file = result['test']
         filepath = '%s%s' % (gs_results_base_path, test_file)
         write_gzip_json(filepath, result)
@@ -353,11 +390,16 @@ def report_to_summary(wpt_report):
     return test_files
 
 
-def write_gzip_json(filepath, payload):
+# Create all non-existent directories in a specified path
+def mkdirp(path):
     try:
-        os.makedirs(os.path.dirname(filepath))
+        os.makedirs(path)
     except OSError:
         pass
+
+
+def write_gzip_json(filepath, payload):
+    mkdirp(os.path.dirname(filepath))
 
     with gzip.open(filepath, 'wb') as f:
         payload_str = json.dumps(payload)
@@ -451,6 +493,19 @@ def parse_args():
     parser.add_argument(
         '--wpt_sha',
         help='https://github.com/w3c/web-platform-tests commit SHA to test.'
+    )
+    parser.add_argument(
+        '--total_chunks',
+        help='Total number of chunks to use (forwarded to the `wpt` CLI)',
+        type=int,
+        default=1
+    )
+    parser.add_argument(
+        '--max_attempts',
+        help=('Maximum number of times to re-try running any given failing '
+              'chunk'),
+        type=int,
+        default=3
     )
     args = parser.parse_args()
 
