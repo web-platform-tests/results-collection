@@ -8,8 +8,7 @@ RUN gcloud components install \
     bq \
     core \
     gsutil \
-    app-engine-python \
-    kubectl
+    app-engine-python
 
 # Expose Sauce Connect port
 EXPOSE 4445
