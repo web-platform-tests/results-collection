@@ -13,8 +13,7 @@ RUN gcloud components install \
     bq \
     core \
     gsutil \
-    app-engine-python \
-    kubectl
+    app-engine-python
 
 # Put wptdashboard code in GOPATH
 RUN mkdir -p "${GOPATH}/src/github.com/w3c"
