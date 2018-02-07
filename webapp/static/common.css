@@ -1,51 +1,58 @@
 * {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 body {
-    font-size: 16px;
-    font-family: Arial;
-    color: #333;
+  font-size: 16px;
+  font-family: Arial;
+  color: #333;
 }
 #content {
-    margin: 0 auto;
-    max-width: 800px;
+  margin: 0 auto;
+  max-width: 800px;
 }
 a {
-    text-decoration: none;
-    color: #0d5de6;
+  text-decoration: none;
+  color: #0d5de6;
 }
 header {
-    padding: 0.5em 0;
+  padding: 0.5em 0;
 }
 header h1 {
-    font-size: 1.5em;
-    margin-bottom: 0.2em;
+  font-size: 1.5em;
+  margin-bottom: 0.2em;
 }
 header nav a {
-    margin-right: 1em;
+  margin-right: 1em;
 }
 
 wpt-results {
-    margin-bottom: 5em;
+  margin-bottom: 5em;
 }
 
 article {
-    margin-top: 2em;
-    line-height: 1.5em;
-    font-size: 1.2em;
+  margin-top: 2em;
+  line-height: 1.5em;
+  font-size: 1.2em;
 }
 article h1 {
-    font-size: 2em;
-    margin-bottom: 0.5em;
+  font-size: 2em;
+  margin-bottom: 0.5em;
 }
 article h2 {
-    font-size: 1.5em;
-    margin-bottom: 0.5em;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
 }
 article p, ul {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 article ul {
-    margin-left: 2em;
+  margin-left: 2em;
+}
+.caveat {
+  margin-top: 20px;
+  padding: 0.5em;
+  background-color: #fde2e3;
+  margin-bottom: 1em;
+  border-left: solid 4px #f47477;
 }
