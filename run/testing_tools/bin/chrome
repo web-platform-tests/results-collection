@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+
+# Copyright 2017 The WPT Dashboard Project. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from command_stubber import request_and_execute
+
+request_and_execute('chrome', sys.argv[1:])

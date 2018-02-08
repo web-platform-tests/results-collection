@@ -421,8 +421,8 @@ def get_config():
         sys.exit()
 
     expand_keys = [
-        'build_path', 'wpt_path', 'wptd_path', 'firefox_binary',
-        'sauce_connect_path',
+        'build_path', 'chrome_binary', 'wpt_path', 'wptd_path',
+        'firefox_binary', 'sauce_connect_path',
     ]
     # Expand paths, this is for convenience so you can use $HOME
     for key in expand_keys:
