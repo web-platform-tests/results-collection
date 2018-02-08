@@ -275,6 +275,42 @@ class TestRun2(unittest.TestCase):
         )
         self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
 
+    def test_no_results(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3382.22'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = json.dumps({'results': []})
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertNotEqual(
+            returncode,
+            0,
+            '`run.py` should fail when the `wpt` CLI produces zero results'
+        )
+        self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
+
     def test_os_name_mismatch(self):
         platform_id = 'chrome-63.0-linux'
 

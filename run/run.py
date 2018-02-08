@@ -223,6 +223,9 @@ def main(platform_id, platform, args, config):
 
         full_report['results'].extend(partial_report['results'])
 
+    assert len(full_report['results']) > 0, (
+        '0 test results, something went wrong, stopping.')
+
     summary = report_to_summary(full_report)
 
     print('==================================================')
