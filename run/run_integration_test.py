@@ -24,7 +24,15 @@ log_dir = os.path.join(tools_dir, 'wptdbuild')
 class TestRun2(unittest.TestCase):
     def setUp(self):
         self.remote_control = command_stubber.CommandStubber()
-        self.tmp_dirs = [log_dir, os.path.join(mock_wptd_dir, 'webapp')]
+        self.running_manifest = os.path.join(
+            mock_wptd_dir, 'run', 'running.ini'
+        )
+        self.tmp_dirs = [
+            log_dir,
+            os.path.join(mock_wptd_dir),
+            os.path.join(mock_wptd_dir, 'webapp'),
+            os.path.join(mock_wptd_dir, 'run')
+        ]
 
         for tmp_dir in self.tmp_dirs:
             try:
@@ -32,8 +40,25 @@ class TestRun2(unittest.TestCase):
             except OSError:
                 pass
 
+        with open(self.running_manifest, 'w') as handle:
+            handle.write('\n'.join([
+                '[default]',
+                'build_path = $PWD/../wptdbuild',
+                'wpt_path = $PWD/../mock-web-platform-tests',
+                'wptd_path = $PWD/../mock-wptdashboard',
+                'chrome_binary = $PWD/../bin/chrome',
+                'firefox_binary = $PWD/../bin/firefox',
+                'wptd_prod_host = http://localhost:8099',
+                'gs_results_bucket = wptd',
+                'secret = token',
+                'sauce_connect_path = TO_BE_FILLED_IN',
+                'sauce_tunnel_id = TO_BE_FILLED_IN',
+                'sauce_user = TO_BE_FILLED_IN',
+                'sauce_key = TO_BE_FILLED_IN'
+            ]))
+
     def tearDown(self):
-        for tmp_dir in self.tmp_dirs:
+        for tmp_dir in reversed(self.tmp_dirs):
             shutil.rmtree(tmp_dir)
 
     def write_browsers_manifest(self, data):
@@ -345,6 +370,41 @@ class TestRun2(unittest.TestCase):
             '`run.py` should fail when the `wpt` CLI produces repeated results'
         )
         self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
+
+    def test_no_running_manifest(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3382.22'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+
+        os.remove(self.running_manifest)
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertNotEqual(
+            returncode,
+            0,
+            '`run.py` should fail when the `running.ini` file is absent'
+        )
+
+        self.assertListEqual(os.listdir(log_dir), [])
 
     def test_repeated_results_across_chunks(self):
         platform_id = 'chrome-62.0-linux'
