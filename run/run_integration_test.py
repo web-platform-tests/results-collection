@@ -51,7 +51,7 @@ class TestRun2(unittest.TestCase):
                 'wptd_prod_host = http://localhost:8099',
                 'gs_results_bucket = wptd',
                 'secret = token',
-                'sauce_connect_binary = TO_BE_FILLED_IN',
+                'sauce_connect_binary = $PWD/../bin/sauce-connect',
                 'sauce_tunnel_id = TO_BE_FILLED_IN',
                 'sauce_user = TO_BE_FILLED_IN',
                 'sauce_key = TO_BE_FILLED_IN'
@@ -309,6 +309,58 @@ class TestRun2(unittest.TestCase):
         self.assertJsonMatch(
             actual_output_dir + [platform_id, 'js', 'bitwise-and.html'],
             expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
+        )
+
+    def test_sauce_connect(self):
+        platform_id = 'edge-15-windows-10-sauce'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': True,
+                'currently_run': True,
+                'browser_name': 'edge',
+                'browser_version': '15',
+                'os_name': 'windows',
+                'os_version': '10',
+                'sauce': True
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [json.dumps({
+            'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                }
+            ]
+        })]
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertEqual(returncode, 0, stderr)
+
+        actual_output_dir = [log_dir, 'c0ffee']
+        expected_output_dir = [
+            here, 'expected_output', 'sauce-report', 'c0ffee'
+        ]
+
+        self.assertJsonMatch(
+            actual_output_dir + ['%s-summary.json.gz' % platform_id],
+            expected_output_dir + ['%s-summary.json.gz' % platform_id]
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-or.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-or.html']
         )
 
     def test_repeated_results(self):
