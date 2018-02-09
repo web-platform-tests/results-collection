@@ -146,7 +146,7 @@ def main(platform_id, platform, args, config):
                 '--sauce-platform=%s' % platform['os_name'],
                 '--sauce-key=%s' % config['sauce_key'],
                 '--sauce-user=%s' % config['sauce_user'],
-                '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+                '--sauce-connect-binary=%s' % config['sauce_connect_binary'],
                 '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
                 '--no-restart-on-unexpected',
                 '--processes=2',
@@ -424,7 +424,7 @@ def get_config():
 
     expand_keys = [
         'build_path', 'chrome_binary', 'wpt_path', 'wptd_path',
-        'firefox_binary', 'sauce_connect_path',
+        'firefox_binary', 'sauce_connect_binary',
     ]
     # Expand paths, this is for convenience so you can use $HOME
     for key in expand_keys:
@@ -497,7 +497,7 @@ def parse_args():
         help='https://github.com/w3c/web-platform-tests commit SHA to test.'
     )
     parser.add_argument(
-        '--total_chunks',
+        '--total-chunks',
         help='Total number of chunks to use (forwarded to the `wpt` CLI)',
         type=int,
         default=1
