@@ -51,7 +51,7 @@ class TestRun2(unittest.TestCase):
                 'wptd_prod_host = http://localhost:8099',
                 'gs_results_bucket = wptd',
                 'secret = token',
-                'sauce_connect_path = TO_BE_FILLED_IN',
+                'sauce_connect_binary = TO_BE_FILLED_IN',
                 'sauce_tunnel_id = TO_BE_FILLED_IN',
                 'sauce_user = TO_BE_FILLED_IN',
                 'sauce_key = TO_BE_FILLED_IN'
@@ -288,7 +288,7 @@ class TestRun2(unittest.TestCase):
         ]
 
         returncode, stdout, stderr = self.run_py([
-            platform_id, '--total_chunks', '2'
+            platform_id, '--total-chunks', '2'
         ])
 
         self.assertEqual(returncode, 0, stderr)
@@ -462,7 +462,7 @@ class TestRun2(unittest.TestCase):
         ]
 
         returncode, stdout, stderr = self.run_py([
-            platform_id, '--total_chunks', '3'
+            platform_id, '--total-chunks', '3'
         ])
 
         self.assertNotEqual(
