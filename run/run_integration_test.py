@@ -313,10 +313,15 @@ class TestRun2(unittest.TestCase):
 
     def test_sauce_connect(self):
         platform_id = 'edge-15-windows-10-sauce'
+        wpt_args = []
 
         def git(*args):
             if 'log' in args:
                 return {'stdout': 'c0ffee'}
+
+        def wpt(*args):
+            wpt_args.append(args)
+            return self.cmd_wpt(*args)
 
         self.remote_control.add_handler('git', git)
         self.write_browsers_manifest({
@@ -330,7 +335,7 @@ class TestRun2(unittest.TestCase):
                 'sauce': True
             }
         })
-        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.remote_control.add_handler('wpt', wpt)
         self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
             'c0ffee', platform_id
         )
@@ -362,6 +367,17 @@ class TestRun2(unittest.TestCase):
             actual_output_dir + [platform_id, 'js', 'bitwise-or.html'],
             expected_output_dir + [platform_id, 'js', 'bitwise-or.html']
         )
+
+        run_invocation_count = 0
+
+        for args in wpt_args:
+            if 'run' not in args:
+                continue
+            run_invocation_count += 1
+
+            self.assertIn('--sauce-platform=windows 10', args)
+
+        self.assertGreater(run_invocation_count, 0)
 
     def test_repeated_results(self):
         platform_id = 'chrome-62.0-linux'

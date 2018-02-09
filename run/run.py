@@ -97,9 +97,6 @@ def main(platform_id, platform, args, config):
 
     setup_wpt(config)
 
-    print('Patching WPT')
-    patch_wpt(config, platform)
-
     print('Getting WPT commit SHA and Date')
     wpt_sha, wpt_commit_date = get_commit_details(args, config, logger)
 
@@ -143,7 +140,8 @@ def main(platform_id, platform, args, config):
             command = [
                 './wpt', 'run', 'sauce:%s:%s' % (
                     sauce_browser_name, platform['browser_version']),
-                '--sauce-platform=%s' % platform['os_name'],
+                '--sauce-platform=%s %s' % (
+                    platform['os_name'], platform['os_version']),
                 '--sauce-key=%s' % config['sauce_key'],
                 '--sauce-user=%s' % config['sauce_user'],
                 '--sauce-connect-binary=%s' % config['sauce_connect_binary'],
@@ -287,7 +285,6 @@ def main(platform_id, platform, args, config):
 
 def setup_wpt(config):
     wpt_setup_commands = [
-        ['git', 'reset', '--hard', 'HEAD'],  # For wpt.patch
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
         ['./wpt', 'manifest', '--work'],
@@ -436,30 +433,6 @@ def get_config():
         k, v = item
         conf[k] = v
     return conf
-
-
-def patch_wpt(config, platform):
-    """Applies util/wpt.patch to WPT.
-
-    The patch is necessary to keep WPT running on long runs.
-    jeffcarp has a PR out with this patch:
-    https://github.com/w3c/web-platform-tests/pull/5774
-    """
-    patch_path = '%s/util/wpt.patch' % config['wptd_path']
-    with open(patch_path) as f:
-        patch = f.read()
-
-    # The --sauce-platform command line arg doesn't
-    # accept spaces, but Sauce requires them in the platform name.
-    # https://github.com/w3c/web-platform-tests/issues/6852
-    patch = patch.replace('__platform_hack__', '%s %s' % (
-        platform['os_name'], platform['os_version'])
-    )
-
-    p = subprocess.Popen(
-        ['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE
-    )
-    p.communicate(input=patch)
 
 
 def parse_args():
