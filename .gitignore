@@ -2,6 +2,7 @@ node_modules
 *.pyc
 run/running.ini
 run/testing_tools/wptdbuild
+run/testing_tools/mock-wptdashboard/
 .DS_Store
 run/protos/*_pb2.py
 bq-schema

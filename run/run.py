@@ -15,7 +15,6 @@ import re
 import requests
 import shas
 import subprocess
-import sys
 import traceback
 import os
 
@@ -417,11 +416,11 @@ def verify_gsutil_installed(config):
 def get_config():
     manifest = "run/running.ini"
     config = configparser.ConfigParser()
-    if os.path.isfile(manifest):
-        config.read(manifest)
-    else:
-        print("The manifest {0} does not exist.".format(manifest))
-        sys.exit()
+    assert os.path.isfile(manifest), (
+        'The manifest %s does not exist.' % manifest
+    )
+
+    config.read(manifest)
 
     expand_keys = [
         'build_path', 'chrome_binary', 'wpt_path', 'wptd_path',
