@@ -62,7 +62,7 @@ class TestRun2(unittest.TestCase):
 
             full_path = os.path.join(log_dir, args[index + 1])
             with open(full_path, 'w') as log:
-                log.write(self.wpt_log_contents)
+                log.write(self.wpt_log_contents.pop(0))
 
             # Invocations of `wpt run` are generally expected to fail because
             # most browsers will fail at least one test
@@ -102,7 +102,7 @@ class TestRun2(unittest.TestCase):
         self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
             'deadbeef', platform_id
         )
-        self.wpt_log_contents = json.dumps({
+        self.wpt_log_contents = [json.dumps({
             'results': [
                 {
                     'test': '/js/with-statement.html',
@@ -124,7 +124,7 @@ class TestRun2(unittest.TestCase):
                     ]
                 }
             ]
-        })
+        })]
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -173,7 +173,7 @@ class TestRun2(unittest.TestCase):
         self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
             'c0ffee', platform_id
         )
-        self.wpt_log_contents = json.dumps({
+        self.wpt_log_contents = [json.dumps({
             'results': [
                 {
                     'test': '/js/bitwise-or.html',
@@ -191,9 +191,80 @@ class TestRun2(unittest.TestCase):
                     ]
                 }
             ]
-        })
+        })]
 
         returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertEqual(returncode, 0, stderr)
+
+        actual_output_dir = [log_dir, 'c0ffee']
+        expected_output_dir = [
+            here, 'expected_output', 'simple_report-2', 'c0ffee'
+        ]
+
+        self.assertJsonMatch(
+            actual_output_dir + ['%s-summary.json.gz' % platform_id],
+            expected_output_dir + ['%s-summary.json.gz' % platform_id]
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-or.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-or.html']
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-and.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
+        )
+
+    def test_simple_report_2_chunked(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3382.22'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [
+            json.dumps({'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                }
+            ]}),
+            json.dumps({'results': [
+                {
+                    'test': '/js/bitwise-and.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                }
+            ]})
+        ]
+
+        returncode, stdout, stderr = self.run_py([
+            platform_id, '--total_chunks', '2'
+        ])
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -240,7 +311,7 @@ class TestRun2(unittest.TestCase):
         self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
             'c0ffee', platform_id
         )
-        self.wpt_log_contents = json.dumps({
+        self.wpt_log_contents = [json.dumps({
             'results': [
                 {
                     'test': '/js/bitwise-or.html',
@@ -264,7 +335,7 @@ class TestRun2(unittest.TestCase):
                     'subtests': []
                 }
             ]
-        })
+        })]
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -272,6 +343,73 @@ class TestRun2(unittest.TestCase):
             returncode,
             0,
             '`run.py` should fail when the `wpt` CLI produces repeated results'
+        )
+        self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
+
+    def test_repeated_results_across_chunks(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3382.22'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [
+            json.dumps({'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                }
+            ]}),
+            json.dumps({'results': [
+                {
+                    'test': '/js/bitwise-and.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                }
+            ]}),
+            json.dumps({'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                }
+            ]})
+        ]
+
+        returncode, stdout, stderr = self.run_py([
+            platform_id, '--total_chunks', '3'
+        ])
+
+        self.assertNotEqual(
+            returncode,
+            0,
+            '`run.py` should fail when the `wpt` CLI produces repeated '
+            'results across independent "chunks"'
         )
         self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
 
@@ -300,7 +438,7 @@ class TestRun2(unittest.TestCase):
         self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
             'c0ffee', platform_id
         )
-        self.wpt_log_contents = json.dumps({'results': []})
+        self.wpt_log_contents = [json.dumps({'results': []})] * 3
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
