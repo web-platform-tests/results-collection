@@ -449,6 +449,75 @@ class TestRun2(unittest.TestCase):
         )
         self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
 
+    def test_no_results_recover(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3382.22'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [
+            json.dumps({'results': []}),
+            json.dumps({'results': []}),
+            json.dumps({'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                },
+                {
+                    'test': '/js/bitwise-and.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                }
+            ]})
+        ]
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertEqual(returncode, 0, stderr)
+
+        actual_output_dir = [log_dir, 'c0ffee']
+        expected_output_dir = [
+            here, 'expected_output', 'simple_report-2', 'c0ffee'
+        ]
+
+        self.assertJsonMatch(
+            actual_output_dir + ['%s-summary.json.gz' % platform_id],
+            expected_output_dir + ['%s-summary.json.gz' % platform_id]
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-or.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-or.html']
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-and.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
+        )
+
     def test_os_name_mismatch(self):
         platform_id = 'chrome-63.0-linux'
 
