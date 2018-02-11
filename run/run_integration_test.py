@@ -24,16 +24,17 @@ log_dir = os.path.join(tools_dir, 'wptdbuild')
 class TestRun2(unittest.TestCase):
     def setUp(self):
         self.remote_control = command_stubber.CommandStubber()
+        self.tmp_dirs = [log_dir, os.path.join(mock_wptd_dir, 'webapp')]
 
-        try:
-            os.mkdir(log_dir)
-            os.mkdir(os.path.join(mock_wptd_dir, 'webapp'))
-        except OSError:
-            pass
+        for tmp_dir in self.tmp_dirs:
+            try:
+                os.mkdir(tmp_dir)
+            except OSError:
+                pass
 
     def tearDown(self):
-        shutil.rmtree(log_dir)
-        shutil.rmtree(os.path.join(mock_wptd_dir, 'webapp'))
+        for tmp_dir in self.tmp_dirs:
+            shutil.rmtree(tmp_dir)
 
     def write_browsers_manifest(self, data):
         full_path = os.path.join(mock_wptd_dir, 'webapp', 'browsers.json')
@@ -67,7 +68,7 @@ class TestRun2(unittest.TestCase):
             # most browsers will fail at least one test
             return {'returncode': 1}
 
-    def assertJsonMatch(self, expected, actual):
+    def assertJsonMatch(self, actual, expected):
         def load(path_parts):
             path = os.path.join(*path_parts)
 
