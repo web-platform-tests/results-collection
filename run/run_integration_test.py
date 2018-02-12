@@ -493,8 +493,7 @@ class TestRun2(unittest.TestCase):
                         {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
                     ]
                 }
-            ]
-            })
+            ]})
         ]
 
         returncode, stdout, stderr = self.run_py([platform_id])
