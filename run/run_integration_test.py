@@ -286,7 +286,6 @@ class TestRun2(unittest.TestCase):
             expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
         )
 
-
     def test_repeated_results(self):
         platform_id = 'chrome-62.0-linux'
 
