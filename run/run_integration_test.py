@@ -478,8 +478,7 @@ class TestRun2(unittest.TestCase):
         self.wpt_log_contents = [
             json.dumps({'results': []}),
             json.dumps({'results': []}),
-            json.dumps({
-            'results': [
+            json.dumps({'results': [
                 {
                     'test': '/js/bitwise-or.html',
                     'status': 'OK',
