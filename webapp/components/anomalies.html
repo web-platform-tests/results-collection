@@ -16,16 +16,6 @@ found in the LICENSE file.
     <style>
     </style>
 
-    <section class="caveat">
-      Data below are intended for web platform implementers and do not contain
-      useful metrics for evaluation or comparison of web platform features.
-      Each browser listed here is currently tested at its latest stable
-      release. See <a
-        href="https://github.com/w3c/wptdashboard/issues/109">#109</a> and <a
-        href="https://github.com/w3c/wptdashboard/issues/112">#112</a> for
-      discussion on testing pre-release versions.
-    </section>
-
     <template is="dom-repeat" items="{{anomalyGroups}}" as="anomalyGroup" itemsIndexAs="index">
       <template is="dom-if" if="{{browser}}">
         <h2>Failing in [[browser]] and [[computeOtherBrowserCount(index)]]</h2>
