@@ -36,7 +36,7 @@ then
   PROMOTE="--promote"
 fi
 
-COMMAND="gcloud app deploy ${PROMOTE} --version=${VERSION} ${WPTD_PATH}/webapp"
+COMMAND="gcloud config set project wptdashboard && gcloud app deploy ${PROMOTE} --version=${VERSION} ${WPTD_PATH}/webapp"
 
 info "Deploy command:\n${COMMAND}"
 confirm "Execute?"
