@@ -32,6 +32,16 @@ class TestReport(unittest.TestCase):
 
         self.assertEquals({'results': [1, 2, 3]}, result)
 
+    def test_chunk_load_empty_file(self):
+        r = report.Report(3, self.tmp_dir)
+        name = os.path.join(self.tmp_dir, 'foo.json')
+
+        with open(name, 'w') as handle:
+            handle.write('')
+
+        with self.assertRaises(report.InsufficientData):
+            r.load_chunk(1, name)
+
     def test_chunk_load_no_results(self):
         r = report.Report(3, self.tmp_dir)
         name = os.path.join(self.tmp_dir, 'foo.json')

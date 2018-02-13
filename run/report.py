@@ -60,7 +60,15 @@ class Report(object):
         with open(file_name) as handle:
             contents = handle.read()
 
-        data = json.loads(contents)
+        # The WPT CLI is known to produce invalid JSON files in some
+        # circumstances. These cases represent test executions with zero
+        # results. Tolerate this condition and interpret accordingly.
+        #
+        # https://github.com/w3c/web-platform-tests/issues/9481
+        try:
+            data = json.loads(contents)
+        except ValueError:
+            data = {'results': []}
 
         if len(data['results']) <= len(current['results']):
             raise InsufficientData()

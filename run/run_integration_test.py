@@ -674,7 +674,6 @@ class TestRun2(unittest.TestCase):
         self.wpt_log_contents = [
             '',
             '',
-            '',
             json.dumps({'results': [
                 {
                     'test': '/js/with-statement.html',
@@ -698,9 +697,7 @@ class TestRun2(unittest.TestCase):
             ]})
         ]
 
-        returncode, stdout, stderr = self.run_py([
-            platform_id, '--total-chunks', '2'
-        ])
+        returncode, stdout, stderr = self.run_py([platform_id])
 
         self.assertEquals(returncode, 0, stderr)
 
