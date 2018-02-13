@@ -18,6 +18,8 @@ import subprocess
 import traceback
 import os
 
+from report import Report, InsufficientData
+
 """
 run.py runs WPT and uploads results to Google Cloud Storage.
 
@@ -111,6 +113,9 @@ def main(platform_id, platform, args, config):
     abs_report_chunks_path = "%s/%s/%s-report-chunks" % (
         config['build_path'], short_wpt_sha, platform_id
     )
+    abs_current_chunk_path = os.path.join(
+        abs_report_chunks_path, 'current.json'
+    )
     mkdirp(abs_report_chunks_path)
 
     sha_summary_gz_path = '%s/%s-summary.json.gz' % (
@@ -129,6 +134,8 @@ def main(platform_id, platform, args, config):
 
     print('==================================================')
     print('Running WPT')
+
+    report = Report(args.total_chunks, abs_report_chunks_path)
 
     for this_chunk in range(1, args.total_chunks + 1):
         if platform.get('sauce'):
@@ -172,10 +179,8 @@ def main(platform_id, platform, args, config):
                 ])
 
         command.append('--log-mach=-')
-        partial_report_filename = '%s/%s-of-%s.json' % (
-            abs_report_chunks_path, this_chunk, args.total_chunks
-        )
-        command.extend(['--log-wptreport', partial_report_filename])
+
+        command.extend(['--log-wptreport', abs_current_chunk_path])
         command.append('--install-fonts')
         command.extend([
             '--this-chunk', str(this_chunk),
@@ -187,22 +192,29 @@ def main(platform_id, platform, args, config):
                 this_chunk, args.total_chunks, attempt_number,
                 args.max_attempts
             ))
+
+            try:
+                os.remove(abs_current_chunk_path)
+            except OSError:
+                pass
+
             return_code = subprocess.call(command, cwd=config['wpt_path'])
 
             print('Return code from wptrunner: %s' % return_code)
 
             try:
-                with open(partial_report_filename) as f:
-                    partial_report = json.load(f)
+                data = report.load_chunk(this_chunk, abs_current_chunk_path)
 
-                result_count = len(partial_report['results'])
+                print 'Report contains %s results' % len(data['results'])
 
-                print('Report contains %s results' % result_count)
-
-                if result_count > 0:
-                    break
-            except Exception:
-                print(traceback.format_exc())
+                break
+            except InsufficientData:
+                pass
+        else:
+            print (
+                'No results found after %s attempts. Giving up.' %
+                args.max_attempts
+            )
 
     print('==================================================')
     print('Finished WPT run')
@@ -212,18 +224,12 @@ def main(platform_id, platform, args, config):
         firefox_path = '%s/_venv/firefox/firefox' % config['wpt_path']
         verify_browser_binary_version(platform, firefox_path)
 
-    print('Consolidating results')
-    full_report = {'results': []}
-    for name in glob.glob('%s/*.json' % abs_report_chunks_path):
-        with open(name) as f:
-            partial_report = json.load(f)
-
-        full_report['results'].extend(partial_report['results'])
-
-    assert len(full_report['results']) > 0, (
-        '0 test results, something went wrong, stopping.')
-
-    summary = report_to_summary(full_report)
+    print('Creating summary of results')
+    try:
+        summary = report.summarize()
+    except InsufficientData:
+        logging.fatal('Insufficient report data. Stopping.')
+        exit(1)
 
     print('==================================================')
     print('Writing summary.json.gz to local filesystem')
@@ -232,7 +238,7 @@ def main(platform_id, platform, args, config):
 
     print('==================================================')
     print('Writing individual result files to local filesystem')
-    for result in full_report['results']:
+    for result in report.each_result():
         test_file = result['test']
         filepath = '%s%s' % (gs_results_base_path, test_file)
         write_gzip_json(filepath, result)
@@ -365,28 +371,6 @@ def verify_or_set_os_version(platform):
         'Host OS version does not match platform os_version.\n'
         'Host OS version: %s\nPlatform os_version: %s'
         % (os_version, platform['os_version']))
-
-
-def report_to_summary(wpt_report):
-    test_files = {}
-
-    for result in wpt_report['results']:
-        test_file = result['test']
-        assert test_file not in test_files, (
-            'Assumption that each test_file only shows up once broken!')
-
-        if result['status'] in ('OK', 'PASS'):
-            test_files[test_file] = [1, 1]
-        else:
-            test_files[test_file] = [0, 1]
-
-        for subtest in result['subtests']:
-            if subtest['status'] == 'PASS':
-                test_files[test_file][0] += 1
-
-            test_files[test_file][1] += 1
-
-    return test_files
 
 
 # Create all non-existent directories in a specified path
