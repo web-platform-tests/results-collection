@@ -33,6 +33,7 @@ class TestRun2(unittest.TestCase):
             os.path.join(mock_wptd_dir, 'webapp'),
             os.path.join(mock_wptd_dir, 'run')
         ]
+        self.wpt_list_tests_output = ''
 
         for tmp_dir in self.tmp_dirs:
             try:
@@ -80,6 +81,9 @@ class TestRun2(unittest.TestCase):
 
     def cmd_wpt(self, *args):
         if 'run' in args:
+            if '--list-tests' in args:
+                return {'stdout': self.wpt_list_tests_output}
+
             try:
                 index = args.index('--log-wptreport')
             except ValueError:
@@ -372,6 +376,8 @@ class TestRun2(unittest.TestCase):
 
         for args in wpt_args:
             if 'run' not in args:
+                continue
+            if '--list-tests' in args:
                 continue
             run_invocation_count += 1
 
@@ -718,6 +724,205 @@ class TestRun2(unittest.TestCase):
             actual_output_dir + [platform_id, 'js', 'isNaN.html'],
             expected_output_dir + [platform_id, 'js', 'isNaN.html']
         )
+
+    def test_incomplete_result(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3282.119'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [json.dumps({
+            'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                },
+                {
+                    'test': '/js/bitwise-and.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                }
+            ]
+        })]
+        self.wpt_list_tests_output = '\n'.join(
+            ['/js-bitwise-or.html', '/js/bitwise-and.html'] +
+            ['/missed-test-%s.html' % index for index in range(100)]
+        )
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertEqual(returncode, 0, stderr)
+
+        actual_output_dir = [log_dir, 'c0ffee']
+        expected_output_dir = [
+            here, 'expected_output', 'simple_report-2', 'c0ffee'
+        ]
+
+        self.assertJsonMatch(
+            actual_output_dir + ['%s-summary.json.gz' % platform_id],
+            expected_output_dir + ['%s-summary.json.gz' % platform_id]
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-or.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-or.html']
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-and.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
+        )
+
+    def test_partial_result_above_threshold(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3282.119'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [json.dumps({
+            'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                },
+                {
+                    'test': '/js/bitwise-and.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                }
+            ]
+        })]
+        self.wpt_list_tests_output = '\n'.join([
+            '/js-bitwise-or.html', '/js/bitwise-and.html', '/missed-test.html'
+        ])
+
+        returncode, stdout, stderr = self.run_py([
+            platform_id, '--partial-threshold', '66'
+        ])
+
+        self.assertEqual(returncode, 0, stderr)
+
+        actual_output_dir = [log_dir, 'c0ffee']
+        expected_output_dir = [
+            here, 'expected_output', 'simple_report-2', 'c0ffee'
+        ]
+
+        self.assertJsonMatch(
+            actual_output_dir + ['%s-summary.json.gz' % platform_id],
+            expected_output_dir + ['%s-summary.json.gz' % platform_id]
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-or.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-or.html']
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'bitwise-and.html'],
+            expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
+        )
+
+    def test_partial_result_below_threshold(self):
+        platform_id = 'chrome-62.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'c0ffee'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 62.0.3282.119'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '62.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'c0ffee', platform_id
+        )
+        self.wpt_log_contents = [json.dumps({
+            'results': [
+                {
+                    'test': '/js/bitwise-or.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': []
+                },
+                {
+                    'test': '/js/bitwise-and.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                }
+            ]
+        })]
+        self.wpt_list_tests_output = '\n'.join([
+            '/js-bitwise-or.html', '/js/bitwise-and.html', '/missed-test.html'
+        ])
+
+        returncode, stdout, stderr = self.run_py([
+            platform_id, '--partial-threshold', '67'
+        ])
+
+        self.assertNotEquals(returncode, 0, stdout)
+
+        self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
 
     def test_os_name_mismatch(self):
         platform_id = 'chrome-63.0-linux'

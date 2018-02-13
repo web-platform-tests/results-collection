@@ -4,6 +4,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import division
+
 import argparse
 import ConfigParser as configparser
 import glob
@@ -227,8 +229,18 @@ def main(platform_id, platform, args, config):
     print('Creating summary of results')
     try:
         summary = report.summarize()
-    except InsufficientData:
-        logging.fatal('Insufficient report data. Stopping.')
+
+        expected_count = len(get_expected_tests(
+            platform['browser_name'], config['wpt_path']
+        ))
+        actual_count = len(summary.keys())
+
+        if actual_count / expected_count < args.partial_threshold / 100:
+            raise InsufficientData('%s of %s is below threshold of %s%%' % (
+                actual_count, expected_count, args.partial_threshold)
+            )
+    except InsufficientData as exc:
+        logging.fatal('Insufficient report data (%s). Stopping.', exc)
         exit(1)
 
     print('==================================================')
@@ -302,6 +314,19 @@ def setup_wpt(config):
             '%d from command %s' % (return_code, command))
 
     return 0
+
+
+def get_expected_tests(browser_name, wpt_path):
+    '''Create a list of strings which define all tests available in a given
+    Web Platform Test repository. This number is distinct from the number of
+    test files due to the presence of "multi-global" tests.
+
+    The browser name does not effect the output of this function. It is
+    necessary only to satisfy the requirements of the WPT CLI.'''
+
+    return subprocess.check_output([
+        './wpt', 'run', '--list-tests', browser_name], cwd=wpt_path
+    ).strip().split('\n')
 
 
 def get_commit_details(mainargs, config, logger):
@@ -419,6 +444,15 @@ def get_config():
     return conf
 
 
+def parse_percent(string):
+    parsed = int(string)
+
+    if parsed < 0 or parsed > 100:
+        raise ValueError('Percent value must be between 0 and 100')
+
+    return parsed
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -465,6 +499,17 @@ def parse_args():
               'chunk'),
         type=int,
         default=3
+    )
+
+    parser.add_argument(
+        '--partial-threshold',
+        help=('Save reports for datasets that omit results for some tests. '
+              'This must be an integer between 1 and 100 describing the '
+              'minimum percentage of results that must be present for reports '
+              'to be saved. Defaults to 0 (i.e. empty results allowed.'),
+        type=parse_percent,
+        action='store',
+        default=0
     )
     args = parser.parse_args()
 
