@@ -43,5 +43,5 @@ confirm "Execute?"
 if [ "${?}" != "0" ]; then exit "${?}"; fi
 
 info "Executing..."
-${COMMAND}
+eval ${COMMAND}
 exit 0
