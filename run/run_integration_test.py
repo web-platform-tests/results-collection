@@ -646,6 +646,79 @@ class TestRun2(unittest.TestCase):
             expected_output_dir + [platform_id, 'js', 'bitwise-and.html']
         )
 
+    def test_empty_results(self):
+        platform_id = 'chrome-64.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'deadbeef'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 64.0.3282.119'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '64.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'deadbeef', platform_id
+        )
+        self.wpt_log_contents = [
+            '',
+            '',
+            json.dumps({'results': [
+                {
+                    'test': '/js/with-statement.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'PASS', 'message': None, 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'}
+                    ]
+                },
+                {
+                    'test': '/js/isNaN.html',
+                    'status': 'OK',
+                    'message': None,
+                    'subtests': [
+                        {'status': 'PASS', 'message': None, 'name': 'first'},
+                        {'status': 'FAIL', 'message': 'bad', 'name': 'second'},
+                        {'status': 'PASS', 'message': None, 'name': 'third'}
+                    ]
+                }
+            ]})
+        ]
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertEquals(returncode, 0, stderr)
+
+        actual_output_dir = [log_dir, 'deadbeef']
+        expected_output_dir = [
+            here, 'expected_output', 'simple_report-1', 'deadbeef'
+        ]
+
+        self.assertJsonMatch(
+            actual_output_dir + ['%s-summary.json.gz' % platform_id],
+            expected_output_dir + ['%s-summary.json.gz' % platform_id]
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'with-statement.html'],
+            expected_output_dir + [platform_id, 'js', 'with-statement.html']
+        )
+        self.assertJsonMatch(
+            actual_output_dir + [platform_id, 'js', 'isNaN.html'],
+            expected_output_dir + [platform_id, 'js', 'isNaN.html']
+        )
+
     def test_os_name_mismatch(self):
         platform_id = 'chrome-63.0-linux'
 
