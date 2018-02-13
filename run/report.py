@@ -109,7 +109,7 @@ class Report(object):
                     summary[test_file][1] += 1
 
         if not has_results:
-            raise InsufficientData()
+            raise InsufficientData('Zero results available')
 
         return summary
 
