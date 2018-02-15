@@ -5,10 +5,10 @@
 REPO_DIR="$(dirname "$0")/.."
 source "${REPO_DIR}/util/logging.sh"
 source "${REPO_DIR}/util/path.sh"
-WPTD_PATH=${WPTD_PATH:-$(absdir "${REPO_DIR}")}
+WPTD_PATH=${WPTD_PATH:-$(absdir ${REPO_DIR})}
 
 usage() {
-  info "Usage: git-deploy [-p] [-h]";
+  info "Usage: deploy.sh [-p] [-h]";
 }
 
 while getopts ':ph' flag; do
@@ -18,6 +18,11 @@ while getopts ':ph' flag; do
   esac
 done
 
+# Ensure dependencies are installed.
+info "Installing dependencies..."
+cd ${WPTD_PATH}; make go_deps;
+
+# Create a name for this version
 BRANCH_NAME="$(git rev-parse --abbrev-ref HEAD)"
 USER="$(git remote -v get-url origin | sed -E 's#(https?:\/\/|git@)github.com(\/|:)##' | sed 's#/.*$##')"
 VERSION="${USER}-${BRANCH_NAME}"

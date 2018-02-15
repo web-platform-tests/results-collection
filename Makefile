@@ -11,6 +11,8 @@
 
 SHELL := /bin/bash
 
+export GOPATH=$(shell go env GOPATH)
+
 WPTD_PATH ?= /home/jenkins/wptdashboard
 WPTD_GO_PATH ?= $(GOPATH)/src/github.com/w3c/wptdashboard
 
