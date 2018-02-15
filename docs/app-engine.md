@@ -17,13 +17,13 @@ Make sure you have the latest code and deploy the app.
 
 ```sh
 git pull
-cd webapp/
-gcloud app deploy
+./util/deploy.sh
 ```
 
-If you've updated [`index.yaml`](../index.yaml) you must also deploy the indexes
-separately.
+If you've updated [`index.yaml`](../index.yaml) you must also deploy the indexes manually.
 
 ```sh
+git pull
+cd webapp
 gcloud app deploy index.yaml
 ```
