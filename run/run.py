@@ -216,7 +216,15 @@ def main(platform_id, platform, args, config):
     full_report = {'results': []}
     for name in glob.glob('%s/*.json' % abs_report_chunks_path):
         with open(name) as f:
-            partial_report = json.load(f)
+            # The WPT CLI is known to produce invalid JSON files in some
+            # circumstances. These cases represent test executions with zero
+            # results. Tolerate this condition and interpret accordingly.
+            #
+            # https://github.com/w3c/web-platform-tests/issues/9481
+            try:
+                partial_report = json.load(f)
+            except ValueError:
+                continue
 
         full_report['results'].extend(partial_report['results'])
 
