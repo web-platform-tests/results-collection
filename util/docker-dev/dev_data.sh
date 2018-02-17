@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-DOCKER_DIR=$(dirname "$0")
+DOCKER_DIR=$(dirname $0)
+source "${DOCKER_DIR}/../commands.sh"
 source "${DOCKER_DIR}/../logging.sh"
+source "${DOCKER_DIR}/../path.sh"
+WPTD_PATH=${WPTD_PATH:-$(absdir ${DOCKER_DIR}/../..)}
 
 # Run util/populate_dev_data.go (via make) in the docker environment.
 
@@ -24,4 +27,4 @@ else
     ${COPY_COMMAND}
 fi
 
-docker exec -t -u $(id -u $USER):$(id -g $USER) ${ENVIRONMENT_VAR} ${DOCKER_INSTANCE} make dev_data
+wptd_exec "make dev_data"
