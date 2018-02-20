@@ -162,11 +162,14 @@ def main(platform_id, platform, args, config):
             if args.path:
                 command.insert(3, args.path)
         else:
-            command = [
+            command = [                    
                 'xvfb-run', '--auto-servernum',
                 './wpt', 'run',
                 platform['browser_name'],
             ]
+
+            if args.no-xvfb:
+                del command[0] # remove the xvfb-run command from the list
 
             if args.path:
                 command.insert(5, args.path)
