@@ -33,7 +33,7 @@ class TestRun2(unittest.TestCase):
             os.path.join(mock_wptd_dir, 'webapp'),
             os.path.join(mock_wptd_dir, 'run')
         ]
-        self.wpt_list_tests_output = ''
+        self.wpt_expected_tests = ['/dummy.html']
 
         for tmp_dir in self.tmp_dirs:
             try:
@@ -81,17 +81,40 @@ class TestRun2(unittest.TestCase):
 
     def cmd_wpt(self, *args):
         if 'run' in args:
-            if '--list-tests' in args:
-                return {'stdout': self.wpt_list_tests_output}
-
             try:
                 index = args.index('--log-wptreport')
             except ValueError:
                 return
 
-            full_path = os.path.join(log_dir, args[index + 1])
-            with open(full_path, 'w') as log:
+            wptreport_path = os.path.join(log_dir, args[index + 1])
+            with open(wptreport_path, 'w') as log:
                 log.write(self.wpt_log_contents.pop(0))
+
+            try:
+                index = args.index('--log-raw')
+            except ValueError:
+                return
+
+            rawlog_path = os.path.join(log_dir, args[index + 1])
+            irrelevant_data = '''
+                {}
+                {"action": "other"},
+                {"action": "other", "tests": {} }"
+                {"action": "other", "tests": { "default": [] }'''
+
+            raw_log_contents = '\n'.join([
+                irrelevant_data,
+                json.dumps({
+                    'action': 'suite_start',
+                    'tests': {
+                        'default': self.wpt_expected_tests
+                    }
+                }),
+                irrelevant_data
+            ])
+
+            with open(rawlog_path, 'w') as log:
+                log.write(raw_log_contents)
 
             # Invocations of `wpt run` are generally expected to fail because
             # most browsers will fail at least one test
@@ -769,10 +792,9 @@ class TestRun2(unittest.TestCase):
                 }
             ]
         })]
-        self.wpt_list_tests_output = '\n'.join(
-            ['/js-bitwise-or.html', '/js/bitwise-and.html'] +
-            ['/missed-test-%s.html' % index for index in range(100)]
-        )
+        self.wpt_expected_tests = [
+            '/js-bitwise-or.html', '/js/bitwise-and.html'
+            ] + ['/missed-test-%s.html' % index for index in range(100)]
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -840,9 +862,9 @@ class TestRun2(unittest.TestCase):
                 }
             ]
         })]
-        self.wpt_list_tests_output = '\n'.join([
+        self.wpt_expected_tests = [
             '/js-bitwise-or.html', '/js/bitwise-and.html', '/missed-test.html'
-        ])
+        ]
 
         returncode, stdout, stderr = self.run_py([
             platform_id, '--partial-threshold', '66'
@@ -912,9 +934,9 @@ class TestRun2(unittest.TestCase):
                 }
             ]
         })]
-        self.wpt_list_tests_output = '\n'.join([
+        self.wpt_expected_tests = [
             '/js-bitwise-or.html', '/js/bitwise-and.html', '/missed-test.html'
-        ])
+        ]
 
         returncode, stdout, stderr = self.run_py([
             platform_id, '--partial-threshold', '67'

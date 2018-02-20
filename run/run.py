@@ -17,6 +17,7 @@ import re
 import requests
 import shas
 import subprocess
+import tempfile
 import traceback
 import os
 
@@ -138,6 +139,7 @@ def main(platform_id, platform, args, config):
     print('Running WPT')
 
     report = Report(args.total_chunks, abs_report_chunks_path)
+    expected_test_count = 0
 
     for this_chunk in range(1, args.total_chunks + 1):
         if platform.get('sauce'):
@@ -181,6 +183,8 @@ def main(platform_id, platform, args, config):
                 ])
 
         command.append('--log-mach=-')
+        raw_log_filename = tempfile.mkstemp('-wptdashboard')[1]
+        command.extend(['--log-raw', raw_log_filename])
 
         command.extend(['--log-wptreport', abs_current_chunk_path])
         command.append('--install-fonts')
@@ -195,14 +199,24 @@ def main(platform_id, platform, args, config):
                 args.max_attempts
             ))
 
-            try:
-                os.remove(abs_current_chunk_path)
-            except OSError:
-                pass
+            # In the event of a failed attempt, previously-created files will
+            # still be available on disk. Remove these to guard against errors
+            # where the next attempt fails to write new results.
+            for name in (abs_current_chunk_path, raw_log_filename):
+                try:
+                    os.remove(name)
+                except OSError:
+                    pass
 
             return_code = subprocess.call(command, cwd=config['wpt_path'])
 
             print('Return code from wptrunner: %s' % return_code)
+
+            chunk_test_count = len(get_expected_tests(raw_log_filename))
+
+            print('%s tests defined in chunk' % chunk_test_count)
+
+            expected_test_count += chunk_test_count
 
             try:
                 data = report.load_chunk(this_chunk, abs_current_chunk_path)
@@ -218,6 +232,8 @@ def main(platform_id, platform, args, config):
                 args.max_attempts
             )
 
+        os.remove(raw_log_filename)
+
     print('==================================================')
     print('Finished WPT run')
 
@@ -230,14 +246,12 @@ def main(platform_id, platform, args, config):
     try:
         summary = report.summarize()
 
-        expected_count = len(get_expected_tests(
-            platform['browser_name'], config['wpt_path']
-        ))
-        actual_count = len(summary.keys())
+        actual_test_count = len(summary.keys())
+        actual_percentage = actual_test_count / expected_test_count
 
-        if actual_count / expected_count < args.partial_threshold / 100:
+        if actual_percentage < args.partial_threshold / 100:
             raise InsufficientData('%s of %s is below threshold of %s%%' % (
-                actual_count, expected_count, args.partial_threshold)
+                actual_test_count, expected_test_count, args.partial_threshold)
             )
     except InsufficientData as exc:
         logging.fatal('Insufficient report data (%s). Stopping.', exc)
@@ -316,17 +330,22 @@ def setup_wpt(config):
     return 0
 
 
-def get_expected_tests(browser_name, wpt_path):
-    '''Create a list of strings which define all tests available in a given
+def get_expected_tests(filename):
+    '''Retrieve a list of strings which define all tests available in a given
     Web Platform Test repository. This number is distinct from the number of
-    test files due to the presence of "multi-global" tests.
+    test files due to the presence of "multi-global" tests.'''
 
-    The browser name does not effect the output of this function. It is
-    necessary only to satisfy the requirements of the WPT CLI.'''
+    with open(filename) as handle:
+        for line in handle:
+            try:
+                data = json.loads(line)
+            except ValueError:
+                continue
 
-    return subprocess.check_output([
-        './wpt', 'run', '--list-tests', browser_name], cwd=wpt_path
-    ).strip().split('\n')
+            if data.get('action') != 'suite_start':
+                continue
+
+            return data.get('tests').get('default')
 
 
 def get_commit_details(mainargs, config, logger):
