@@ -16,6 +16,7 @@ import platform as host_platform
 import re
 import requests
 import shas
+import shutil
 import subprocess
 import tempfile
 import traceback
@@ -139,6 +140,7 @@ def main(platform_id, platform, args, config):
     print('Running WPT')
 
     report = Report(args.total_chunks, abs_report_chunks_path)
+    missing_tests = set()
     expected_test_count = 0
 
     for this_chunk in range(1, args.total_chunks + 1):
@@ -212,7 +214,8 @@ def main(platform_id, platform, args, config):
 
             print('Return code from wptrunner: %s' % return_code)
 
-            chunk_test_count = len(get_expected_tests(raw_log_filename))
+            expected_tests = get_expected_tests(raw_log_filename)
+            chunk_test_count = len(expected_tests)
 
             print('%s tests defined in chunk' % chunk_test_count)
 
@@ -222,6 +225,9 @@ def main(platform_id, platform, args, config):
                 data = report.load_chunk(this_chunk, abs_current_chunk_path)
 
                 print 'Report contains %s results' % len(data['results'])
+
+                actual_tests = [test['test'] for test in data['results']]
+                missing_tests.update(set(expected_tests) - set(actual_tests))
 
                 break
             except InsufficientData:
@@ -249,6 +255,11 @@ def main(platform_id, platform, args, config):
         actual_test_count = len(summary.keys())
         actual_percentage = actual_test_count / expected_test_count
 
+        missing_tests_count = len(missing_tests)
+        print '%s missing tests' % missing_tests_count
+        for test_name in missing_tests:
+            print '- %s' % test_name
+
         if actual_percentage < args.partial_threshold / 100:
             raise InsufficientData('%s of %s is below threshold of %s%%' % (
                 actual_test_count, expected_test_count, args.partial_threshold)
@@ -269,6 +280,9 @@ def main(platform_id, platform, args, config):
         filepath = '%s%s' % (gs_results_base_path, test_file)
         write_gzip_json(filepath, result)
         print('Wrote file %s' % filepath)
+
+    print('Removing "chunk" results')
+    shutil.rmtree(abs_report_chunks_path)
 
     if not args.upload:
         print('==================================================')
