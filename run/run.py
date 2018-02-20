@@ -19,6 +19,7 @@ import shas
 import shutil
 import subprocess
 import tempfile
+import threading
 import traceback
 import os
 
@@ -60,19 +61,20 @@ By default this script will not upload anything! To run for production:
 
 def main(platform_id, platform, args, config):
     loggingLevel = getattr(logging, args.log.upper(), None)
-    logging.basicConfig(level=loggingLevel)
-    logger = logging.getLogger()
+    log_format = '%(asctime)s %(levelname)s %(name)s %(message)s'
+    logging.basicConfig(level=loggingLevel, format=log_format)
+    logger = logging.getLogger(' ')
 
-    print('PLATFORM_ID:', platform_id)
-    print('PLATFORM INFO:', platform)
+    logger.info('PLATFORM_ID: %s', platform_id)
+    logger.info('PLATFORM INFO: %s', platform)
 
     if args.path:
-        print('Running tests in path: %s' % args.path)
+        logger.info('Running tests in path: %s', args.path)
     else:
-        print('Running all tests!')
+        logger.info('Running all tests!')
 
     if args.upload:
-        print('Setting up storage client')
+        logger.info('Setting up storage client')
         from google.cloud import storage
         storage_client = storage.Client(project='wptdashboard')
         bucket = storage_client.get_bucket(config['gs_results_bucket'])
@@ -93,21 +95,20 @@ def main(platform_id, platform, args, config):
         verify_os_name(platform)
         verify_or_set_os_version(platform)
 
-    print('Platform information:')
-    print('Browser version: %s' % platform['browser_version'])
-    print('OS name: %s' % platform['os_name'])
-    print('OS version: %s' % platform['os_version'])
+    logger.info('Platform information:')
+    logger.info('Browser version: %s', platform['browser_version'])
+    logger.info('OS name: %s', platform['os_name'])
+    logger.info('OS version: %s', platform['os_version'])
 
-    print('==================================================')
-    print('Setting up WPT checkout')
+    logger.info('Setting up WPT checkout')
 
-    setup_wpt(config)
+    setup_wpt(config, logger)
 
-    print('Getting WPT commit SHA and Date')
+    logger.info('Getting WPT commit SHA and Date')
     wpt_sha, wpt_commit_date = get_commit_details(args, config, logger)
 
-    print('WPT SHA: %s' % wpt_sha)
-    print('WPT Commit Date: %s' % wpt_commit_date)
+    logger.info('WPT SHA: %s', wpt_sha)
+    logger.info('WPT Commit Date: %s', wpt_commit_date)
 
     short_wpt_sha = wpt_sha[0:10]
 
@@ -136,8 +137,7 @@ def main(platform_id, platform, args, config):
         config['gs_results_bucket'], sha_summary_gz_path
     )
 
-    print('==================================================')
-    print('Running WPT')
+    logger.info('Running WPT')
 
     report = Report(args.total_chunks, abs_report_chunks_path)
     missing_tests = set()
@@ -196,10 +196,10 @@ def main(platform_id, platform, args, config):
         ])
 
         for attempt_number in range(1, args.max_attempts + 1):
-            print('Running chunk %s of %s (attempt %s of %s)' % (
-                this_chunk, args.total_chunks, attempt_number,
-                args.max_attempts
-            ))
+            logger.info(
+                'Running chunk %s of %s (attempt %s of %s)', this_chunk,
+                args.total_chunks, attempt_number, args.max_attempts
+            )
 
             # In the event of a failed attempt, previously-created files will
             # still be available on disk. Remove these to guard against errors
@@ -210,21 +210,28 @@ def main(platform_id, platform, args, config):
                 except OSError:
                     pass
 
-            return_code = subprocess.call(command, cwd=config['wpt_path'])
+            proc = subprocess.Popen(
+                command, cwd=config['wpt_path'], stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
 
-            print('Return code from wptrunner: %s' % return_code)
+            log_streams('wpt', proc, logger)
+
+            proc.wait()
+
+            logger.info('Return code from wptrunner: %s', proc.returncode)
 
             expected_tests = get_expected_tests(raw_log_filename)
             chunk_test_count = len(expected_tests)
 
-            print('%s tests defined in chunk' % chunk_test_count)
+            logger.info('%s tests defined in chunk', chunk_test_count)
 
             expected_test_count += chunk_test_count
 
             try:
                 data = report.load_chunk(this_chunk, abs_current_chunk_path)
 
-                print 'Report contains %s results' % len(data['results'])
+                logger.info('Report contains %s results', len(data['results']))
 
                 actual_tests = [test['test'] for test in data['results']]
                 missing_tests.update(set(expected_tests) - set(actual_tests))
@@ -233,22 +240,21 @@ def main(platform_id, platform, args, config):
             except InsufficientData:
                 pass
         else:
-            print (
-                'No results found after %s attempts. Giving up.' %
+            logger.info(
+                'No results found after %s attempts. Giving up.',
                 args.max_attempts
             )
 
         os.remove(raw_log_filename)
 
-    print('==================================================')
-    print('Finished WPT run')
+    logger.info('Finished WPT run')
 
     if platform['browser_name'] == 'firefox':
-        print('Verifying installed firefox matches platform ID')
+        logger.info('Verifying installed firefox matches platform ID')
         firefox_path = '%s/_venv/firefox/firefox' % config['wpt_path']
         verify_browser_binary_version(platform, firefox_path)
 
-    print('Creating summary of results')
+    logger.info('Creating summary of results')
     try:
         summary = report.summarize()
 
@@ -256,9 +262,9 @@ def main(platform_id, platform, args, config):
         actual_percentage = actual_test_count / expected_test_count
 
         missing_tests_count = len(missing_tests)
-        print '%s missing tests' % missing_tests_count
+        logger.info('%s missing tests', missing_tests_count)
         for test_name in missing_tests:
-            print '- %s' % test_name
+            logger.info('- %s', test_name)
 
         if actual_percentage < args.partial_threshold / 100:
             raise InsufficientData('%s of %s is below threshold of %s%%' % (
@@ -268,44 +274,40 @@ def main(platform_id, platform, args, config):
         logging.fatal('Insufficient report data (%s). Stopping.', exc)
         exit(1)
 
-    print('==================================================')
-    print('Writing summary.json.gz to local filesystem')
+    logger.info('Writing summary.json.gz to local filesystem')
     write_gzip_json(abs_sha_summary_gz_path, summary)
-    print('Wrote file %s' % abs_sha_summary_gz_path)
+    logger.info('Wrote file %s', abs_sha_summary_gz_path)
 
-    print('==================================================')
-    print('Writing individual result files to local filesystem')
+    logger.info('Writing individual result files to local filesystem')
     for result in report.each_result():
         test_file = result['test']
         filepath = '%s%s' % (gs_results_base_path, test_file)
         write_gzip_json(filepath, result)
-        print('Wrote file %s' % filepath)
+        logger.info('Wrote file %s', filepath)
 
-    print('Removing "chunk" results')
+    logger.info('Removing "chunk" results')
     shutil.rmtree(abs_report_chunks_path)
 
     if not args.upload:
-        print('==================================================')
-        print('Stopping here (pass --upload to upload results to WPTD).')
+        logger.info('Stopping here (pass --upload to upload results to WPTD).')
         return
 
-    print('==================================================')
-    print('Uploading results to gs://%s' % config['gs_results_bucket'])
+    logger.info('Uploading results to gs://%s', config['gs_results_bucket'])
     command = ['gsutil', '-m', '-h', 'Content-Encoding:gzip',
                'rsync', '-r', short_wpt_sha, 'gs://wptd/%s' % short_wpt_sha]
     return_code = subprocess.check_call(command, cwd=config['build_path'])
     assert return_code == 0
-    print('Successfully uploaded!')
-    print('HTTP summary URL: %s' % gs_results_url)
+    logger.info('Successfully uploaded!')
+    logger.info('HTTP summary URL: %s', gs_results_url)
 
     if not args.create_testrun:
-        print('==================================================')
-        print('Stopping here')
-        print('pass --create-testrun to create and promote this TestRun).')
+        logger.info('Stopping here')
+        logger.info(
+            'Pass --create-testrun to create and promote this TestRun.'
+        )
         return
 
-    print('==================================================')
-    print('Creating new TestRun in the dashboard...')
+    logger.info('Creating new TestRun in the dashboard...')
     url = '%s/api/run' % config['wptd_prod_host']
     response = requests.post(url, params={
             'secret': config['secret']
@@ -321,23 +323,49 @@ def main(platform_id, platform, args, config):
         }
     ))
     if response.status_code == 201:
-        print('Run created!')
+        logger.info('Run created!')
     else:
-        print('There was an issue creating the TestRun.')
+        logger.info('There was an issue creating the TestRun.')
 
-    print('Response status code:', response.status_code)
-    print('Response text:', response.text)
+    logger.info('Response status code: %s', response.status_code)
+    logger.info('Response text: %s', response.text)
 
 
-def setup_wpt(config):
+def log_streams(command_name, proc, logger):
+    def target(cmd_name, stream_name, stream, logger):
+        prefix = '%s:%s ' % (cmd_name, stream_name)
+
+        with stream:
+            for line in iter(stream.readline, b''):
+                logger.debug(prefix + line.rstrip())
+
+    threading.Thread(
+        target=target, args=(command_name, 'stdout', proc.stdout, logger)
+    ).start()
+
+    threading.Thread(
+        target=target, args=(command_name, 'stderr', proc.stderr, logger)
+    ).start()
+
+
+def setup_wpt(config, logger):
     wpt_setup_commands = [
         ['git', 'checkout', 'master'],
         ['git', 'pull'],
         ['./wpt', 'manifest', '--work'],
     ]
     for command in wpt_setup_commands:
-        return_code = subprocess.check_call(command, cwd=config['wpt_path'])
-        assert return_code == 0, (
+        proc = subprocess.Popen(
+            command, cwd=config['wpt_path'], stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        logger.info('Running command: %s', ' '.join(command))
+        log_streams(command[0], proc, logger)
+
+        proc.wait()
+
+        assert proc.returncode == 0, (
             'Got non-0 return code: '
             '%d from command %s' % (return_code, command))
 
@@ -373,7 +401,15 @@ def get_commit_details(mainargs, config, logger):
         wpt_sha = (sha_finder.get_todays_sha(config['wpt_path'])
                    or sha_finder.get_head_sha(config['wpt_path']))
 
-    subprocess.call(['git', 'checkout', wpt_sha], cwd=config['wpt_path'])
+    proc = subprocess.Popen(
+        ['git', 'checkout', wpt_sha], cwd=config['wpt_path'],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
+    log_streams('git', proc, logger)
+
+    proc.wait()
+
     output = subprocess.check_output(
         ['git', 'log', '-1', '--format=%cd', '--date=iso-strict'],
         cwd=config['wpt_path']
