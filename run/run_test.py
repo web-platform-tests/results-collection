@@ -12,15 +12,9 @@ import unittest
 
 from run import (
     get_commit_details,
-    patch_wpt,
-    report_to_summary,
     setup_wpt,
     version_string_to_major_minor
 )
-
-
-def stub_patch_wpt(a, b):
-    return 0
 
 
 def stub_call(a, cwd):
@@ -49,30 +43,6 @@ logger = mock.Mock(logging.Logger)
 
 class TestRun(unittest.TestCase):
 
-    def test_report_to_summary(self):
-        actual = report_to_summary({
-            'results': [
-                {
-                    'test': '/dom/a.html',
-                    'status': 'OK',
-                    'subtests': [
-                        {'status': 'PASS'}
-                    ]
-                },
-                {
-                    'test': '/dom/b.html',
-                    'status': 'OK',
-                    'subtests': [
-                        {'status': 'FAIL'}
-                    ]
-                }
-            ]
-        })
-        self.assertEqual(actual, {
-            '/dom/a.html': [2, 2],
-            '/dom/b.html': [1, 2],
-        })
-
     def test_version_string_to_major_minor(self):
         with self.assertRaises(AssertionError):
             version_string_to_major_minor('')
@@ -89,7 +59,7 @@ class TestRun(unittest.TestCase):
         # TODO: assert details about mock_call.call_args
         self.assertTrue(mock_check_call.called)
         # TODO: assert details about mock_check_output.call_args
-        self.assertEqual(mock_check_call.call_count, 4)
+        self.assertEqual(mock_check_call.call_count, 3)
 
     @mock.patch('subprocess.call', side_effect=stub_call)
     @mock.patch('subprocess.check_output', side_effect=stub_check_output)
