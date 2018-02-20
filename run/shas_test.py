@@ -8,6 +8,7 @@ import logging
 import mock
 import os
 import shas
+import shutil
 import subprocess
 import unittest
 
@@ -15,6 +16,16 @@ from datetime import date
 
 here = os.path.dirname(__file__)
 wptd_dir = os.path.join(here, '../')
+target_dir = os.path.abspath(os.path.join(os.path.abspath(wptd_dir), '../', 'wptdashboard-temp'))
+
+
+if os.path.exists(target_dir):
+    print('%s exists, so it will be deleted and recloned for this test' % target_dir)
+    shutil.rmtree(target_dir)
+
+command = ['git', 'clone', '--depth', '1', 'https://github.com/w3c/wptdashboard', target_dir]
+return_code = subprocess.check_call(command, cwd=wptd_dir)
+assert return_code == 0, ('Got non-0 return code: %d from command %s' % (return_code, command))
 
 
 class TestSHAFinder(unittest.TestCase):
@@ -27,7 +38,7 @@ class TestSHAFinder(unittest.TestCase):
             '--unshallow',
         ]
         abspath = os.path.abspath(wptd_dir)
-        subprocess.call(command, cwd=abspath)
+        subprocess.call(command, cwd=target_dir)
 
         # ~5 commits that day, ensure first is result.
         logger = mock.Mock(logging.Logger)
