@@ -165,7 +165,6 @@ def main(platform_id, platform, args, config):
                 command.insert(3, args.path)
         else:
             command = [
-                'xvfb-run', '--auto-servernum',
                 './wpt', 'run',
                 platform['browser_name'],
             ]
