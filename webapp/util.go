@@ -12,6 +12,7 @@ import (
 	models "github.com/w3c/wptdashboard/shared"
 )
 
+// All errors are considered fatal
 var browserNames, browserNamesAlphabetical = loadBrowsers()
 
 // GetBrowserNames returns an alphabetically-ordered array of the names
