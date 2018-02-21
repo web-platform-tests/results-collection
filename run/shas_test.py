@@ -23,7 +23,6 @@ if os.path.exists(target_dir):
     print('%s exists, so it will be deleted and recloned for this test' % target_dir)
     shutil.rmtree(target_dir)
 
-os.makedirs(target_dir)
 command = ['git', 'clone', '--depth', '1', 'https://github.com/w3c/wptdashboard', target_dir]
 return_code = subprocess.check_call(command, cwd=wptd_dir)
 assert return_code == 0, ('Got non-0 return code: %d from command %s' % (return_code, command))
