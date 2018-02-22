@@ -18,7 +18,7 @@ import (
 	gcs "cloud.google.com/go/storage"
 	"github.com/w3c/wptdashboard/metrics"
 	"github.com/w3c/wptdashboard/metrics/compute"
-	"github.com/w3c/wptdashboard/metrics/storage"
+	"../storage"
 	base "github.com/w3c/wptdashboard/shared"
 	"golang.org/x/net/context"
 )

@@ -317,7 +317,7 @@ func LoadTestRunResults(ctx *GCSDatastoreContext, runs []base.TestRun) (
 	go func() {
 		defer wg.Done()
 		for err := range errChan {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}()
 	wg.Wait()
