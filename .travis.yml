@@ -76,7 +76,10 @@ install: |
   docker exec -u 0:0 "${DOCKER_INSTANCE}" chown -R $(id -u $USER):$(id -g $USER) /home/jenkins
 
 script:
-  - docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${MAKE_TEST_TARGET}"
+  - |
+    if [ "${MAKE_TEST_TARGET}" != "" ]; then
+      docker exec -t -u $(id -u $USER):$(id -g $USER) "${DOCKER_INSTANCE}" make "${MAKE_TEST_TARGET}"
+    fi
   - |
     if [ "${WCT}" == "1" ]; then
       cd webapp && npm test
