@@ -13,7 +13,6 @@ WPTD_HOST_WEB_PORT=${WPTD_HOST_WEB_PORT:-"8080"}
 WPTD_HOST_ADMIN_WEB_PORT=${WPTD_HOST_ADMIN_WEB_PORT:-"8000"}
 WPTD_HOST_API_WEB_PORT=${WPTD_HOST_API_WEB_PORT:-"9999"}
 
-WPTD_CONTAINER_HOST
 # Create a docker instance:
 #
 # --rm                                      Auto-remove when stopped
