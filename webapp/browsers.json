@@ -48,8 +48,8 @@
         "os_version": "*"
     },
     "firefox-57.0-linux": {
-        "initially_loaded": true,
-        "currently_run": true,
+        "initially_loaded": false,
+        "currently_run": false,
         "browser_name": "firefox",
         "browser_version": "57.0",
         "os_name": "linux",
