@@ -68,65 +68,84 @@ func init() {
 		"Hostname of endpoint that serves WPT Dashboard data API")
 }
 
-//
-// Collect metrics from WPT test runs
-//
-// Runtime environment requirements:
-//
-//   GCP Application Default Credentials
-//     Example of how to setup:
-//       $ gcloud config set project wptdashboard
-//       $ gcloud auth application-default login
-//       # ... follow prompts to authenticate in browser
-//
-// Inputs:
-//   Latest WPT test runs exposed via WPTD endpoint
-//
-// Outputs:
-//   - Compressed JSON files in GCS detailing metrics
-//   - BQ tables detailing metrics
-//   - Local logs in "current_metrics.log"
-//
-// Run with:
-//
-//   make go_deps && cd $GOPATH && go run \
-//     src/github.com/w3c/wptdashboard/metrics/run/collect_metrics.go [flags]
-//
-// Flags:
-//   wpt_data_path (default: $HOME/wpt-data)
-//     Path to data directory for local data copied from Google Cloud Storage
-//   project_id (default: wptdashboard)
-//     Google Cloud Platform project id
-//   input_gcs_bucket (default:
-//     Google Cloud Storage bucket where test results are stored
-//   output_gcs_bucket (default: wptd-metrics)
-//     Google Cloud Storage bucket where metrics are stored
-//   output_bq_metadata_dataset (default: wptd_metrics_[current UNIX time])
-//     BigQuery dataset where metrics metadata are stored
-//   output_bq_data_dataset (default: wptd_metrics_[current UNIX time])
-//     BigQuery dataset where metrics data are stored
-//   output_bq_pass_rate_table (default: PassRates_[current UNIX time])
-//     BigQuery table where pass rate metrics are stored
-//   output_bq_pass_rate_metadata_table (default: PassRateMetadata_[current UNIX time])
-//     BigQuery table where pass rate metrics are stored
-//   output_bq_failures_table (default: Failures_[current UNIX time])
-//     BigQuery table where test failure lists are stored
-//   output_bq_failures_metadata_table (default: FailuresMetadata_[current UNIX time])
-//     BigQuery table where pass rate metrics are stored
-//   wptd_host (default: wpt.fyi)
-//     Hostname of endpoint that serves WPT Dashboard data API
-//
-// Data collection procedure:
-//   1. Fetch latest runs from WPTD endpoint
-//   2. Load each run's results by iterating over files in GCS folder associated
-//      with run's results
-//   3. Use raw run results as input to two metrics calculations:
-//      (a) Per directory/test file: Count of runs passing in [0, 1, ..., n]
-//          browsers
-//      (b) Per browser: tests failing in this browser and [0, 1, .., n - 1]
-//          browsers
-//   4. Upload metrics as JSON files to GCS and as tables to BQ
-//
+/*
+
+
+Collect metrics from WPT test runs
+
+Runtime environment requirements:
+
+  GCP Application Default Credentials
+    Example of how to setup:
+      $ gcloud config set project wptdashboard
+      $ gcloud auth application-default login
+      # ... follow prompts to authenticate in browser
+
+Inputs:
+  Latest WPT test runs exposed via WPTD endpoint
+
+Outputs:
+  - Compressed JSON files in GCS detailing metrics
+  - BQ tables detailing metrics
+  - Local logs in "current_metrics.log"
+
+Run with:
+
+  make go_deps && cd $GOPATH && go run \
+    src/github.com/w3c/wptdashboard/metrics/run/collect_metrics.go [flags]
+
+To run in development environment:
+
+  make go_deps && cd $(go env GOPATH) && go run metrics/run/collect_metrics.go [flags]
+
+
+Flags:
+
+  wpt_data_path (default: $HOME/wpt-data)
+    Path to data directory for local data copied from Google Cloud Storage
+
+  project_id (default: wptdashboard)
+    Google Cloud Platform project id
+
+  input_gcs_bucket (default:
+    Google Cloud Storage bucket where test results are stored
+
+  output_gcs_bucket (default: wptd-metrics)
+    Google Cloud Storage bucket where metrics are stored
+
+  output_bq_metadata_dataset (default: wptd_metrics_[current UNIX time])
+    BigQuery dataset where metrics metadata are stored
+
+  output_bq_data_dataset (default: wptd_metrics_[current UNIX time])
+    BigQuery dataset where metrics data are stored
+
+  output_bq_pass_rate_table (default: PassRates_[current UNIX time])
+    BigQuery table where pass rate metrics are stored
+
+  output_bq_pass_rate_metadata_table (default: PassRateMetadata_[current UNIX time])
+    BigQuery table where pass rate metrics are stored
+
+  output_bq_failures_table (default: Failures_[current UNIX time])
+    BigQuery table where test failure lists are stored
+
+  output_bq_failures_metadata_table (default: FailuresMetadata_[current UNIX time])
+    BigQuery table where pass rate metrics are stored
+
+  wptd_host (default: wpt.fyi)
+    Hostname of endpoint that serves WPT Dashboard data API
+
+Data collection procedure:
+  1. Fetch latest runs from WPTD endpoint
+  2. Load each run's results by iterating over files in GCS folder associated
+     with run's results
+  3. Use raw run results as input to two metrics calculations:
+     (a) Per directory/test file: Count of runs passing in [0, 1, ..., n]
+         browsers
+     (b) Per browser: tests failing in this browser and [0, 1, .., n - 1]
+         browsers
+  4. Upload metrics as JSON files to GCS and as tables to BQ
+
+ */
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -160,6 +179,8 @@ func main() {
 
 	readStartTime := time.Now()
 	runs := base.FetchLatestRuns(*wptdHost)
+
+	log.Println(runs)
 	allResults := storage.LoadTestRunResults(&inputCtx, runs)
 	readEndTime := time.Now()
 
