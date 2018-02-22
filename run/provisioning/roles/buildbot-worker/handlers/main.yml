@@ -1,0 +1,5 @@
+---
+- name: Restart "build worker" service
+  systemd:
+    name: buildbot-worker
+    state: restarted

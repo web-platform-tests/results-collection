@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+import json
+import os
+import shutil
+import sys
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+args = sys.argv[1:]
+
+for arg in args:
+    if not os.access(arg, os.R_OK):
+        continue
+
+    shutil.copytree(arg, os.path.join(here, 'content-to-upload'))
+
+with open(os.path.join(here, 'gsutil_args.json'), 'w') as handle:
+    json.dump(args, handle)
+
+sys.exit(int(os.environ['GSUTIL_RETURN_CODE']))

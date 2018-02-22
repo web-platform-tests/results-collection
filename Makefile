@@ -50,7 +50,7 @@ py_lint: py_proto py_deps
 	pycodestyle --exclude=webapp/node_modules/*,*_pb2.py .
 
 py_test: py_proto py_deps
-	python -m unittest discover -p '*_test.py'
+	python -m unittest discover -p '*_test.py' -s run
 
 go_lint: go_deps
 	cd $(WPTD_GO_PATH); golint -set_exit_status $(GO_FILES)

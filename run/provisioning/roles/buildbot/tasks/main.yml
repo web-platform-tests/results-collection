@@ -1,0 +1,8 @@
+---
+- name: Install pip
+  apt:
+    name: python-pip
+
+- name: Install Buildbot
+  pip:
+    name: buildbot[bundle]
