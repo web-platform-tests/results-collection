@@ -19,7 +19,7 @@ wptd_exec "gcloud auth application-default print-access-token"
 DOCKER_STATUS="${?}"
 if [ "${DOCKER_STATUS}" != "0" ]; then
   warn "No credentials yet. Logging in..."
-  wptd_exec "gcloud auth application-default login"
+  wptd_exec_it "gcloud auth application-default login"
 
   DOCKER_STATUS="${?}"
   if [ "${DOCKER_STATUS}" != "0" ]; then
