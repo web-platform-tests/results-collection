@@ -67,9 +67,6 @@
                 state=present
     notify: Restart ssh
 
-  - name: remove old repos
-    command: "rm -rf /root/web-platform-tests && rm -rf /root/wptdashboard"
-
   - name: checkout the wptdashboard project
     git:
       repo: 'https://github.com/w3c/wptdashboard.git'
