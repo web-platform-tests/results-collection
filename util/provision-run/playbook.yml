@@ -110,12 +110,6 @@
       line="export BROWSER={{ browser }}"
       state=present
 
-  - name: set up browser-runner to have good defaults
-    lineinfile: dest=/root/browser-runner.sh
-      regexp="export FLAGS"
-      line="export FLAGS=--upload --create-testrun --total-chunks 100"
-      state=present
-
   - name: ensure we have the latest google-sdk
     command: pip install --upgrade google-cloud
     async: 0
