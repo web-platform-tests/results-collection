@@ -3,6 +3,8 @@
 # variable definition file named `vault`. That file is decrypted as part of the
 # system provisioning process using the password specified in the
 # `ansible-vault-password.txt` file.
+sauce_labs_user: mattl
+sauce_labs_tunnel_id: FIGHT_MILK
 sauce_labs_key: '{{vault_sauce_labs_key}}'
 
 external_packages:
