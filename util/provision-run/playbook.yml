@@ -51,6 +51,7 @@
       - curl
       - dtrx
       - emacs-nox
+      - firefox
       - git
       - google-cloud-sdk
       - htop
@@ -66,6 +67,22 @@
       - virtualenv
       - xauth
       - xvfb
+
+  - name: Create directory to store downloaded files
+    file:
+      name: ~/downloads
+      state: directory
+
+  - name: Download Mozilla Geckodriver
+    get_url:
+      url: https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz
+      dest: ~/downloads/
+
+  - name: Install Mozilla Geckodriver
+    unarchive:
+      src: ~/downloads/geckodriver-v0.19.1-linux64.tar.gz
+      dest: /usr/local/bin
+      remote_src: true
 
   - name: Disallow password authentication
     lineinfile: dest=/etc/ssh/sshd_config
