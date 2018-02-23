@@ -37,6 +37,12 @@
     command: uname -r
     register: kernel_version
 
+  - name: Install kernel Linux headers
+    apt:
+      name: linux-headers-{{kernel_version.stdout}}
+      state: present
+    notify: Restart system
+
   - name: install the various packages we need
     apt:
       name: '{{ item }}'
@@ -49,7 +55,6 @@
       - google-cloud-sdk
       - htop
       - libnss3-tools
-      - linux-headers-{{kernel_version.stdout}}
       - nvidia-367
       - nvidia-375
       - nvidia-384
@@ -142,12 +147,8 @@
                 line="sauce_key = {{ sauce_labs_key }}"
                 state=present
 
-  - name: reboot the machine
-    command: /sbin/shutdown -r +1
-    async: 0
-    poll: 0
-    ignore_errors: true
-
   handlers:
     - name: Restart ssh
       service: name=ssh state=restarted
+    - name: Restart system
+      command: /sbin/shutdown -r +1
