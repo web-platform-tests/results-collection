@@ -42,25 +42,25 @@
       name: '{{ item }}'
       state: present
     with_items:
-      - emacs-nox
-      - htop
-      - rsync
-      - dtrx
-      - git
-      - libnss3-tools
-      - python2.7
-      - virtualenv
-      - python-pip
-      - screen
       - curl
+      - dtrx
+      - emacs-nox
+      - git
+      - google-cloud-sdk
+      - htop
+      - libnss3-tools
+      - linux-headers-{{kernel_version.stdout}}
+      - nvidia-367
+      - nvidia-375
+      - nvidia-384
+      - python-pip
+      - python2.7
+      - rsync
+      - screen
+      - unattended-upgrades
+      - virtualenv
       - xauth
       - xvfb
-      - google-cloud-sdk
-      - linux-headers-{{kernel_version.stdout}}
-      - nvidia-375
-      - nvidia-367
-      - nvidia-384
-      - unattended-upgrades
 
   - name: Disallow password authentication
     lineinfile: dest=/etc/ssh/sshd_config
