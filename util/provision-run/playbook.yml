@@ -16,19 +16,22 @@
     with_file:
      - public_keys/web-platform
 
-  - name: make sure we have the GPG key for google cloud repo
+  - name: Download keys for external package repositories
     get_url:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        dest: /tmp/key.gpg
+      url: '{{item.key_url}}'
+      dest: /root/{{item.name}}
+    with_items: '{{external_packages}}'
 
-  - name: install key
-    command: apt-key add /tmp/key.gpg
+  - name: Install keys for external package repositories
+    command: apt-key add /root/{{item.name}}
+    with_items: '{{external_packages}}'
 
-  - name: make sure we have google cloud repo added
+  - name: Add apt sources
     lineinfile:
-        dest: /etc/apt/sources.list.d/google-cloud-sdk.list
-        line: deb http://packages.cloud.google.com/apt cloud-sdk-xenial main
-        create: true
+      dest: '/etc/apt/sources.list.d/{{item.name}}.list'
+      line: '{{item.repository}}'
+      create: true
+    with_items: '{{external_packages}}'
 
   - name: update package repository
     command: apt-get update
@@ -53,6 +56,7 @@
       - emacs-nox
       - firefox
       - git
+      - google-chrome-stable
       - google-cloud-sdk
       - htop
       - libnss3-tools
@@ -81,6 +85,17 @@
   - name: Install Mozilla Geckodriver
     unarchive:
       src: ~/downloads/geckodriver-v0.19.1-linux64.tar.gz
+      dest: /usr/local/bin
+      remote_src: true
+
+  - name: Download Google Chromedriver
+    get_url:
+      url: https://chromedriver.storage.googleapis.com/2.35/chromedriver_linux64.zip
+      dest: ~/downloads/
+
+  - name: Install Google Chromedriver
+    unarchive:
+      src: ~/downloads/chromedriver_linux64.zip
       dest: /usr/local/bin
       remote_src: true
 
