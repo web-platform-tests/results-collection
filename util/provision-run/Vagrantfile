@@ -8,6 +8,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision 'ansible_local' do |ansible|
     ansible.playbook = 'playbook.yml'
+    ansible.extra_vars = {
+      browser: 'chrome-64.0-linux'
+    }
     ansible.inventory_path = 'inventory/vagrant'
     ansible.limit = 'all'
   end
