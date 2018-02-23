@@ -4,3 +4,11 @@
 # system provisioning process using the password specified in the
 # `ansible-vault-password.txt` file.
 sauce_labs_key: '{{vault_sauce_labs_key}}'
+
+external_packages:
+  - name: google-cloud
+    key_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    repository: deb http://packages.cloud.google.com/apt cloud-sdk-xenial main
+  - name: google-chrome
+    key_url: https://dl-ssl.google.com/linux/linux_signing_key.pub
+    repository: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
