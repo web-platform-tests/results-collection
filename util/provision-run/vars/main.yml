@@ -7,6 +7,8 @@ sauce_labs_user: mattl
 sauce_labs_tunnel_id: FIGHT_MILK
 sauce_labs_key: '{{vault_sauce_labs_key}}'
 
+google_cloud_secret: '{{vault_google_cloud_secret}}'
+
 external_packages:
   - name: google-cloud
     key_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
