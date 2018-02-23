@@ -24,13 +24,13 @@
 
   - name: make sure we have google cloud repo added
     lineinfile:
-        path: /etc/apt/sources.list.d/google-cloud-sdk.list
+        dest: /etc/apt/sources.list.d/google-cloud-sdk.list
         line: deb http://packages.cloud.google.com/apt cloud-sdk-stretch main
         create: true
 
   - name: install nvidia drivers (for GPU machines)
     lineinfile:
-        path: /etc/apt/sources.list.d/nvidia-drivers.list
+        dest: /etc/apt/sources.list.d/nvidia-drivers.list
         line: deb http://httpredir.debian.org/debian/ stretch main contrib non-free
         create: true
 
