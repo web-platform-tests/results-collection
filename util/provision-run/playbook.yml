@@ -171,18 +171,12 @@
       job: "rm /root/browser-running.txt"
 
   - name: put the running.ini file in place
-    copy:
-      src: files/root/running.ini
+    template:
+      src: files/root/running.ini.j2
       dest: /root/wptdashboard/run/running.ini
       owner: root
       group: root
       mode: 0755
-
-  - name: update the running.ini file with ACTUAL SECRETS
-    lineinfile: dest=/root/wptdashboard/run/running.ini
-                regexp="^sauce_key"
-                line="sauce_key = {{ sauce_labs_key }}"
-                state=present
 
   handlers:
     - name: Restart ssh
