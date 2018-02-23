@@ -6,7 +6,7 @@ VAGRANTFILE_API_VERSION = '2'
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = 'debian/testing64'
 
-  config.vm.provision 'ansible' do |ansible|
+  config.vm.provision 'ansible_local' do |ansible|
     ansible.playbook = 'playbook.yml'
     ansible.inventory_path = 'inventory/vagrant'
     ansible.limit = 'all'
