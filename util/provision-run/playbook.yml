@@ -25,21 +25,20 @@
   - name: make sure we have google cloud repo added
     lineinfile:
         dest: /etc/apt/sources.list.d/google-cloud-sdk.list
-        line: deb http://packages.cloud.google.com/apt cloud-sdk-stretch main
-        create: true
-
-  - name: install nvidia drivers (for GPU machines)
-    lineinfile:
-        dest: /etc/apt/sources.list.d/nvidia-drivers.list
-        line: deb http://httpredir.debian.org/debian/ stretch main contrib non-free
+        line: deb http://packages.cloud.google.com/apt cloud-sdk-xenial main
         create: true
 
   - name: update package repository
     command: apt-get update
 
+  - name: Infer current kernel Linux version
+    command: uname -r
+    register: kernel_version
+
   - name: install the various packages we need
-    action: >
-      {{ ansible_pkg_mgr }} name={{ item }} state=present update_cache=yes
+    apt:
+      name: '{{ item }}'
+      state: present
     with_items:
       - emacs-nox
       - htop
@@ -55,8 +54,10 @@
       - xauth
       - xvfb
       - google-cloud-sdk
-      - linux-headers-amd64
-      - nvidia-driver
+      - linux-headers-{{kernel_version.stdout}}
+      - nvidia-375
+      - nvidia-367
+      - nvidia-384
       - unattended-upgrades
 
   - name: Disallow password authentication
