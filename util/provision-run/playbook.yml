@@ -3,7 +3,9 @@
   #remote_user: username specified in /etc/ansible/hosts
   become: yes
   become_user: root
-
+  vars_files:
+    - vars/main.yml
+    - vars/vault
   tasks:
   - name: Set authorized key, removing all the authorized key already set
     authorized_key:
@@ -143,7 +145,7 @@
   - name: update the running.ini file with ACTUAL SECRETS
     lineinfile: dest=/root/wptdashboard/run/running.ini
                 regexp="^sauce_key"
-                line="sauce_key = {{ sauce_key }}"
+                line="sauce_key = {{ sauce_labs_key }}"
                 state=present
 
   - name: reboot the machine

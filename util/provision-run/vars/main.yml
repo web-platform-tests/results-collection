@@ -1,0 +1,6 @@
+---
+# Sensitive data is encrypted using Ansible Vault and stored in a corresponding
+# variable definition file named `vault`. That file is decrypted as part of the
+# system provisioning process using the password specified in the
+# `ansible-vault-password.txt` file.
+sauce_labs_key: '{{vault_sauce_labs_key}}'
