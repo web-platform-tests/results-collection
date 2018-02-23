@@ -16,14 +16,19 @@
     with_file:
      - public_keys/web-platform
 
+  - name: Create directory to store keys
+    file:
+      name: /root/keys
+      state: directory
+
   - name: Download keys for external package repositories
     get_url:
       url: '{{item.key_url}}'
-      dest: /root/{{item.name}}
+      dest: /root/keys/{{item.name}}
     with_items: '{{external_packages}}'
 
   - name: Install keys for external package repositories
-    command: apt-key add /root/{{item.name}}
+    command: apt-key add /root/keys/{{item.name}}
     with_items: '{{external_packages}}'
 
   - name: Add apt sources
