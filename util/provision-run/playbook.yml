@@ -1,5 +1,5 @@
 ---
-- hosts: debian
+- hosts: all
   #remote_user: username specified in /etc/ansible/hosts
   become: yes
   become_user: root
