@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 export BROWSER=
-export FLAGS=--total-chunks=100
 
 if [ -f "/root/browser-is-running.txt" ]; then
     echo "Not running, browser tests are running"
@@ -16,7 +15,9 @@ else
     touch /root/browser-is-running.txt
 
     #    rm -rf ~/wptdbuild/*
-    cd /root/wptdashboard/ && ./run/run.py $BROWSER $FLAGS  2>&1 | tee browser-`date +%s`.log
+    cd /root/wptdashboard/ && ./run/run.py $BROWSER \
+      --upload --create-testrun --total-chunks 100 2>&1 | \
+        tee browser-`date +%s`.log
 
     rm /root/browser-is-running.txt
 
