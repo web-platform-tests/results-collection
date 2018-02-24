@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+. /home/{{application_user}}/.bash_profile
+
 export BROWSER={{browser}}
 
 if [ -f "./browser-is-running.txt" ]; then
