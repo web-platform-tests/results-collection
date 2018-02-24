@@ -9,6 +9,9 @@ sauce_labs_key: '{{vault_sauce_labs_key}}'
 
 google_cloud_secret: '{{vault_google_cloud_secret}}'
 
+application_group: wpt
+application_user: wptrunner
+
 external_packages:
   - name: google-cloud
     key_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
