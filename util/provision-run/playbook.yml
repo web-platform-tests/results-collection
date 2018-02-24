@@ -136,6 +136,18 @@
       dest: /home/{{application_user}}/wptdashboard
       force: yes
 
+  # If provisioning an environment that has previously executed the tests, the
+  # web-platform-tests git repository may be in a detached HEAD state. This
+  # triggers a bug in the Ansible "git" module [1]. Work around the bug by
+  # checking out the "master" branch prior to invoking that module.
+  #
+  # [1] https://github.com/ansible/ansible/issues/30780
+  - name: Work around bug in Ansible "git" module
+    command: git checkout master
+    args:
+      chdir: /home/{{application_user}}/web-platform-tests
+    when: '("/home/" + application_user + "/web-platform-tests") | is_dir'
+
   - name: checkout the web-platform-tests
     git:
       repo: 'https://github.com/w3c/web-platform-tests.git'
