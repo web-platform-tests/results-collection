@@ -111,46 +111,56 @@
                 state=present
     notify: Restart ssh
 
-  - name: checkout the wptdashboard project
-    git:
-      repo: 'https://github.com/w3c/wptdashboard.git'
-      dest: ~/wptdashboard
-      force: yes
-
-  - name: checkout the web-platform-tests
-    git:
-      repo: 'https://github.com/w3c/web-platform-tests.git'
-      dest: ~/web-platform-tests
-      force: yes
-
-  - name: install python requirements
-    pip:
-      requirements: ~/wptdashboard/requirements.txt
-
-  - name: make python virtualenv
-    pip:
-      name: virtualenv
-      virtualenv: ~/web-platform-tests/_venv
-
   - name: make sure we can open enough files
     lineinfile: dest=/etc/systemd/system.conf
       regexp="DefaultLimitNOFILE"
       line="DefaultLimitNOFILE=65536"
       state=present
 
-  - name: copy various files in /files/root/ to /root/
-    copy:
-      src: files/root/browser-runner.sh
-      dest: /root/browser-runner.sh
-      owner: root
-      group: root
-      mode: 0755
+  - name: Create group
+    group:
+      name: '{{application_group}}'
+      state: present
+      system: true
 
-  - name: set up browser-runner to run tests for a browser
-    lineinfile: dest=/root/browser-runner.sh
-      regexp="export BROWSER"
-      line="export BROWSER={{ browser }}"
-      state=present
+  - name: Create user account
+    user:
+      name: '{{application_user}}'
+      state: present
+      system: true
+      shell: /bin/bash
+
+  - name: checkout the wptdashboard project
+    git:
+      repo: 'https://github.com/w3c/wptdashboard.git'
+      dest: /home/{{application_user}}/wptdashboard
+      force: yes
+
+  - name: checkout the web-platform-tests
+    git:
+      repo: 'https://github.com/w3c/web-platform-tests.git'
+      dest: /home/{{application_user}}/web-platform-tests
+      force: yes
+
+  - name: make python virtualenv
+    pip:
+      name: virtualenv
+      virtualenv: /home/{{application_user}}/web-platform-tests/_venv
+
+  - name: Grant file ownership to application user
+    file:
+      path: '{{item}}'
+      group: '{{application_group}}'
+      owner: '{{application_user}}'
+      state: directory
+      recurse: true
+    with_items:
+      - /home/{{application_user}}/wptdashboard
+      - /home/{{application_user}}/web-platform-tests
+
+  - name: install python requirements
+    pip:
+      requirements: /home/{{application_user}}/wptdashboard/requirements.txt
 
   - name: ensure we have the latest google-sdk
     command: pip install --upgrade google-cloud
@@ -158,24 +168,40 @@
     poll: 0
     ignore_errors: true
 
+  - name: Copy browser runner script into place
+    copy:
+      src: files/browser-runner.sh
+      dest: /home/{{application_user}}/browser-runner.sh
+      owner: '{{application_user}}'
+      group: '{{application_group}}'
+      mode: 0755
+
+  - name: set up browser-runner to run tests for a browser
+    lineinfile: dest=/home/{{application_user}}/browser-runner.sh
+      regexp="export BROWSER"
+      line="export BROWSER={{ browser }}"
+      state=present
+
   - name: make a cronjob to run browser-runner.sh
     cron:
       name: "run browsers"
       minute: "*/1"
-      job: "/root/browser-runner.sh > /root/browser-runner.log 2>&1"
+      job: "/home/{{application_user}}/browser-runner.sh > /home/{{application_user}}/browser-runner.log 2>&1"
+      user: '{{application_user}}'
 
   - name: make a cronjob to remove browser-running.txt at boot
     cron:
       name: "a job for reboot"
       special_time: reboot
-      job: "rm /root/browser-running.txt"
+      job: "rm /home/{{application_user}}/browser-running.txt"
+      user: '{{application_user}}'
 
   - name: put the running.ini file in place
     template:
-      src: files/root/running.ini.j2
-      dest: /root/wptdashboard/run/running.ini
-      owner: root
-      group: root
+      src: files/running.ini.j2
+      dest: /home/{{application_user}}/wptdashboard/run/running.ini
+      group: '{{application_group}}'
+      owner: '{{application_user}}'
       mode: 0755
 
   handlers:
