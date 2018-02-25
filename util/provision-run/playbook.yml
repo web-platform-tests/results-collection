@@ -170,6 +170,19 @@
       - /home/{{application_user}}/wptdashboard
       - /home/{{application_user}}/web-platform-tests
 
+  - name: Determine host aliases required by web-platform-tests
+    command: python wpt make-hosts-file
+    args:
+      chdir: /home/{{application_user}}/web-platform-tests
+    register: host_contents
+
+  - name: Define hosts aliases required by web-platform-tests
+    lineinfile:
+      dest: /etc/hosts
+      line: '{{item}}'
+      state: present
+    with_items: '{{host_contents.stdout_lines}}'
+
   - name: install python requirements
     pip:
       requirements: /home/{{application_user}}/wptdashboard/requirements.txt
