@@ -33,7 +33,7 @@ class TestRun2(unittest.TestCase):
             os.path.join(mock_wptd_dir, 'webapp'),
             os.path.join(mock_wptd_dir, 'run')
         ]
-        self.wpt_expected_tests = ['/dummy.html']
+        self.set_wpt_raw_log([{'tests': ['/dummy.html']}])
 
         for tmp_dir in self.tmp_dirs:
             try:
@@ -79,6 +79,36 @@ class TestRun2(unittest.TestCase):
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
 
+    def set_wpt_raw_log(self, results):
+        self.raw_log_contents = []
+
+        for result in results:
+            self.assertNotEqual(
+                'text' in result,
+                'tests' in result,
+                'Must specify either "text" or "tests".'
+            )
+            if 'text' in result:
+                self.raw_log_contents.append(result['text'])
+                continue
+
+            irrelevant_data = '''
+                {}
+                {"action": "other"}
+                {"action": "other", "tests": {}}
+                {"action": "other", "tests": {"default": []}}'''
+
+            self.raw_log_contents.append('\n'.join([
+                irrelevant_data,
+                json.dumps({
+                    'action': 'suite_start',
+                    'tests': {
+                        'default': result['tests']
+                    }
+                }),
+                irrelevant_data
+            ]))
+
     def cmd_wpt(self, *args):
         if 'run' in args:
             try:
@@ -96,25 +126,9 @@ class TestRun2(unittest.TestCase):
                 return
 
             rawlog_path = os.path.join(log_dir, args[index + 1])
-            irrelevant_data = '''
-                {}
-                {"action": "other"},
-                {"action": "other", "tests": {} }"
-                {"action": "other", "tests": { "default": [] }'''
-
-            raw_log_contents = '\n'.join([
-                irrelevant_data,
-                json.dumps({
-                    'action': 'suite_start',
-                    'tests': {
-                        'default': self.wpt_expected_tests
-                    }
-                }),
-                irrelevant_data
-            ])
 
             with open(rawlog_path, 'w') as log:
-                log.write(raw_log_contents)
+                log.write(self.raw_log_contents.pop(0))
 
             # Invocations of `wpt run` are generally expected to fail because
             # most browsers will fail at least one test
@@ -313,6 +327,10 @@ class TestRun2(unittest.TestCase):
                 }
             ]})
         ]
+        self.set_wpt_raw_log([
+          {'tests': ['/js/bitwise-or.html']},
+          {'tests': ['/js/bitwise-and.html']}
+        ])
 
         returncode, stdout, stderr = self.run_py([
             platform_id, '--total-chunks', '2'
@@ -557,6 +575,11 @@ class TestRun2(unittest.TestCase):
                 }
             ]})
         ]
+        self.set_wpt_raw_log([
+          {'tests': ['/js/bitwise-or.html']},
+          {'tests': ['/js/bitwise-and.html']},
+          {'tests': ['/js/bitwise-or.html']}
+        ])
 
         returncode, stdout, stderr = self.run_py([
             platform_id, '--total-chunks', '3'
@@ -596,6 +619,7 @@ class TestRun2(unittest.TestCase):
             'c0ffee', platform_id
         )
         self.wpt_log_contents = [json.dumps({'results': []})] * 3
+        self.set_wpt_raw_log([{'tests': ['/js/isNaN.html']}] * 3)
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -652,6 +676,9 @@ class TestRun2(unittest.TestCase):
                 }
             ]})
         ]
+        self.set_wpt_raw_log([
+            {'tests': ['/js/bitwise-or.html', '/js/bitwise-and.html']}
+        ] * 3)
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -725,6 +752,11 @@ class TestRun2(unittest.TestCase):
                 }
             ]})
         ]
+        self.set_wpt_raw_log([
+            {
+              'tests': ['/js/with-statement.html', '/js/isNaN.html']
+            }
+        ] * 3)
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -792,9 +824,12 @@ class TestRun2(unittest.TestCase):
                 }
             ]
         })]
-        self.wpt_expected_tests = [
-            '/js-bitwise-or.html', '/js/bitwise-and.html'
-            ] + ['/missed-test-%s.html' % index for index in range(100)]
+        self.set_wpt_raw_log([{
+            'tests': [
+                '/js-bitwise-or.html', '/js/bitwise-and.html'
+                ] + ['/missed-test-%s.html' % index for index in range(100)]
+            }
+        ])
 
         returncode, stdout, stderr = self.run_py([platform_id])
 
@@ -862,9 +897,12 @@ class TestRun2(unittest.TestCase):
                 }
             ]
         })]
-        self.wpt_expected_tests = [
-            '/js-bitwise-or.html', '/js/bitwise-and.html', '/missed-test.html'
-        ]
+        self.set_wpt_raw_log([{
+            'tests': [
+                '/js-bitwise-or.html', '/js/bitwise-and.html',
+                '/missed-test.html'
+            ]
+        }])
 
         returncode, stdout, stderr = self.run_py([
             platform_id, '--partial-threshold', '66'
@@ -934,9 +972,12 @@ class TestRun2(unittest.TestCase):
                 }
             ]
         })]
-        self.wpt_expected_tests = [
-            '/js-bitwise-or.html', '/js/bitwise-and.html', '/missed-test.html'
-        ]
+        self.set_wpt_raw_log([{
+            'tests': [
+                '/js-bitwise-or.html', '/js/bitwise-and.html',
+                '/missed-test.html'
+            ]
+        }])
 
         returncode, stdout, stderr = self.run_py([
             platform_id, '--partial-threshold', '67'
