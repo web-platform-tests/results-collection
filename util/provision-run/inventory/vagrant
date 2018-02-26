@@ -1,1 +1,1 @@
-localhost ansible_connection=local
+localhost ansible_connection=local browser=chrome-64.0-linux
