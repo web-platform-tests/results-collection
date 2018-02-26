@@ -486,6 +486,41 @@ class TestRun2(unittest.TestCase):
         )
         self.assertListEqual(os.listdir(log_dir), ['c0ffee'])
 
+    def test_incomplete_raw_log(self):
+        platform_id = 'chrome-64.0-linux'
+
+        def git(*args):
+            if 'log' in args:
+                return {'stdout': 'deadbeef'}
+
+        self.remote_control.add_handler('git', git)
+        self.remote_control.add_handler(
+            'chrome', lambda *_: {'stdout': 'Chromium 64.0.3282.119'}
+        )
+        self.write_browsers_manifest({
+            platform_id: {
+                'initially_loaded': False,
+                'currently_run': False,
+                'browser_name': 'chrome',
+                'browser_version': '64.0',
+                'os_name': platform.system().lower(),
+                'os_version': '*'
+            }
+        })
+        self.remote_control.add_handler('wpt', self.cmd_wpt)
+        self.wpt_log_file_name = 'wptd-%s-%s-report.log' % (
+            'deadbeef', platform_id
+        )
+        self.wpt_log_contents = ['', '', '']
+        # skip
+        self.set_wpt_raw_log([{'text': '{}\n{}\n{}\n'}] * 3)
+
+        returncode, stdout, stderr = self.run_py([platform_id])
+
+        self.assertEquals(returncode, 1, stdout)
+
+        self.assertListEqual(os.listdir(log_dir), ['deadbeef'])
+
     def test_no_running_manifest(self):
         platform_id = 'chrome-62.0-linux'
 
