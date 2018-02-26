@@ -21,6 +21,7 @@ class TestSHAFinder(unittest.TestCase):
     target_dir = os.path.abspath(
         os.path.join(os.path.abspath(wptd_dir), '../', 'wptdashboard-temp')
     )
+
     def setUp(self):
         # This is only necessary for local development environments
         # that are unlikely to have been cloned with an explicit --depth
@@ -28,14 +29,15 @@ class TestSHAFinder(unittest.TestCase):
             shutil.rmtree(self.target_dir)
 
         command = [
-            'git', 'clone', '--depth', '1', 'https://github.com/w3c/wptdashboard',
-            self.target_dir
+            'git', 'clone', '--depth', '1',
+            'https://github.com/w3c/wptdashboard', self.target_dir
         ]
         return_code = subprocess.check_call(command, cwd=self.wptd_dir)
         assert return_code == 0, (
-            'Got non-0 return code: %d from command %s' % (return_code, command)
+            'Got non-0 return code: %d from command %s' % (
+                return_code, command
+            )
         )
-
 
     def test_nov_21st(self):
         # Travis only pulls git history depth 50 by default
