@@ -389,6 +389,8 @@ def get_expected_tests(filename):
 
             return data.get('tests').get('default')
 
+    return []
+
 
 def get_commit_details(mainargs, config, logger):
     wpt_sha = ''
