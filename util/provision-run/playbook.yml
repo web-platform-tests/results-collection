@@ -130,11 +130,10 @@
       system: true
       shell: /bin/bash
 
-  - name: checkout the wptdashboard project
-    git:
-      repo: 'https://github.com/w3c/wptdashboard.git'
-      dest: /home/{{application_user}}/wptdashboard
-      force: yes
+  - name: Copy the source code into place
+    synchronize:
+      src: ../../../
+      dest: /home/{{application_user}}/wptdashboard/
 
   # If provisioning an environment that has previously executed the tests, the
   # web-platform-tests git repository may be in a detached HEAD state. This
