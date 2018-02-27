@@ -46,7 +46,6 @@ class TestSHAFinder(unittest.TestCase):
             'fetch',
             '--unshallow',
         ]
-        abspath = os.path.abspath(self.wptd_dir)
         subprocess.call(command, cwd=self.target_dir)
 
         # ~5 commits that day, ensure first is result.
@@ -56,7 +55,7 @@ class TestSHAFinder(unittest.TestCase):
 
         self.assertEqual(
             '46060eb2c33de6101bc6930bf5e34f794aa9f996',
-            sha_finder.get_todays_sha(self.wptd_dir)
+            sha_finder.get_todays_sha(self.target_dir)
         )
 
     def test_nov_18th(self):
