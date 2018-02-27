@@ -367,7 +367,7 @@ def setup_wpt(config, logger):
 
         assert proc.returncode == 0, (
             'Got non-0 return code: '
-            '%d from command %s' % (return_code, command))
+            '%d from command %s' % (proc.returncode, command))
 
     return 0
 
