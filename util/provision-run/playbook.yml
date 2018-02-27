@@ -104,6 +104,26 @@
       dest: /usr/local/bin
       remote_src: true
 
+  - name: Download Sauce Connect
+    get_url:
+      url: https://saucelabs.com/downloads/sc-4.4.11-linux.tar.gz
+      dest: ~/downloads
+      checksum: sha1:4a70c3a559913274a35b056a6e5d274cdbe4fdec
+
+  - name: Unpack Sauce Connect
+    unarchive:
+      src: ~/downloads/sc-4.4.11-linux.tar.gz
+      dest: ~/downloads
+      creates: ~/downloads/sc-4.4.11-linux/bin/sc
+      remote_src: true
+
+  - name: Install Sauce Connect
+    copy:
+      src: ~/downloads/sc-4.4.11-linux/bin/sc
+      dest: /usr/local/bin
+      mode: 0755
+      remote_src: true
+
   - name: Disallow password authentication
     lineinfile: dest=/etc/ssh/sshd_config
                 regexp="^PasswordAuthentication"
