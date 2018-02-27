@@ -177,8 +177,11 @@ def main(platform_id, platform, args, config):
             if platform['browser_name'] == 'chrome':
                 command.extend(['--binary', browser_binary])
             if platform['browser_name'] == 'firefox':
-                command.extend(['--binary', browser_binary])
+                command.extend(['--binary', browser_binary])                
                 # we no longer want to download a firefox binary
+                command.append('--yes')
+                # this actually refers to 'say yes to everything'
+                # and not installing a browser, as previously written
                 command.append('--certutil-binary=certutil')
                 # temporary fix to allow WebRTC tests to call getUserMedia
                 command.extend([
