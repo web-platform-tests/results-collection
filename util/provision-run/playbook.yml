@@ -169,18 +169,12 @@
     ignore_errors: true
 
   - name: Copy browser runner script into place
-    copy:
+    template:
       src: files/browser-runner.sh
       dest: /home/{{application_user}}/browser-runner.sh
       owner: '{{application_user}}'
       group: '{{application_group}}'
       mode: 0755
-
-  - name: set up browser-runner to run tests for a browser
-    lineinfile: dest=/home/{{application_user}}/browser-runner.sh
-      regexp="export BROWSER"
-      line="export BROWSER={{ browser }}"
-      state=present
 
   - name: make a cronjob to run browser-runner.sh
     cron:
