@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-export BROWSER=
+export BROWSER={{browser}}
 
 if [ -f "./browser-is-running.txt" ]; then
     echo "Not running, browser tests are running"
