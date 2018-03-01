@@ -180,7 +180,6 @@ def main(platform_id, platform, args, config):
                 # temporary fix to allow WebRTC tests to call getUserMedia
                 command.extend(['--binary-arg=--use-fake-ui-for-media-stream'])
                 command.extend(['--binary-arg=--use-fake-device-for-media-stream'])
-                print(command)
             if platform['browser_name'] == 'firefox':
                 command.extend(['--install-browser', '--yes'])
                 command.append('--certutil-binary=certutil')
