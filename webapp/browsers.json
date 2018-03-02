@@ -39,6 +39,15 @@
         "os_name": "linux",
         "os_version": "*"
     },
+    "edge-15-windows-10-sauce": {
+        "initially_loaded": true,
+        "currently_run": true,
+        "browser_name": "edge",
+        "browser_version": "15",
+        "os_name": "windows",
+        "os_version": "10",
+        "sauce": true
+    },
     "firefox-57.0-linux": {
         "initially_loaded": true,
         "currently_run": true,
@@ -54,15 +63,6 @@
         "browser_version": "56.0",
         "os_name": "linux",
         "os_version": "*"
-    },
-    "edge-15-windows-10-sauce": {
-        "initially_loaded": true,
-        "currently_run": true,
-        "browser_name": "edge",
-        "browser_version": "15",
-        "os_name": "windows",
-        "os_version": "10",
-        "sauce": true
     },
     "safari-11.0-macos-10.12-sauce": {
         "initially_loaded": true,
