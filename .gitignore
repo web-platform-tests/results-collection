@@ -9,3 +9,4 @@ bq-schema
 generated
 webapp/bower_components/*
 !webapp/bower_components/{polymer,shadycss,webcomponentsjs}
+/run/.vagrant/

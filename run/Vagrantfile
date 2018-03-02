@@ -8,10 +8,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Override the default synced folder so that the entire source tree is
   # available within the VM during provisioning
-  config.vm.synced_folder '../..', '/vagrant'
+  config.vm.synced_folder '..', '/vagrant'
 
   config.vm.provision 'ansible_local' do |ansible|
-    ansible.provisioning_path = '/vagrant/util/provision-run'
+    ansible.provisioning_path = '/vagrant/run/provisioning'
     ansible.playbook = 'playbook.yml'
     ansible.inventory_path = 'inventory/vagrant'
     ansible.limit = 'all'
