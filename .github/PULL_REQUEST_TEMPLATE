@@ -1,0 +1,40 @@
+<!--
+  Thanks for the PR!
+
+  You probably worked hard on it, so make the job easy for your reviewer!
+  Below is an example PR body which would have made #349 easier; use it as a
+  guide for what context your reviewer might need.
+
+  If you changed any dev procedures, consider also updating the README.
+
+  If this affects an open issue, make sure to reference it (but be specific
+  with the reference - 'Fixes #999' will cause GitHub to automatically close
+  the issue).
+
+------------- Template --------------
+
+### Description
+
+Added an _anomalies_ list view, as per the [Q1 OKR](https://docs.google.com/document/d/1ojlLDiRruI4e95Z7JQ10JQPRMiQHd_40rBkYCL6IJqw/edit#heading=h.dl2bcelt56s) of per-browser interoperability issues.
+
+Fixes issue #999.
+
+### Changes
+
+   - `/interop/anomalies` shows a list of anomalies that fail in at least one, but not all, browsers.
+   - `/interop/anomalies?browser=[browser]` will show tests that __fail__ in that browser, but not all browsers.
+
+### Staging
+
+ - Deployed using `./git/git-deploy` to https://lukebjerring-interoperability-anomalies-dot-wptdashboard.appspot.com/
+ - Changes for this PR are visible at https://lukebjerring-interoperability-anomalies-dot-wptdashboard.appspot.com/interop/anomalies
+
+### Local setup steps
+
+ - Set up mock data; Run:
+    - `./util/docker-dev/web_server.sh`
+    - `./util/docker-dev/dev_auth.sh`
+    - `./util/docker-dev/dev_data.sh`
+ - Open http://localhost:8080/interop/anomalies
+
+-->
