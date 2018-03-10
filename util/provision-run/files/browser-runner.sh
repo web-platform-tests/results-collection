@@ -18,6 +18,7 @@ else
 
     #    rm -rf ~/wptdbuild/*
     cd ./wptdashboard/ && ./run/run.py $BROWSER \
+      --partial-threshold 98 \
       --upload --create-testrun --total-chunks 100 2>&1 | \
         tee browser-`date +%s`.log
 
