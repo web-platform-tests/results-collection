@@ -12,31 +12,45 @@ import (
 var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 func init() {
-	// Test run results, viewed by browser (default view)
-	// For run results diff view, 'before' and 'after' params can be given.
-	http.HandleFunc("/", testHandler)
+	routes := map[string]http.HandlerFunc {
+		// Test run results, viewed by browser (default view)
+		// For run results diff view, 'before' and 'after' params can be given.
+		"/": testHandler,
 
-	// About wpt.fyi
-	http.HandleFunc("/about", aboutHandler)
+		// About wpt.fyi
+		"/about": aboutHandler,
 
-	// Test run results, viewed by pass-rate across the browsers
-	http.HandleFunc("/interop/", interopHandler)
+		// Test run results, viewed by pass-rate across the browsers
+		"/interop/": interopHandler,
 
-	// Lists of test run results which have poor interoperability
-	http.HandleFunc("/interop/anomalies", anomalyHandler)
+		// Lists of test run results which have poor interoperability
+		"/interop/anomalies": anomalyHandler,
 
-	// List of all test runs, by SHA[0:10]
-	http.HandleFunc("/test-runs", testRunsHandler)
+		// List of all test runs, by SHA[0:10]
+		"/test-runs": testRunsHandler,
 
-	// API endpoint for diff of two test run summary JSON blobs.
-	http.HandleFunc("/api/diff", apiDiffHandler)
+		// API endpoint for diff of two test run summary JSON blobs.
+		"/api/diff": apiDiffHandler,
 
-	// API endpoint for listing all test runs for a given SHA.
-	http.HandleFunc("/api/runs", apiTestRunsHandler)
+		// API endpoint for listing all test runs for a given SHA.
+		"/api/runs": apiTestRunsHandler,
 
-	// API endpoint for a single test run.
-	http.HandleFunc("/api/run", apiTestRunHandler)
+		// API endpoint for a single test run.
+		"/api/run": apiTestRunHandler,
 
-	// API endpoint for redirecting to a run's summary JSON blob.
-	http.HandleFunc("/results", resultsRedirectHandler)
+		// API endpoint for redirecting to a run's summary JSON blob.
+		"/results": resultsRedirectHandler,
+	}
+
+	for route, handler := range routes {
+		http.HandleFunc(route, wrapHSTS(handler))
+	}
+}
+
+func wrapHSTS(h http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		value := "max-age=31536000; includeSubDomains; preload"
+		w.Header().Add("Strict-Transport-Security", value)
+		h(w, r)
+	})
 }
