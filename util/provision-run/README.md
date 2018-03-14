@@ -22,7 +22,7 @@ To support local development and functional testing, a
 2. Open a terminal and navigate to the directory containing this text file
 3. Run the following command:
 
-       `vagrant up`
+       vagrant up
 
 This will initiate the creation of a virtual machine. Further documentation on
 using Vagrant can be found in [the "Getting Started" guide by the maintainers
@@ -43,4 +43,4 @@ machine will not have all the capabilities of the production system.
 3. Open a terminal and navigate to the directory containing this text file
 4. Run the following command:
 
-       `ansible-playbook -i inventory/production playbook.yml
+       ansible-playbook -i inventory/production playbook.yml
