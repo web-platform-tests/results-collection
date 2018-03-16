@@ -371,13 +371,18 @@ def verify_or_set_os_version(platform):
         % (os_version, platform['os_version']))
 
 
-def report_to_summary(wpt_report):
+def report_to_summary(wpt_report, strict=True):
     test_files = {}
 
     for result in wpt_report['results']:
         test_file = result['test']
-        assert test_file not in test_files, (
-            'Assumption that each test_file only shows up once broken!')
+        if (strict):
+            assert test_file not in test_files, (
+                'Assumption that each test_file only shows up once broken by %s' % test_file)
+        else:
+            if test_file in test_files:
+                logging.warn('Duplicate test file %s' % test_file)
+                continue
 
         if result['status'] in ('OK', 'PASS'):
             test_files[test_file] = [1, 1]
