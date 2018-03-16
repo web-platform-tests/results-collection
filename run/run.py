@@ -586,7 +586,7 @@ def parse_args():
         help=('Save reports for datasets that omit results for some tests. '
               'This must be an integer between 1 and 100 describing the '
               'minimum percentage of results that must be present for reports '
-              'to be saved. Defaults to 0 (i.e. empty results allowed.'),
+              'to be saved. Defaults to 0 (i.e. empty results allowed.)'),
         type=parse_percent,
         action='store',
         default=0
