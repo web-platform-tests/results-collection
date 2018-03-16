@@ -182,7 +182,11 @@ def main(platform_id, platform, args, config):
                     ['--binary-arg=--use-fake-ui-for-media-stream',
                      '--binary-arg=--use-fake-device-for-media-stream'])
             if platform['browser_name'] == 'firefox':
-                command.extend(['--install-browser', '--yes'])
+                command.extend(['--binary', browser_binary])
+                # we no longer want to download a firefox binary
+                command.append('--yes')
+                # this actually refers to 'say yes to everything'
+                # and not installing a browser, as previously written
                 command.append('--certutil-binary=certutil')
                 # temporary fix to allow WebRTC tests to call getUserMedia
                 command.extend([
@@ -256,7 +260,7 @@ def main(platform_id, platform, args, config):
 
     if platform['browser_name'] == 'firefox':
         logger.info('Verifying installed firefox matches platform ID')
-        firefox_path = '%s/_venv/firefox/firefox' % config['wpt_path']
+        firefox_path = config['firefox_binary']
         verify_browser_binary_version(platform, firefox_path)
 
     logger.info('Creating summary of results')
