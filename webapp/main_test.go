@@ -80,7 +80,6 @@ func assertHandlerMatch(t *testing.T, path string, pattern string) {
 	assert.Equal(t, pattern, handlerPattern)
 }
 
-
 func assertHSTS(t *testing.T, path string) {
 	req := httptest.NewRequest("GET", "/", nil)
 	rr := httptest.NewRecorder()

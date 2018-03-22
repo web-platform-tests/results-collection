@@ -12,7 +12,7 @@ import (
 var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 func init() {
-	routes := map[string]http.HandlerFunc {
+	routes := map[string]http.HandlerFunc{
 		// Test run results, viewed by browser (default view)
 		// For run results diff view, 'before' and 'after' params can be given.
 		"/": testHandler,
