@@ -1,0 +1,38 @@
+---
+# In Ubuntu 16.04, open file limits are set via two independent configuration
+# files.
+#
+# https://ro-che.info/articles/2017-03-26-increase-open-files-limit
+- name: Raise limit on number of open files (systemd settings)
+  lineinfile: dest=/etc/systemd/system.conf
+    regexp="DefaultLimitNOFILE"
+    line="DefaultLimitNOFILE=65536"
+    state=present
+
+- name: Raise limits on number of open files (PAM settings)
+  lineinfile:
+    dest: /etc/security/limits.conf
+    line: '{{item}}'
+  with_items:
+    - '* soft nofile 65536'
+    - '* hard nofile 65536'
+
+- name: Download Sauce Connect
+  get_url:
+    url: https://saucelabs.com/downloads/sc-4.4.12-linux.tar.gz
+    dest: ~/downloads
+    checksum: sha1:3a1f9ec4fc187f73d884e6f1cc0ef2d80de43c1f
+
+- name: Unpack Sauce Connect
+  unarchive:
+    src: ~/downloads/sc-4.4.12-linux.tar.gz
+    dest: ~/downloads
+    creates: ~/downloads/sc-4.4.12-linux/bin/sc
+    remote_src: true
+
+- name: Install Sauce Connect
+  copy:
+    src: ~/downloads/sc-4.4.12-linux/bin/sc
+    dest: /usr/local/bin
+    mode: 0755
+    remote_src: true

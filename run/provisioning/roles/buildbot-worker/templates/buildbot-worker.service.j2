@@ -1,0 +1,19 @@
+# Adapted from:
+# https://github.com/buildbot/buildbot-contrib/blob/a0f5d3898b9955c7d97b7dd2346a85e27252bb60/worker/contrib/systemd/buildbot-worker.service
+[Unit]
+Description=Buildbot Worker
+Wants=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile={{home_dir}}/worker/twistd.pid
+WorkingDirectory={{home_dir}}
+ExecStart=/usr/local/bin/buildbot-worker start worker
+ExecReload=/usr/local/bin/buildbot-worker restart worker
+ExecStop=/usr/local/bin/buildbot-worker stop worker
+Restart=always
+User={{application_user}}
+
+[Install]
+WantedBy=multi-user.target
