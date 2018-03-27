@@ -12,22 +12,22 @@ matrix:
     - language: python
       env:
         - WCT=1
-    - language: python
-      env:
-        - MAKE_DEPS_TARGET=py_deps
-        - MAKE_TEST_TARGET=py_lint
-    - language: python
-      env:
-        - MAKE_DEPS_TARGET=py_deps
-        - MAKE_TEST_TARGET=py_test
-    - language: go
-      env:
-        - MAKE_DEPS_TARGET=go_deps
-        - MAKE_TEST_TARGET=go_lint
-    - language: go
-      env:
-        - MAKE_DEPS_TARGET=go_deps
-        - MAKE_TEST_TARGET=go_test
+    # - language: python
+    #   env:
+    #     - MAKE_DEPS_TARGET=py_deps
+    #     - MAKE_TEST_TARGET=py_lint
+    # - language: python
+    #   env:
+    #     - MAKE_DEPS_TARGET=py_deps
+    #     - MAKE_TEST_TARGET=py_test
+    # - language: go
+    #   env:
+    #     - MAKE_DEPS_TARGET=go_deps
+    #     - MAKE_TEST_TARGET=go_lint
+    # - language: go
+    #   env:
+    #     - MAKE_DEPS_TARGET=go_deps
+    #     - MAKE_TEST_TARGET=go_test
     # Disabled while this is not in use.
     # - language: python
     #   env:
@@ -82,7 +82,9 @@ script:
     fi
   - |
     if [ "${WCT}" == "1" ]; then
-      cd webapp && npm test
+      cd webapp
+
+      npm ls web-component-tester
     fi
 
 after_script:
