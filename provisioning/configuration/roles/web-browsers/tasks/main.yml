@@ -1,27 +1,4 @@
 ---
-- name: Create directory to store keys
-  file:
-    name: /root/keys
-    state: directory
-
-- name: Download key for external package repository
-  get_url:
-    url: https://dl-ssl.google.com/linux/linux_signing_key.pub
-    dest: /root/keys/google-chrome
-
-- name: Install key for external package repository
-  command: apt-key add /root/keys/google-chrome
-
-- name: Add apt sources
-  lineinfile:
-    dest: '/etc/apt/sources.list.d/google-chrome.list'
-    line: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
-    create: true
-
-- name: update package repository
-  run_once: '{{is_development}}'
-  command: apt-get update
-
 - name: Infer current kernel Linux version
   command: uname -r
   register: kernel_version
@@ -41,14 +18,7 @@
     - curl
     - dtrx
     - emacs-nox
-    # In a future iteration of this project, the appropriate version of the
-    # Mozilla Firefox browser will be installed as part of the testing
-    # procedure.
-    - firefox
     - git
-    # In a future iteration of this project, the appropriate version of the
-    # Google Chrome browser will be installed as part of the testing procedure.
-    - google-chrome-stable
     - htop
     - libnss3-tools
     - nvidia-367
@@ -62,6 +32,21 @@
     - virtualenv
     - xauth
     - xvfb
+
+- name: Install scripts for managing browser binaries
+  copy:
+    src: '{{item}}'
+    dest: /usr/local/bin/
+    mode: 0755
+  with_items:
+    - ../../src/scripts/install-browser.sh
+    - ../../src/scripts/read-browser-version.py
+
+# This allows workers to edit install web browsers via `sudo install-browser.sh`
+- name: Allow application user to install web browsers
+  lineinfile:
+    dest: /etc/sudoers
+    line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/install-browser.sh'
 
 - name: Create directory to store downloaded files
   file:

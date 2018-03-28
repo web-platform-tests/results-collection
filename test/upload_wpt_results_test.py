@@ -106,8 +106,8 @@ class TestUploadWptResults(unittest.TestCase):
             self.server.server_close()
             self.server_thread.join()
 
-    def upload(self, browser_name, browser_version, os_name, os_version,
-               results_dir, results, port, gsutil_return_code=0):
+    def upload(self, browser_name, browser_channel, browser_version, os_name,
+               os_version, results_dir, results, port, gsutil_return_code=0):
         env = dict(os.environ)
         env['PATH'] = gsutil_stub_dir + os.pathsep + os.environ['PATH']
         env['GSUTIL_RETURN_CODE'] = str(gsutil_return_code)
@@ -121,6 +121,7 @@ class TestUploadWptResults(unittest.TestCase):
             '--platform-id', '%s-%s-%s-%s' % (browser_name, browser_version,
                                               os_name, os_version),
             '--browser-name', browser_name,
+            '--browser-channel', browser_channel,
             '--browser-version', browser_version,
             '--os-name', os_name,
             '--os-version', os_version,
@@ -159,6 +160,7 @@ class TestUploadWptResults(unittest.TestCase):
     def test_basic_firefox(self):
         self.start_server(9801)
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '2.0',
                                                  'linux',
                                                  '4.0',
@@ -211,6 +213,7 @@ class TestUploadWptResults(unittest.TestCase):
     def test_basic_chrome(self):
         self.start_server(9802)
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '4.3.2',
                                                  'macos',
                                                  '10.5',
@@ -260,6 +263,59 @@ class TestUploadWptResults(unittest.TestCase):
             'revision': '1234567890'
         })
 
+    def test_experimental(self):
+        self.start_server(9802)
+        returncode, stdout, stderr = self.upload('chrome',
+                                                 'experimental',
+                                                 '4.3.2',
+                                                 'macos',
+                                                 '10.5',
+                                                 self.temp_dir,
+                                                 make_results(),
+                                                 port=9802)
+
+        self.assertEqual(returncode, 0, stderr)
+
+        self.assertJsonFiles(gsutil_stub_content, {
+            'chrome-4.3.2-macos-10.5-summary.json.gz': {
+                '/js/bitwise-and.html': [1, 3],
+                '/js/bitwise-or-2.html': [1, 1],
+                '/js/bitwise-or.html': [1, 1]
+            },
+            'chrome-4.3.2-macos-10.5/js/bitwise-and.html': {
+                'test': '/js/bitwise-and.html',
+                'status': 'OK',
+                'subtests': [
+                    {u'message': 'bad', 'name': 'first', 'status': 'FAIL'},
+                    {u'message': 'bad', 'name': 'second', 'status': 'FAIL'}
+                ]
+            },
+            'chrome-4.3.2-macos-10.5/js/bitwise-or.html': {
+                'test': '/js/bitwise-or.html',
+                'status': 'OK',
+                'subtests': []
+            },
+            'chrome-4.3.2-macos-10.5/js/bitwise-or-2.html':  {
+                'test': '/js/bitwise-or-2.html',
+                'status': u'OK',
+                'subtests': []
+            }
+        })
+        self.assertEqual(len(self.server.requests), 1)
+        request = self.server.requests[0]
+        self.assertEqual(request['path'], '/?secret=fake-secret')
+        self.assertEqual(json.loads(request['body']), {
+            'browser_name': 'chrome-experimental',
+            'browser_version': '4.3.2',
+            'commit_date': '2018-03-19T17:54:32-04:00',
+            'os_name': 'macos',
+            'os_version': '10.5',
+            'results_url': 'https://storage.googleapis.com/' +
+                               'wpt-test/1234567890/' +
+                               'chrome-4.3.2-macos-10.5-summary.json.gz',
+            'revision': '1234567890'
+        })
+
     def test_unexpected_result(self):
         self.start_server(9801)
         unexpected_results = make_results()
@@ -271,6 +327,7 @@ class TestUploadWptResults(unittest.TestCase):
             'subtests': []
         })
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '2.0',
                                                  'linux',
                                                  '4.0',
@@ -288,6 +345,7 @@ class TestUploadWptResults(unittest.TestCase):
         missing_results['1_of_2.json']['completeness']['total_missing'] = 1
         del missing_results['1_of_2.json']['results'][1]
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '2.0',
                                                  'linux',
                                                  '4.0',
@@ -302,6 +360,7 @@ class TestUploadWptResults(unittest.TestCase):
     def test_expand_foreign_platform(self):
         self.start_server(9802)
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '4.3.2',
                                                  'beos',
                                                  '*',
@@ -316,6 +375,7 @@ class TestUploadWptResults(unittest.TestCase):
         self.start_server(9804)
         self.server.status_code = 500
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '4.3.2',
                                                  'linux',
                                                  '4.0',
@@ -328,6 +388,7 @@ class TestUploadWptResults(unittest.TestCase):
 
     def test_no_server(self):
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '4.3.2',
                                                  'linux',
                                                  '4.0',
@@ -340,6 +401,7 @@ class TestUploadWptResults(unittest.TestCase):
     def test_failed_gsutil(self):
         self.start_server(9801)
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '3.2.1',
                                                  'linux',
                                                  '4.0',
@@ -358,6 +420,7 @@ class TestUploadWptResults(unittest.TestCase):
             duplicated_results['1_of_2.json']['results'][0]
         )
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '1.0.1',
                                                  'linux',
                                                  '4.0',
