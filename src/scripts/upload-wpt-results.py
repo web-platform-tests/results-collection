@@ -19,9 +19,9 @@ import tempfile
 THRESHOLD = 0.02
 
 
-def main(raw_results_directory, platform_id, browser_name, browser_version,
-         os_name, os_version, wpt_revision, wpt_revision_date, bucket_name,
-         notify_url, notify_secret):
+def main(raw_results_directory, platform_id, browser_name, browser_channel,
+         browser_version, os_name, os_version, wpt_revision, wpt_revision_date,
+         bucket_name, notify_url, notify_secret):
     '''Consolidate the WPT results data into a set of gzip-encoded JSON files,
     upload those files to a Google Cloud Storage bucket, and send an HTTP
     request to a given web server to signal that this operation has occurred.
@@ -79,11 +79,22 @@ def main(raw_results_directory, platform_id, browser_name, browser_version,
 
     logger.info('Notifying %s' % notify_url)
 
+    # In order to satisfy the assumptions of https://wpt.fyi, only results for
+    # stable releases should be uploaded with a canonical browser name. This
+    # is a workaround which is expected to be removed following an enhancement
+    # to https://wpt.fyi
+    #
+    # See: https://github.com/w3c/wptdashboard/issues/512
+    if browser_channel == 'experimental':
+        reported_browser_name = '%s-experimental' % browser_name
+    else:
+        reported_browser_name = browser_name
+
     status_code, response_text = notify(
         notify_url,
         notify_secret,
         {
-            'browser_name': browser_name,
+            'browser_name': reported_browser_name,
             'browser_version': browser_version,
             'os_name': os_name,
             'os_version': os_version,
@@ -239,6 +250,7 @@ parser = argparse.ArgumentParser(description=main.__doc__)
 parser.add_argument('--raw-results-directory', required=True)
 parser.add_argument('--platform-id', required=True)
 parser.add_argument('--browser-name', required=True)
+parser.add_argument('--browser-channel', required=True)
 parser.add_argument('--browser-version', required=True)
 parser.add_argument('--os-name', required=True)
 parser.add_argument('--os-version', required=True)

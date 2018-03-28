@@ -58,6 +58,10 @@ class WptRunStep(steps.ShellCommand):
         else:
             command = ['xvfb-run', '--auto-servernum'] + command
 
+            command.extend([
+                '--binary', properties.getProperty('browser_binary')
+            ])
+
             browser_id = browser_name
 
         if browser_name == 'firefox':
