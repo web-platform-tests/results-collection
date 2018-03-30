@@ -7,11 +7,13 @@
         test -e /usr/bin/python || \
           (sudo apt -y update && sudo apt install -y python-minimal)
       changed_when: False
+    - name: Install pip
+      apt:
+        name: python-pip
 - hosts: buildbot-master
   become: true
   roles:
     - user-accounts
-    - buildbot
     - buildbot-master
     - google-cloud-platform
   vars_files:
@@ -22,7 +24,6 @@
   become: true
   roles:
     - user-accounts
-    - buildbot
     - buildbot-worker
     - web-browsers
     - sauce-labs

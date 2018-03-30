@@ -13,6 +13,15 @@
     - /etc/authbind/byport/80
     - /etc/authbind/byport/443
 
+- name: Copy Python requirements file into place
+  copy:
+    src: requirements.txt
+    dest: '{{home_dir}}'
+
+- name: Install Python dependencies
+  pip:
+    requirements: '{{home_dir}}/requirements.txt'
+
 - name: Create a directory to store the build master database
   file:
     path: '{{db_mount_point}}'
@@ -75,12 +84,6 @@
       value: '{{wptd_notify_url}}'
     - name: wptd_notify_secret
       value: '{{wptd_notify_secret}}'
-
-# The "requests" module is a soft requirement of Buildbot, necessary only when
-# using the OAUth functionality.
-- name: Install "requests" Python package
-  pip:
-    name: requests
 
 - name: Copy Buildbot configuration files into place
   copy:

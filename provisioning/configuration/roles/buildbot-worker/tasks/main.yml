@@ -1,4 +1,13 @@
 ---
+- name: Copy Python requirements file into place
+  copy:
+    src: requirements.txt
+    dest: '{{home_dir}}'
+
+- name: Install Python dependencies
+  pip:
+    requirements: '{{home_dir}}/requirements.txt'
+
 - name: Create a Buildbot worker
   command: |
     sudo --user {{application_user}}
