@@ -19,7 +19,10 @@ class WPTChunkedStep(steps.Trigger):
 
     def getSchedulersAndProperties(self):
         spec = []
+        revision = self.build.properties.getProperty('got_revision')
         revision_date = self.build.properties.getProperty('revision_date')
+        browser_name = self.platform['browser_name']
+        results_id = '%s-%s-%s' % (browser_name, revision, self.build.buildid)
 
         for scheduler in self.schedulerNames:
             unimportant = scheduler in self.unimportantSchedulerNames
@@ -31,12 +34,13 @@ class WPTChunkedStep(steps.Trigger):
                         'this_chunk': this_chunk,
                         'total_chunks': self.total_chunks,
                         'platform_id': self.platform_id,
-                        'browser_name': self.platform['browser_name'],
+                        'browser_name': browser_name,
                         'browser_version': self.platform['browser_version'],
                         'os_name': self.platform['os_name'],
                         'os_version': self.platform['os_version'],
                         'use_sauce_labs': self.platform.get('sauce', False),
-                        'revision_date': revision_date
+                        'revision_date': revision_date,
+                        'results_id': results_id
                     },
                     'unimportant': unimportant
                 })
