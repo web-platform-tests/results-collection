@@ -218,7 +218,7 @@ class ValidateWptResults(unittest.TestCase):
 
         self.assertEquals(returncode, 0, stderr)
 
-    def test_missing_unacceptable(self):
+    def test_extra_unacceptable(self):
         results, filenames = make_results(100)
         log_wptreport = self.temp_file('wpt-log.json')
         log_raw = self.temp_file('raw-log.json')
