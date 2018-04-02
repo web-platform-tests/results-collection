@@ -58,6 +58,17 @@ class ValidateWptResults(unittest.TestCase):
 
         return (proc.returncode, stdout, stderr)
 
+    def assertCompleteness(self, log_wptreport, total_expected,
+                           total_unexpected, total_missing):
+        with open(log_wptreport) as handle:
+            data = json.load(handle)
+
+        self.assertIn('completeness', data)
+        completeness = data['completeness']
+        self.assertEquals(completeness['total_expected'], total_expected)
+        self.assertEquals(completeness['total_unexpected'], total_unexpected)
+        self.assertEquals(completeness['total_missing'], total_missing)
+
     def test_perfect(self):
         results, filenames = make_results(6)
         log_wptreport = self.temp_file('wpt-log.json')
@@ -80,6 +91,9 @@ class ValidateWptResults(unittest.TestCase):
 
         self.assertEquals(returncode, 0, stderr)
 
+        self.assertCompleteness(log_wptreport, total_expected=6,
+                                total_unexpected=0, total_missing=0)
+
     def test_zero_tests(self):
         log_wptreport = self.temp_file('wpt-log.json')
         log_raw = self.temp_file('raw-log.json')
@@ -100,6 +114,9 @@ class ValidateWptResults(unittest.TestCase):
         returncode, stdout, stderr = self.validate(log_wptreport, log_raw)
 
         self.assertEquals(returncode, 0, stderr)
+
+        self.assertCompleteness(log_wptreport, total_expected=0,
+                                total_unexpected=0, total_missing=0)
 
     def test_extra_log_raw(self):
         results, filenames = make_results(6)
@@ -130,6 +147,9 @@ class ValidateWptResults(unittest.TestCase):
 
         self.assertEquals(returncode, 0, stderr)
 
+        self.assertCompleteness(log_wptreport, total_expected=6,
+                                total_unexpected=0, total_missing=0)
+
     def test_empty_log_raw(self):
         results, filenames = make_results(6)
         log_wptreport = self.temp_file('wpt-log.json')
@@ -144,6 +164,9 @@ class ValidateWptResults(unittest.TestCase):
         returncode, stdout, stderr = self.validate(log_wptreport, log_raw)
 
         self.assertEquals(returncode, 1, stderr)
+
+        self.assertCompleteness(log_wptreport, total_expected=0,
+                                total_unexpected=6, total_missing=0)
 
     def test_missing_acceptable(self):
         results, filenames = make_results(100)
@@ -168,6 +191,9 @@ class ValidateWptResults(unittest.TestCase):
         returncode, stdout, stderr = self.validate(log_wptreport, log_raw)
 
         self.assertEquals(returncode, 0, stderr)
+
+        self.assertCompleteness(log_wptreport, total_expected=100,
+                                total_unexpected=0, total_missing=1)
 
     def test_missing_unacceptable(self):
         results, filenames = make_results(100)
@@ -194,6 +220,9 @@ class ValidateWptResults(unittest.TestCase):
 
         self.assertEquals(returncode, 1, stdout)
 
+        self.assertCompleteness(log_wptreport, total_expected=100,
+                                total_unexpected=0, total_missing=2)
+
     def test_extra_acceptable(self):
         results, filenames = make_results(100)
         log_wptreport = self.temp_file('wpt-log.json')
@@ -217,6 +246,9 @@ class ValidateWptResults(unittest.TestCase):
         returncode, stdout, stderr = self.validate(log_wptreport, log_raw)
 
         self.assertEquals(returncode, 0, stderr)
+
+        self.assertCompleteness(log_wptreport, total_expected=99,
+                                total_unexpected=1, total_missing=0)
 
     def test_extra_unacceptable(self):
         results, filenames = make_results(100)
@@ -242,3 +274,6 @@ class ValidateWptResults(unittest.TestCase):
         returncode, stdout, stderr = self.validate(log_wptreport, log_raw)
 
         self.assertEquals(returncode, 1, stdout)
+
+        self.assertCompleteness(log_wptreport, total_expected=98,
+                                total_unexpected=2, total_missing=0)
