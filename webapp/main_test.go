@@ -81,7 +81,7 @@ func assertHandlerMatch(t *testing.T, path string, pattern string) {
 }
 
 func assertHSTS(t *testing.T, path string) {
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", path, nil)
 	rr := httptest.NewRecorder()
 	handler, _ := http.DefaultServeMux.Handler(req)
 	handler.ServeHTTP(rr, req)
