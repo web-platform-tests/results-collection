@@ -1,0 +1,5 @@
+---
+- name: Restart "build master" service
+  systemd:
+    name: buildbot-master
+    state: restarted

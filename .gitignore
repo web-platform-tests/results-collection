@@ -1,11 +1,10 @@
 node_modules
 *.pyc
-run/running.ini
-run/testing_tools/wptdbuild
-run/testing_tools/mock-wptdashboard/
 .DS_Store
-run/protos/*_pb2.py
 bq-schema
 generated
 webapp/bower_components/*
 !webapp/bower_components/{polymer,shadycss,webcomponentsjs}
+/run/.vagrant/
+/run/test/gsutil-stub/gsutil_args.json
+/run/test/gsutil-stub/content-to-upload/
