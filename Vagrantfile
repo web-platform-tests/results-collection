@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network 'forwarded_port', guest: 80, host: 8090
 
   config.vm.provision 'ansible_local' do |ansible|
-    ansible.provisioning_path = '/vagrant/provisioning'
+    ansible.provisioning_path = '/vagrant/provisioning/configuration'
     ansible.playbook = 'provision.yml'
     ansible.inventory_path = 'inventory/vagrant'
     ansible.limit = 'all'

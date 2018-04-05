@@ -84,7 +84,7 @@
 
 - name: Copy Buildbot configuration files into place
   copy:
-    src: ../src/master/
+    src: ../../src/master/
     dest: '{{home_dir}}/master'
     owner: '{{application_user}}'
     group: '{{application_group}}'
@@ -116,6 +116,6 @@
 
 - name: Install script for uploading results
   copy:
-    src: ../src/scripts/upload-wpt-results.py
+    src: ../../src/scripts/upload-wpt-results.py
     dest: /usr/local/bin/upload-wpt-results.py
     mode: 0755

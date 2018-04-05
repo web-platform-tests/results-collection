@@ -9,7 +9,7 @@
 
 - name: Install script for modifying system hosts file
   copy:
-    src: ../../../src/scripts/extend-hosts.py
+    src: ../../src/scripts/extend-hosts.py
     dest: /usr/local/bin/extend-hosts.py
     mode: 0755
 
