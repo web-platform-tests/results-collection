@@ -1,13 +1,16 @@
 ---
 - hosts: all
   gather_facts: False
+  become: True
   pre_tasks:
     - name: Install Python for Ansible
+      run_once: is_development
       raw: |-
         test -e /usr/bin/python || \
-          (sudo apt -y update && sudo apt install -y python-minimal)
+          (apt -y update && sudo apt install -y python-minimal)
       changed_when: False
     - name: Install pip
+      run_once: is_development
       apt:
         name: python-pip
 - hosts: buildbot-master

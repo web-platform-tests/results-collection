@@ -19,6 +19,7 @@
     create: true
 
 - name: update package repository
+  run_once: is_development
   command: apt-get update
 
 - name: Infer current kernel Linux version
