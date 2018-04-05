@@ -19,6 +19,7 @@
     create: true
 
 - name: update package repository
+  run_once: '{{is_development}}'
   command: apt-get update
 
 - name: Infer current kernel Linux version
@@ -32,6 +33,7 @@
   notify: Restart system
 
 - name: Install system packages
+  run_once: '{{is_development}}'
   apt:
     name: '{{ item }}'
     state: present
