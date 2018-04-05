@@ -19,8 +19,8 @@
   become: true
   roles:
     - user-accounts
-    - buildbot-master
     - google-cloud-platform
+    - buildbot-master
   vars_files:
     - vars/main.yml
     - vars/master.yml
@@ -29,9 +29,9 @@
   become: true
   roles:
     - user-accounts
-    - buildbot-worker
     - web-browsers
     - sauce-labs
     - wpt-cli
+    - buildbot-worker
   vars_files:
     - vars/main.yml

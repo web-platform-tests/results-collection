@@ -22,22 +22,22 @@
     owner: '{{application_user}}'
     group: '{{application_group}}'
     dest: '{{home_dir}}/worker/info/host'
+  notify:
+    - Restart "build worker" service
 
 - name: Define a system service
   template:
     src: buildbot-worker.service.j2
     dest: /etc/systemd/system/buildbot-worker.service
-  notify:
-    - Restart "build worker" service
-
-- name: Enable system service
-  systemd:
-    name: buildbot-worker
-    enabled: true
-    state: started
 
 - name: Install script for validating results
   copy:
     src: ../../src/scripts/validate-wpt-results.py
     dest: /usr/local/bin/validate-wpt-results.py
     mode: 0755
+
+- name: Enable and start system service
+  systemd:
+    name: buildbot-worker
+    enabled: true
+    state: started

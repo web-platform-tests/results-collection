@@ -48,7 +48,7 @@
     group: '{{application_group}}'
     dest: '{{home_dir}}/master/workers.json'
   notify:
-    - Restart "build master" service
+    - Reload "build master" service
 
 - name: Create directory to store configuration
   file:
@@ -92,7 +92,7 @@
     owner: '{{application_user}}'
     group: '{{application_group}}'
   notify:
-    - Restart "build master" service
+    - Reload "build master" service
 
 # This is a workaround for a known bug in Buildbot:
 # "Confusing error message when the database is missing or empty"
@@ -110,12 +110,13 @@
     src: buildbot-master.service.j2
     dest: /etc/systemd/system/buildbot-master.service
   notify:
-    - Restart "build master" service
+    - Reload "build master" service
 
-- name: Enable system service
+- name: Enable and start "build master" system service
   systemd:
     name: buildbot-master
     enabled: true
+    state: started
 
 - name: Install script for uploading results
   copy:
