@@ -41,13 +41,6 @@
   notify:
     - Restart "build master" service
 
-- name: Insert platform manifest file
-  copy:
-    src: ../webapp/browsers.json
-    dest: '{{home_dir}}/master'
-  notify:
-    - Restart "build master" service
-
 - name: Create directory to store configuration
   file:
     path: '{{home_dir}}/master/configuration'
