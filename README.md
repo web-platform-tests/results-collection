@@ -1,9 +1,9 @@
-# "Run" system configuration
+# WPT Results Collector [![Build Status](https://travis-ci.org/w3c/wptdashboard.svg?branch=master)](https://travis-ci.org/w3c/wptdashboard)
 
-This subdirectory defines the procedure used to provision and deploy systems
-for running the test results collection mechanism for WPT Dashboard (elsewhere
-referred to simply as "run"). The process is facilitated by [the Ansible
-configuration management tool](https://www.ansible.com/).
+This project defines the procedure used to provision and deploy systems for
+running the test results collection mechanism for [the WPT Dashboard
+project](https://github.com/w3c/wptdashboard). The process is facilitated by
+[the Ansible configuration management tool](https://www.ansible.com/).
 
 Because the system must access private infrastructure (e.g. [Google Cloud
 Storage](https://cloud.google.com/storage/) and the [Sauce
@@ -48,3 +48,10 @@ machine will not have all the capabilities of the production system.
    ```
    ansible-playbook -i inventory/production playbook.yml
    ```
+
+## License
+
+Copyright (c) 2017 The WPT Dashboard Project. All rights reserved.
+
+The code in this project is governed by the BSD license that can be found in
+the LICENSE file

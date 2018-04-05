@@ -43,7 +43,7 @@
 
 - name: Insert platform manifest file
   copy:
-    src: ../../webapp/browsers.json
+    src: ../webapp/browsers.json
     dest: '{{home_dir}}/master'
   notify:
     - Restart "build master" service
@@ -123,6 +123,6 @@
 
 - name: Install script for uploading results
   copy:
-    src: ../../../src/scripts/upload-wpt-results.py
+    src: ../src/scripts/upload-wpt-results.py
     dest: /usr/local/bin/upload-wpt-results.py
     mode: 0755

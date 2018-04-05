@@ -29,6 +29,6 @@
 
 - name: Install script for validating results
   copy:
-    src: ../../../src/scripts/validate-wpt-results.py
+    src: ../src/scripts/validate-wpt-results.py
     dest: /usr/local/bin/validate-wpt-results.py
     mode: 0755

@@ -12,7 +12,7 @@ lint: .deps
 
 .PHONY: test
 test: .deps
-	python -m unittest discover -p '*_test.py' -s run
+	python -m unittest discover -p '*_test.py'
 
 .deps: requirements.txt
 	pip install -r requirements.txt

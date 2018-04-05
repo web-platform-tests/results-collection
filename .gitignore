@@ -1,5 +1,5 @@
 .deps
 *.pyc
-/run/.vagrant/
-/run/test/gsutil-stub/gsutil_args.json
-/run/test/gsutil-stub/content-to-upload/
+/.vagrant/
+/test/gsutil-stub/gsutil_args.json
+/test/gsutil-stub/content-to-upload/
