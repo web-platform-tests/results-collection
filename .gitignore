@@ -1,10 +1,5 @@
-node_modules
+.deps
 *.pyc
-.DS_Store
-bq-schema
-generated
-webapp/bower_components/*
-!webapp/bower_components/{polymer,shadycss,webcomponentsjs}
 /run/.vagrant/
 /run/test/gsutil-stub/gsutil_args.json
 /run/test/gsutil-stub/content-to-upload/
