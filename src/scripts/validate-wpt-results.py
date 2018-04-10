@@ -70,7 +70,7 @@ def normalize_wpt_report(log_wptreport):
     try:
         with open(log_wptreport) as handle:
             json.load(handle)
-    except IOError, ValueError:
+    except (IOError, ValueError):
         with open(log_wptreport, 'w') as handle:
             json.dump({'results': []}, handle)
 
