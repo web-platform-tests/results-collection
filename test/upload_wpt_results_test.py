@@ -263,6 +263,59 @@ class TestUploadWptResults(unittest.TestCase):
             'revision': '1234567890'
         })
 
+    def test_experimental(self):
+        self.start_server(9802)
+        returncode, stdout, stderr = self.upload('chrome',
+                                                 'experimental',
+                                                 '4.3.2',
+                                                 'macos',
+                                                 '10.5',
+                                                 self.temp_dir,
+                                                 make_results(),
+                                                 port=9802)
+
+        self.assertEqual(returncode, 0, stderr)
+
+        self.assertJsonFiles(gsutil_stub_content, {
+            'chrome-4.3.2-macos-10.5-summary.json.gz': {
+                '/js/bitwise-and.html': [1, 3],
+                '/js/bitwise-or-2.html': [1, 1],
+                '/js/bitwise-or.html': [1, 1]
+            },
+            'chrome-4.3.2-macos-10.5/js/bitwise-and.html': {
+                'test': '/js/bitwise-and.html',
+                'status': 'OK',
+                'subtests': [
+                    {u'message': 'bad', 'name': 'first', 'status': 'FAIL'},
+                    {u'message': 'bad', 'name': 'second', 'status': 'FAIL'}
+                ]
+            },
+            'chrome-4.3.2-macos-10.5/js/bitwise-or.html': {
+                'test': '/js/bitwise-or.html',
+                'status': 'OK',
+                'subtests': []
+            },
+            'chrome-4.3.2-macos-10.5/js/bitwise-or-2.html':  {
+                'test': '/js/bitwise-or-2.html',
+                'status': u'OK',
+                'subtests': []
+            }
+        })
+        self.assertEqual(len(self.server.requests), 1)
+        request = self.server.requests[0]
+        self.assertEqual(request['path'], '/?secret=fake-secret')
+        self.assertEqual(json.loads(request['body']), {
+            'browser_name': 'chrome-experimental',
+            'browser_version': '4.3.2',
+            'commit_date': '2018-03-19T17:54:32-04:00',
+            'os_name': 'macos',
+            'os_version': '10.5',
+            'results_url': 'https://storage.googleapis.com/' +
+                               'wpt-test/1234567890/' +
+                               'chrome-4.3.2-macos-10.5-summary.json.gz',
+            'revision': '1234567890'
+        })
+
     def test_unexpected_result(self):
         self.start_server(9801)
         unexpected_results = make_results()
