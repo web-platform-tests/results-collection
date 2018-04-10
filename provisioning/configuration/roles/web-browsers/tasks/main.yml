@@ -17,17 +17,9 @@
   with_items:
     - curl
     - dtrx
-    - emacs-nox
     - git
-    - htop
     - libnss3-tools
-    - nvidia-367
-    - nvidia-375
-    - nvidia-384
-    - python-pip
-    - python2.7
     - rsync
-    - screen
     - unattended-upgrades
     - virtualenv
     - xauth
