@@ -16,6 +16,13 @@ class WptRunStep(steps.ShellCommand):
         kwargs['name'] = self.name
         kwargs['command'] = self.makeWptRunCommand
 
+        kwargs['logfiles'] = {
+            'sauce-connect-log': {
+                'filename': '/tmp/sc.log',
+                'follow': True
+            }
+        }
+
         super(WptRunStep, self).__init__(*args, **kwargs)
 
     @staticmethod
