@@ -250,7 +250,9 @@ parser = argparse.ArgumentParser(description=main.__doc__)
 parser.add_argument('--raw-results-directory', required=True)
 parser.add_argument('--platform-id', required=True)
 parser.add_argument('--browser-name', required=True)
-parser.add_argument('--browser-channel', required=True)
+parser.add_argument('--browser-channel',
+                    choices=('stable', 'experimental'),
+                    required=True)
 parser.add_argument('--browser-version', required=True)
 parser.add_argument('--os-name', required=True)
 parser.add_argument('--os-version', required=True)
