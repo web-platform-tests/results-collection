@@ -17,7 +17,7 @@ import urlparse
 import urllib
 
 
-def main(product, channel, os_name, bucket_name):
+def main(browser_name, channel, os_name, bucket_name):
     '''Find the most recent build of a given browser and provide a stable URL
     from which it may be downloaded. Because browser vendors do not necessarily
     commit to hosting outdated builds, this may involve downloading the build
@@ -29,11 +29,13 @@ def main(product, channel, os_name, bucket_name):
 
     source_url = None
 
-    logger.info('Locating artifact for %s browser', product.title())
+    logger.info(
+      'Locating artifact for %s@%s browser', browser_name.title(), channel
+    )
 
-    if product == 'firefox':
+    if browser_name == 'firefox':
         source_url = locate_firefox(channel)
-    elif product == 'chrome':
+    elif browser_name == 'chrome':
         source_url = locate_chrome(channel)
 
     if source_url is None:
@@ -41,7 +43,7 @@ def main(product, channel, os_name, bucket_name):
 
     logger.info('Artifact located at %s', source_url)
 
-    directory = '%s-%s-%s' % (product, channel, os_name)
+    directory = '%s-%s-%s' % (browser_name, channel, os_name)
     identifier = get_identifier(source_url)
     uri = '%s/%s/%s' % (bucket_name, directory, identifier)
 
@@ -63,12 +65,12 @@ def main(product, channel, os_name, bucket_name):
 
 def locate_firefox(channel):
     if channel == 'experimental':
-        product = 'firefox-nightly-latest-ssl'
+        browser_name = 'firefox-nightly-latest-ssl'
     else:
-        product = 'firefox-latest-ssl'
+        browser_name = 'firefox-latest-ssl'
 
     url = ('https://download.mozilla.org/?product=%s&os=linux64&lang=en-US' %
-           product)
+           browser_name)
 
     return head_request(url).getheader('Location')
 
@@ -134,7 +136,7 @@ def mirror(source_artifact_url, uri):
 
 
 parser = argparse.ArgumentParser(description=main.__doc__)
-parser.add_argument('--product',
+parser.add_argument('--browser_name',
                     choices=('firefox', 'chrome'),
                     required=True)
 parser.add_argument('--channel',
