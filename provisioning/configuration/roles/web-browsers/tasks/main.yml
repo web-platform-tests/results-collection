@@ -16,11 +16,11 @@
     state: present
   with_items:
     - curl
-    - dtrx
     - git
     - libnss3-tools
     - rsync
     - unattended-upgrades
+    - unzip
     - virtualenv
     - xauth
     - xvfb
