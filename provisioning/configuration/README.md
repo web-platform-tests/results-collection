@@ -43,4 +43,4 @@ machine will not have all the capabilities of the production system.
 3. Open a terminal and navigate to the directory containing this text file
 4. Run the following command:
 
-       ansible-playbook -i inventory/production playbook.yml
+       ansible-playbook -i inventory/production provision.yml
