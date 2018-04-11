@@ -6,6 +6,10 @@
 2. Ensure `~/.aws/credentials` has an entry with administrative access keys
    matching the `profile` for the project. The profile name can be found in
    `terraform/{project}/variables.tf` under the `provider "aws" {}` block.
+3. Retrieve a Google Cloud Platform credentials file and save it with the file
+   name `google-cloud-platform.json` in the current directory. [Instructions
+   are available
+   here.](https://www.terraform.io/docs/providers/google/index.html)
 
 ### Commands Available
 

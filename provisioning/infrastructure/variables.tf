@@ -26,6 +26,11 @@ provider "aws" {
   region = "us-east-1"
 }
 
+provider "google" {
+  project = "wptdashboard"
+  credentials = "${file("google-cloud-platform.json")}"
+}
+
 ##
 # This tells Terraform where to persist the state of the infrastructure for
 # this project. We use S3 so the state doesn't have to be manually checked
