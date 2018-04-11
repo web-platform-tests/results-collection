@@ -17,3 +17,13 @@ test: .deps
 .deps: requirements.txt
 	pip install -r requirements.txt
 	touch .deps
+
+provisioning/infrastructure/.initialized:
+	cd provisioning/infrastructure && terraform init
+
+.PHONY: deploy
+deploy: provisioning/infrastructure/.initialized
+	cd provisioning/infrastructure && \
+		terraform apply
+	cd provisioning/configuration && \
+		ansible-playbook -i inventory/production provision.yml

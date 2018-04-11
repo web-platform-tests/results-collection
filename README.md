@@ -38,16 +38,21 @@ machine will not have all the capabilities of the production system.
 
 ## Deploying to production (for project maintainers)
 
-1. Install [Ansible](https://www.ansible.com/) (version 2.0)
-2. Request the Ansible Vault password from another maintainer and save it in a
-   file named `ansible-vault-password.txt` located in the directory that
-   contains this text file
-3. Open a terminal and navigate to the directory containing this text file
-4. Run the following command:
+1. Install [Ansible] (version 2.0), [AWSCLI] & [Terraform]
+2. Request the Ansible Vault password from another maintainer and save it to
+   the following location:
+   `provisioning/configuration/ansible-vault-password.txt`
+2. Ensure `~/.aws/credentials` has an entry with administrative access keys
+   matching the `profile` for the project. The profile name can be found in
+   `terraform/{project}/variables.tf` under the `provider "aws" {}` block.
+3. Retrieve a Google Cloud Platform credentials file and save it with the file
+   name `google-cloud-platform.json` in the current directory. [Instructions
+   are available
+   here.](https://www.terraform.io/docs/providers/google/index.html)
+4. Open a terminal and navigate to the directory containing this text file
+5. Run the following command:
 
-   ```
-   ansible-playbook -i inventory/production playbook.yml
-   ```
+       make deploy
 
 ## License
 
@@ -55,3 +60,7 @@ Copyright (c) 2017 The WPT Dashboard Project. All rights reserved.
 
 The code in this project is governed by the BSD license that can be found in
 the LICENSE file
+
+[Ansible]: https://www.ansible.com/
+[AWSCLI]: http://docs.aws.amazon.com/cli/latest/userguide/installing.html
+[Terraform]: https://www.terraform.io/downloads.html

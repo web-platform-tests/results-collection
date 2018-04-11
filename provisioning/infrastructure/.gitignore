@@ -1,3 +1,3 @@
-*.plan
 /.terraform/
+/.initialized
 /google-cloud-platform.json
