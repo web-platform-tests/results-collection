@@ -38,7 +38,7 @@ machine will not have all the capabilities of the production system.
 
 ## Deploying to production (for project maintainers)
 
-1. Install [Ansible] (version 2.0), [AWSCLI] & [Terraform]
+1. Install [Ansible] (version 2.5.0 or later), [AWSCLI] & [Terraform]
 2. Request the Ansible Vault password from another maintainer and save it to
    the following location:
    `provisioning/configuration/ansible-vault-password.txt`
