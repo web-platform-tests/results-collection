@@ -1,4 +1,4 @@
-# WPT Results Collector [![Build Status](https://travis-ci.org/w3c/wptdashboard.svg?branch=master)](https://travis-ci.org/w3c/wptdashboard)
+# WPT Results Collector [![Build Status](https://travis-ci.org/web-platform-tests/results-collection.svg?branch=master)](https://travis-ci.org/web-platform-tests/results-collection)
 
 This project defines the procedure used to provision and deploy systems for
 running the test results collection mechanism for [the WPT Dashboard
