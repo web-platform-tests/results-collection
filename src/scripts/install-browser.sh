@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Copyright 2018 The WPT Dashboard Project. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+browser_name=$1
+url=$2
+temp_file=$(mktemp)
+
+install_chrome() {
+  deb_archive=$1
+
+  # > Note: Installing Google Chrome will add the Google repository so your
+  # > system will automatically keep Google Chrome up to date. If you don’t
+  # > want Google's repository, do “sudo touch /etc/default/google-chrome”
+  # > before installing the package.
+  #
+  # Source: https://www.google.com/intl/en/chrome/browser/
+  rm --force /etc/default/google-chrome
+  touch /etc/default/google-chrome
+
+  # If the environment provides an installation of Google Chrome, the
+  # existing binary may take precedence over the one introduced in this
+  # script. Remove any previously-existing "alternatives" prior to
+  # installation in order to ensure that the new binary is installed as
+  # intended.
+  if update-alternatives --list google-chrome >&2 ; then
+    update-alternatives --remove-all google-chrome || return 1
+  fi
+
+  # Installation will fail in cases where the package has unmet dependencies.
+  # When this occurs, attempt to use the system package manager to fetch the
+  # required packages and retry.
+  if ! dpkg --install $deb_archive >&2 ; then
+    apt-get install --fix-broken --yes >&2 || return 1
+    dpkg --install $deb_archive >&2 || return 1
+  fi
+
+  which google-chrome
+}
+
+install_firefox() {
+  archive=$1
+  install_dir=$(readlink --canonicalize ./firefox)
+
+  rm --recursive --force $install_dir
+
+  tar -xvf $archive >&2 || return 1
+
+  chown --recursive $SUDO_USER $install_dir >&2 || return 1
+
+  echo $install_dir/firefox
+}
+
+wget --quiet --output-document $temp_file $url
+
+if [ $? != '0' ]; then
+  echo Error downloading browser. >&2
+  exit 1
+fi
+
+if [ $browser_name == 'chrome' ]; then
+  install_chrome $temp_file
+elif [ $browser_name == 'firefox' ]; then
+  install_firefox $temp_file
+else
+  echo Unrecognized browser: $browser_name >&2
+  false
+fi
+
+result=$?
+
+rm --force $temp_file
+
+exit $result

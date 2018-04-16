@@ -1,3 +1,0 @@
-[submodule "vendor/github.com/GoogleCloudPlatform/protoc-gen-bq-schema"]
-	path = vendor/github.com/GoogleCloudPlatform/protoc-gen-bq-schema
-	url = https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema

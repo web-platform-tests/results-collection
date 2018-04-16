@@ -1,0 +1,131 @@
+---
+- name: Install authbind
+  apt:
+    name: authbind
+
+# https://superuser.com/questions/710253/allow-non-root-process-to-bind-to-port-80-and-443#892391
+- name: Allow non-root process to bind to web ports
+  file:
+    path: '{{item}}'
+    state: touch
+    mode: '0777'
+  with_items:
+    - /etc/authbind/byport/80
+    - /etc/authbind/byport/443
+
+- name: Copy Python requirements file into place
+  copy:
+    src: requirements.txt
+    dest: '{{home_dir}}'
+
+- name: Install Python dependencies
+  pip:
+    requirements: '{{home_dir}}/requirements.txt'
+
+- name: Create a directory to store the build master database
+  file:
+    path: '{{db_mount_point}}'
+    state: directory
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+
+- include_tasks: db_device.yml
+  when: db_device is not None
+
+- name: Create a Buildbot master
+  command: |
+    sudo --user {{application_user}} \
+        buildbot create-master {{home_dir}}/master
+  args:
+    chdir: '{{home_dir}}'
+    creates: '{{home_dir}}/master'
+  register: create_master
+
+- name: Insert Buildbot worker definition file
+  template:
+    src: workers.json.j2
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    dest: '{{home_dir}}/master/workers.json'
+  notify:
+    - Reload "build master" service
+
+- name: Create directory to store configuration
+  file:
+    path: '{{home_dir}}/master/configuration'
+    state: directory
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    mode: 0700
+
+- name: Insert configuration values
+  copy:
+    content: '{{item.value}}'
+    dest: '{{home_dir}}/master/configuration/{{item.name}}'
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    mode: 0700
+  with_items:
+    - name: sauce_labs_user
+      value: '{{sauce_labs_user}}'
+    - name: sauce_labs_key
+      value: '{{sauce_labs_key}}'
+    - name: oauth_github_client_id
+      value: '{{oauth_github_client_id}}'
+    - name: oauth_github_client_secret
+      value: '{{oauth_github_client_secret}}'
+    - name: oauth_github_org_pattern
+      value: '{{oauth_github_org_pattern}}'
+    - name: fqdn
+      value: '{{fqdn}}'
+    - name: db_mount_point
+      value: '{{db_mount_point}}'
+    - name: wptd_notify_url
+      value: '{{wptd_notify_url}}'
+    - name: wptd_notify_secret
+      value: '{{wptd_notify_secret}}'
+
+- name: Copy Buildbot configuration files into place
+  copy:
+    src: ../../src/master/
+    dest: '{{home_dir}}/master'
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+  notify:
+    - Reload "build master" service
+
+# This is a workaround for a known bug in Buildbot:
+# "Confusing error message when the database is missing or empty"
+# https://github.com/buildbot/buildbot/issues/2885
+- name: Upgrade Buildbot master
+  command: |
+    sudo --user {{application_user}} \
+        buildbot upgrade-master {{home_dir}}/master
+  args:
+    chdir: '{{home_dir}}'
+  when: create_master.changed
+
+- name: Define a system service
+  template:
+    src: buildbot-master.service.j2
+    dest: /etc/systemd/system/buildbot-master.service
+  notify:
+    - Reload "build master" service
+
+- name: Enable and start "build master" system service
+  systemd:
+    name: buildbot-master
+    enabled: true
+    state: started
+
+- name: Install script for mirroring browser binaries
+  copy:
+    src: ../../src/scripts/get-browser-url.py
+    dest: /usr/local/bin/get-browser-url.py
+    mode: 0755
+
+- name: Install script for uploading results
+  copy:
+    src: ../../src/scripts/upload-wpt-results.py
+    dest: /usr/local/bin/upload-wpt-results.py
+    mode: 0755

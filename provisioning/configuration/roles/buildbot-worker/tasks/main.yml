@@ -1,0 +1,43 @@
+---
+- name: Copy Python requirements file into place
+  copy:
+    src: requirements.txt
+    dest: '{{home_dir}}'
+
+- name: Install Python dependencies
+  pip:
+    requirements: '{{home_dir}}/requirements.txt'
+
+- name: Create a Buildbot worker
+  command: |
+    sudo --user {{application_user}}
+        buildbot-worker create-worker {{home_dir}}/worker {{master_hostname}} {{application_user}} {{buildbot_worker_password}}
+  args:
+    chdir: '{{home_dir}}'
+    creates: '{{home_dir}}/worker'
+
+- name: Insert description of worker system
+  template:
+    src: host.j2
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    dest: '{{home_dir}}/worker/info/host'
+  notify:
+    - Restart "build worker" service
+
+- name: Define a system service
+  template:
+    src: buildbot-worker.service.j2
+    dest: /etc/systemd/system/buildbot-worker.service
+
+- name: Install script for validating results
+  copy:
+    src: ../../src/scripts/validate-wpt-results.py
+    dest: /usr/local/bin/validate-wpt-results.py
+    mode: 0755
+
+- name: Enable and start system service
+  systemd:
+    name: buildbot-worker
+    enabled: true
+    state: started

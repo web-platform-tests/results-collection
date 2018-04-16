@@ -1,0 +1,16 @@
+---
+- name: Reload "build master" service
+  systemd:
+    name: buildbot-master
+    state: reloaded
+  # Due to a bug in Buildbot [1], this operation may fail if the build master
+  # is actively polling for changes. To account for this possibility, the task
+  # should be continuously re-tried until it completes successfully or until a
+  # typical polling operation would complete (the latter case indicates a
+  # failure that is not related to the change source).
+  #
+  # [1] https://github.com/buildbot/buildbot/issues/4030
+  register: reload
+  until: reload.failed == false
+  retries: 7
+  delay: 3

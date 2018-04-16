@@ -1,0 +1,86 @@
+---
+- name: Infer current kernel Linux version
+  command: uname -r
+  register: kernel_version
+
+- name: Install kernel Linux headers
+  apt:
+    name: linux-headers-{{kernel_version.stdout}}
+    state: present
+  notify: Restart system
+
+- name: Install system packages
+  run_once: '{{is_development}}'
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - curl
+    - git
+    - libnss3-tools
+    - rsync
+    - unattended-upgrades
+    - unzip
+    - virtualenv
+    - xauth
+    - xvfb
+
+- name: Install scripts for managing browser binaries
+  copy:
+    src: '{{item}}'
+    dest: /usr/local/bin/
+    mode: 0755
+  with_items:
+    - ../../src/scripts/install-browser.sh
+    - ../../src/scripts/read-browser-version.py
+
+# This allows workers to edit install web browsers via `sudo install-browser.sh`
+- name: Allow application user to install web browsers
+  lineinfile:
+    dest: /etc/sudoers
+    line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/install-browser.sh'
+
+- name: Create directory to store downloaded files
+  file:
+    name: ~/downloads
+    state: directory
+
+- name: Download Mozilla Geckodriver
+  get_url:
+    url: https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz
+    dest: ~/downloads/
+
+- name: Extend hosts file with configuration to shunt Firefox requests
+  lineinfile:
+    dest: /etc/hosts
+    line: '{{item}}'
+  with_items:
+    - # The following entries are defined to facilitate testing stable releases
+    - # of Firefox using WPT at revisions prior to  cf2ef62f1c470b47a03275c795c6dedd69eace88
+    - # The underlying problem was corrected via
+    - # https://github.com/w3c/web-platform-tests/pull/10443 . These entries
+    - # no longer necessary for testing stable release of Firefox, but they are
+    - # persisted in this system configuration in order to support reproducing
+    - # results for older revisions of WPT.
+    - 0.0.0.0 *.cdn.mozilla.net
+    - 0.0.0.0 normandy.cdn.mozilla.net
+    - 0.0.0.0 tiles.services.mozilla.com
+    - 0.0.0.0 location.services.mozilla.com
+    - 0.0.0.0 *.services.mozilla.com
+
+- name: Install Mozilla Geckodriver
+  unarchive:
+    src: ~/downloads/geckodriver-v0.19.1-linux64.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+
+- name: Download Google Chromedriver
+  get_url:
+    url: https://chromedriver.storage.googleapis.com/2.35/chromedriver_linux64.zip
+    dest: ~/downloads/
+
+- name: Install Google Chromedriver
+  unarchive:
+    src: ~/downloads/chromedriver_linux64.zip
+    dest: /usr/local/bin
+    remote_src: true

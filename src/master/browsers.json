@@ -1,0 +1,46 @@
+{
+    "chrome-experimental-linux": {
+        "browser_name": "chrome",
+        "browser_channel": "experimental",
+        "browser_version": null,
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "chrome-stable-linux": {
+        "browser_name": "chrome",
+        "browser_channel": "stable",
+        "browser_version": null,
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "edge-15-windows-10-sauce": {
+        "browser_name": "edge",
+        "browser_channel": "stable",
+        "browser_version": "15",
+        "os_name": "windows",
+        "os_version": "10",
+        "sauce": true
+    },
+    "firefox-experimental-linux": {
+        "browser_name": "firefox",
+        "browser_channel": "experimental",
+        "browser_version": null,
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "firefox-stable-linux": {
+        "browser_name": "firefox",
+        "browser_channel": "stable",
+        "browser_version": null,
+        "os_name": "linux",
+        "os_version": "*"
+    },
+    "safari-11.0-macos-10.12-sauce": {
+        "browser_name": "safari",
+        "browser_channel": "stable",
+        "browser_version": "11.0",
+        "os_name": "macos",
+        "os_version": "10.12",
+        "sauce": true
+    }
+}
