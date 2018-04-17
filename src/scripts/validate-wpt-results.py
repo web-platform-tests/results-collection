@@ -8,8 +8,6 @@ import argparse
 import json
 import logging
 
-THRESHOLD = 0.02
-
 
 def main(log_wptreport, log_raw):
     '''Verify that the test results for a trial of the Web Platform Tests (as
@@ -49,15 +47,7 @@ def main(log_wptreport, log_raw):
     annotate(log_wptreport, len(expected_results), len(unexpected_results),
              len(missing_results))
 
-    # Due to the way tests are segmented (i.e. the WPT CLI's "chunk"
-    # functionality), a results set may be empty. If the "raw" log describes
-    # this state, then an empty results set should be accepted.
-    if total_expected == 0:
-        assert total_incorrect == 0
-    else:
-        assert float(total_incorrect) / total_expected < THRESHOLD, (
-            'Percentage of incorrect results exceeded threshold'
-        )
+    assert total_incorrect == 0
 
 
 def normalize_wpt_report(log_wptreport):
