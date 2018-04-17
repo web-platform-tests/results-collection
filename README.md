@@ -54,6 +54,15 @@ machine will not have all the capabilities of the production system.
 
        make deploy
 
+## Related repositories
+
+- [Web Platform Tests](https://github.com/w3c/web-platform-tests): The tests
+  themselves
+- [wpt.fyi](https://github.com/web-platform-tests/wpt.fyi): A dashboard
+  displaying test results
+- [Results Analysis](https://github.com/web-platform-tests/results-analysis):
+  Automated analysis of Web Platform Test results
+
 ## License
 
 Copyright (c) 2017 The WPT Dashboard Project. All rights reserved.
