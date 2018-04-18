@@ -56,12 +56,12 @@ machine will not have all the capabilities of the production system.
 
 ## Related repositories
 
-- [Web Platform Tests](https://github.com/w3c/web-platform-tests): The tests
+- [web-platform-tests](https://github.com/w3c/web-platform-tests): The tests
   themselves
 - [wpt.fyi](https://github.com/web-platform-tests/wpt.fyi): A dashboard
   displaying test results
 - [Results Analysis](https://github.com/web-platform-tests/results-analysis):
-  Automated analysis of Web Platform Test results
+  Automated analysis of results from web-platform-tests
 
 ## License
 
