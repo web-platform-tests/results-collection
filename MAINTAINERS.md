@@ -4,7 +4,7 @@ Thank you for your interest in helping maintain the WPT Dashboard! Here are the 
 
 ## Moderating Discussion
 
-Guidelines for issue reports and pull requests are included in this project’s `CONTRIBUTING.md` file. Ensure that contributors honor these recommendations. Close discussions in any of the following events: 
+Guidelines for issue reports and pull requests are included in this project’s `CONTRIBUTING.md` file. Ensure that contributors honor these recommendations. Close discussions in any of the following events:
 
 1. The main description of the issue is no longer what is/was intended
   - If the description is inaccurate or describes something other than what is discussed in the issue, the issue should be closed.
@@ -25,6 +25,6 @@ If you find a patch causes [wpt.fyi](http://wpt.fyi) to no longer function as in
 
 ## Code of Conduct
 
-The [wpt.fyi](https://github.com/w3c/wptdashboard) project is dedicated to providing a harassment-free experience for everyone, regardless of gender, sexual orientation, disability, age, physical appearance, body size, race, or religion. Sexual language and imagery is not appropriate. We do not tolerate harassment in any form and we are committed to partnering with you to foster a healthy collaboration environment. 
+The [wpt.fyi](https://github.com/w3c/wptdashboard) project is dedicated to providing a harassment-free experience for everyone, regardless of gender, sexual orientation, disability, age, physical appearance, body size, race, or religion. Sexual language and imagery is not appropriate. We do not tolerate harassment in any form and we are committed to partnering with you to foster a healthy collaboration environment.
 
 See the details of our policy here: [Code of Conduct](https://github.com/w3c/wptdashboard/blob/master/CODE_OF_CONDUCT.md).
