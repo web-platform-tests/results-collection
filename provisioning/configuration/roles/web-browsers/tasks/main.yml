@@ -55,13 +55,13 @@
     dest: /etc/hosts
     line: '{{item}}'
   with_items:
-    - # The following entries are defined to facilitate testing stable releases
-    - # of Firefox using WPT at revisions prior to  cf2ef62f1c470b47a03275c795c6dedd69eace88
-    - # The underlying problem was corrected via
-    - # https://github.com/w3c/web-platform-tests/pull/10443 . These entries
-    - # no longer necessary for testing stable release of Firefox, but they are
-    - # persisted in this system configuration in order to support reproducing
-    - # results for older revisions of WPT.
+    - '# The following entries are defined to facilitate testing stable releases'
+    - '# of Firefox using WPT at revisions prior to  cf2ef62f1c470b47a03275c795c6dedd69eace88'
+    - '# The underlying problem was corrected via'
+    - '# https://github.com/w3c/web-platform-tests/pull/10443 . These entries'
+    - '# no longer necessary for testing stable release of Firefox, but they are'
+    - '# persisted in this system configuration in order to support reproducing'
+    - '# results for older revisions of WPT.'
     - 0.0.0.0 *.cdn.mozilla.net
     - 0.0.0.0 normandy.cdn.mozilla.net
     - 0.0.0.0 tiles.services.mozilla.com
