@@ -14,7 +14,7 @@ import threading
 import unittest
 
 here = os.path.dirname(os.path.abspath(__file__))
-gsutil_stub_dir = os.path.sep.join([here, 'gsutil-stub'])
+gsutil_stub_dir = os.path.sep.join([here, 'bin-stubs'])
 gsutil_stub_args = os.path.sep.join([gsutil_stub_dir, 'gsutil_args.json'])
 gsutil_stub_content = os.path.sep.join([gsutil_stub_dir, 'content-to-upload'])
 upload_bin = os.path.sep.join(
@@ -40,11 +40,6 @@ class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 def make_results():
     return {
         '1_of_2.json': {
-            'completeness': {
-                'total_expected': 2,
-                'total_unexpected': 0,
-                'total_missing': 0
-            },
             'results': [
                 {
                     'test': '/js/bitwise-or.html',
@@ -62,11 +57,6 @@ def make_results():
             ]
         },
         '2_of_2.json': {
-            'completeness': {
-                'total_expected': 1,
-                'total_unexpected': 0,
-                'total_missing': 0
-            },
             'results': [
                 {
                     'test': '/js/bitwise-or-2.html',
@@ -315,47 +305,6 @@ class TestUploadWptResults(unittest.TestCase):
                                'chrome-4.3.2-macos-10.5-summary.json.gz',
             'revision': '1234567890'
         })
-
-    def test_unexpected_result(self):
-        self.start_server(9801)
-        unexpected_results = make_results()
-        results_file_1 = unexpected_results['1_of_2.json']
-        results_file_1['completeness']['total_unexpected'] = 1
-        results_file_1['results'].append({
-            'test': '/js/bitwise-or-2.html',
-            'status': 'OK',
-            'subtests': []
-        })
-        returncode, stdout, stderr = self.upload('firefox',
-                                                 'stable',
-                                                 '2.0',
-                                                 'linux',
-                                                 '4.0',
-                                                 self.temp_dir,
-                                                 unexpected_results,
-                                                 9801)
-
-        self.assertNotEqual(returncode, 0, stdout)
-        self.assertFalse(os.access(gsutil_stub_content, os.R_OK))
-        self.assertEqual(len(self.server.requests), 0)
-
-    def test_missing_result(self):
-        self.start_server(9801)
-        missing_results = make_results()
-        missing_results['1_of_2.json']['completeness']['total_missing'] = 1
-        del missing_results['1_of_2.json']['results'][1]
-        returncode, stdout, stderr = self.upload('firefox',
-                                                 'stable',
-                                                 '2.0',
-                                                 'linux',
-                                                 '4.0',
-                                                 self.temp_dir,
-                                                 missing_results,
-                                                 9801)
-
-        self.assertNotEqual(returncode, 0, stdout)
-        self.assertFalse(os.access(gsutil_stub_content, os.R_OK))
-        self.assertEqual(len(self.server.requests), 0)
 
     def test_expand_foreign_platform(self):
         self.start_server(9802)

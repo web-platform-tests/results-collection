@@ -15,7 +15,6 @@ class WptRunStep(steps.ShellCommand):
     def __init__(self, *args, **kwargs):
         kwargs['name'] = self.name
         kwargs['command'] = self.makeWptRunCommand
-
         kwargs['logfiles'] = {
             'sauce-connect-log': {
                 'filename': '/tmp/sc.log',
@@ -31,9 +30,11 @@ class WptRunStep(steps.ShellCommand):
         browser_id = None
         browser_name = properties.getProperty('browser_name')
         command = [
-            './wpt', 'run',
+            'run-and-verify.py',
+            '--max-attempts', properties.getProperty('max_attempts'),
             '--log-wptreport', properties.getProperty('log_wptreport'),
             '--log-raw', properties.getProperty('log_raw'),
+            '--',
             '--this-chunk', properties.getProperty('this_chunk'),
             '--total-chunks', properties.getProperty('total_chunks')
         ]

@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+
+import argparse
+import json
+import os
+
+
+def run(args):
+    with open(os.environ['TEST_COUNT_FILE']) as handle:
+        count = int(handle.read())
+
+    with open(os.environ['TEST_FIXTURE_FILE']) as handle:
+        fixture = json.load(handle)
+
+    with open(args.log_raw, 'w') as handle:
+        for record in fixture[count]['log-raw']:
+            handle.write('%s\n' % json.dumps(record))
+
+    with open(args.log_wptreport, 'w') as handle:
+        handle.write(json.dumps(fixture[count]['log-wptreport']))
+
+    with open(os.environ['TEST_COUNT_FILE'], 'w') as handle:
+        handle.write(str(count + 1))
+
+parser = argparse.ArgumentParser()
+subparsers = parser.add_subparsers()
+
+run_parser = subparsers.add_parser('run')
+run_parser.add_argument('--log-wptreport', action='store')
+run_parser.add_argument('--log-raw', action='store')
+run_parser.set_defaults(func=run)
+
+if __name__ == '__main__':
+    args = parser.parse_known_args()
+    args[0].func(args[0])

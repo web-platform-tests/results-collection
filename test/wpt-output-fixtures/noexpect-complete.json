@@ -1,0 +1,68 @@
+[
+  {
+    "log-wptreport": {
+      "results": [
+        {
+          "test": "/a-fake-test.html",
+          "status": "OK",
+          "subtests": []
+        },
+        {
+          "test": "/another-fake-test.html",
+          "status": "OK",
+          "subtests": []
+        },
+        {
+          "test": "/a-third-fake-test.html",
+          "status": "ERROR",
+          "subtests": []
+        }
+      ]
+    },
+    "log-raw": [
+      {
+        "action": "suite_fart",
+        "tests": {
+          "default": [
+            "/a-fake-test.html",
+            "/another-fake-test.html",
+            "/a-third-fake-test.html"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "log-wptreport": {
+      "results": [
+        {
+          "test": "/a-fake-test.html",
+          "status": "OK",
+          "subtests": []
+        },
+        {
+          "test": "/another-fake-test.html",
+          "status": "OK",
+          "subtests": []
+        },
+        {
+          "test": "/a-third-fake-test.html",
+          "status": "ERROR",
+          "subtests": []
+        }
+      ]
+    },
+    "log-raw": [
+      {
+        "action": "suite_start",
+        "tests": {
+          "default": [
+            "/a-fake-test.html",
+            "/another-fake-test.html",
+            "/a-third-fake-test.html"
+          ]
+        }
+      }
+    ]
+  }
+]
