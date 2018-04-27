@@ -32,7 +32,6 @@ class WptRunStep(steps.ShellCommand):
         browser_name = properties.getProperty('browser_name')
         command = [
             './wpt', 'run',
-            '--install-fonts',
             '--log-wptreport', properties.getProperty('log_wptreport'),
             '--log-raw', properties.getProperty('log_raw'),
             '--this-chunk', properties.getProperty('this_chunk'),
@@ -66,7 +65,8 @@ class WptRunStep(steps.ShellCommand):
             command = ['xvfb-run', '--auto-servernum'] + command
 
             command.extend([
-                '--binary', properties.getProperty('browser_binary')
+                '--binary', properties.getProperty('browser_binary'),
+                '--install-fonts',
             ])
 
             browser_id = browser_name
