@@ -16,7 +16,7 @@
     "edge-15-windows-10-sauce": {
         "browser_name": "edge",
         "browser_channel": "stable",
-        "browser_version": "15",
+        "browser_version": "16",
         "os_name": "windows",
         "os_version": "10",
         "sauce": true
