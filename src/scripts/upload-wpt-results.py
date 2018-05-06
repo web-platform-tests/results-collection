@@ -19,7 +19,7 @@ import tempfile
 
 def main(raw_results_directory, platform_id, browser_name, browser_channel,
          browser_version, os_name, os_version, wpt_revision, wpt_revision_date,
-         bucket_name, notify_url, notify_secret):
+         bucket_name, notify_url, notify_secret, total_chunks):
     '''Consolidate the WPT results data into a set of gzip-encoded JSON files,
     upload those files to a Google Cloud Storage bucket, and send an HTTP
     request to a given web server to signal that this operation has occurred.
@@ -34,6 +34,18 @@ def main(raw_results_directory, platform_id, browser_name, browser_channel,
         os.path.join(raw_results_directory, filename)
         for filename in os.listdir(raw_results_directory)
     ]
+
+    # This script will be scheduled for execution only when all results are
+    # available. Under normal operating conditions, this ensures that only
+    # complete results sets are uploaded. However, due to the delay between
+    # scheduling and uploading, extenuating circumstances can alter the set of
+    # available results. Verify the availability of results files to avoid
+    # uploading incomplete results sets.
+    logger.info('Expected %s results files; found %s' % (
+        len(raw_results_files), total_chunks
+    ))
+    if len(raw_results_files) != total_chunks:
+        raise Exception('Found unexpected number of results files.')
 
     os_version = expand_os_version(os_name, os_version)
 
@@ -234,6 +246,7 @@ parser.add_argument('--wpt-revision-date', required=True)
 parser.add_argument('--bucket-name', required=True)
 parser.add_argument('--notify-url', required=True)
 parser.add_argument('--notify-secret', required=True)
+parser.add_argument('--total-chunks', type=int, required=True)
 
 if __name__ == '__main__':
     main(**vars(parser.parse_args()))

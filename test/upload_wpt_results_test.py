@@ -97,7 +97,8 @@ class TestUploadWptResults(unittest.TestCase):
             self.server_thread.join()
 
     def upload(self, browser_name, browser_channel, browser_version, os_name,
-               os_version, results_dir, results, port, gsutil_return_code=0):
+               os_version, results_dir, results, port, total_chunks,
+               gsutil_return_code=0):
         env = dict(os.environ)
         env['PATH'] = gsutil_stub_dir + os.pathsep + os.environ['PATH']
         env['GSUTIL_RETURN_CODE'] = str(gsutil_return_code)
@@ -119,7 +120,8 @@ class TestUploadWptResults(unittest.TestCase):
             '--wpt-revision-date', '2018-03-19T17:54:32-04:00',
             '--bucket-name', 'wpt-test',
             '--notify-url', 'http://localhost:%s' % port,
-            '--notify-secret', 'fake-secret'
+            '--notify-secret', 'fake-secret',
+            '--total-chunks', str(total_chunks)
         ], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         stdout, stderr = proc.communicate()
@@ -156,7 +158,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '4.0',
                                                  self.temp_dir,
                                                  make_results(),
-                                                 9801)
+                                                 9801,
+                                                 total_chunks=2)
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -209,7 +212,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '10.5',
                                                  self.temp_dir,
                                                  make_results(),
-                                                 port=9802)
+                                                 port=9802,
+                                                 total_chunks=2)
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -262,7 +266,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '10.5',
                                                  self.temp_dir,
                                                  make_results(),
-                                                 port=9802)
+                                                 port=9802,
+                                                 total_chunks=2)
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -315,7 +320,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '*',
                                                  self.temp_dir,
                                                  make_results(),
-                                                 port=9802)
+                                                 port=9802,
+                                                 total_chunks=2)
 
         self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 0)
@@ -330,7 +336,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '4.0',
                                                  self.temp_dir,
                                                  make_results(),
-                                                 port=9804)
+                                                 port=9804,
+                                                 total_chunks=2)
 
         self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 1)
@@ -343,7 +350,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '4.0',
                                                  self.temp_dir,
                                                  make_results(),
-                                                 port=9802)
+                                                 port=9802,
+                                                 total_chunks=2)
 
         self.assertNotEqual(returncode, 0, stdout)
 
@@ -357,6 +365,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  make_results(),
                                                  port=9801,
+                                                 total_chunks=2,
                                                  gsutil_return_code=1)
 
         self.assertEqual(returncode, 1, stdout)
@@ -375,10 +384,28 @@ class TestUploadWptResults(unittest.TestCase):
                                                  '4.0',
                                                  self.temp_dir,
                                                  duplicated_results,
+                                                 total_chunks=2,
                                                  port=9801)
 
         self.assertEqual(returncode, 1, stdout)
         self.assertFalse(os.access(gsutil_stub_content, os.R_OK))
+        self.assertEqual(len(self.server.requests), 0)
+
+    def test_missing_results(self):
+        self.start_server(9802)
+        partial_results = make_results()
+        del partial_results['1_of_2.json']
+        returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
+                                                 '1.0.1',
+                                                 'linux',
+                                                 '4.0',
+                                                 self.temp_dir,
+                                                 partial_results,
+                                                 total_chunks=2,
+                                                 port=9801)
+
+        self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 0)
 
 
