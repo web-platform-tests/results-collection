@@ -21,7 +21,9 @@ buildbot-workers:
       ansible_connection: local
       application_user: sally
       buildbot_worker_password: bar
+      sauce_labs_key: this-is-not-a-valid-key
     localworker2:
       ansible_connection: local
       application_user: george
       buildbot_worker_password: baz
+      sauce_labs_key: NULL

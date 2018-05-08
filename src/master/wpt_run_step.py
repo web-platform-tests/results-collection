@@ -41,6 +41,15 @@ class WptRunStep(steps.ShellCommand):
         ]
 
         if properties.getProperty('use_sauce_labs'):
+            workername = properties.getProperty('workername')
+            # The key name is derived from the name of the worker. Because the
+            # Buildbot "secret" functionality is itself built on Python's
+            # string interpolation syntax, the key name must be defined using
+            # string concatenation.
+            key = util.Interpolate(
+                '%(secret:sauce_labs_key_' + workername + ')s'
+            )
+
             if browser_name == 'edge':
                 sauce_browser_name = 'MicrosoftEdge'
             else:
@@ -56,8 +65,8 @@ class WptRunStep(steps.ShellCommand):
 
             command.extend([
                 '--sauce-platform', sauce_platform_id,
-                '--sauce-user', util.Interpolate('%(secret:sauce_labs_user)s'),
-                '--sauce-key', util.Interpolate('%(secret:sauce_labs_key)s'),
+                '--sauce-user', 'wpt-%s' % workername,
+                '--sauce-key', key,
                 '--sauce-tunnel-id', properties.getProperty('workername'),
                 '--sauce-connect-binary', 'sc',
                 '--no-restart-on-unexpected',

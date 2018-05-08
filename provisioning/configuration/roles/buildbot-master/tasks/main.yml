@@ -66,10 +66,6 @@
     group: '{{application_group}}'
     mode: 0700
   with_items:
-    - name: sauce_labs_user
-      value: '{{sauce_labs_user}}'
-    - name: sauce_labs_key
-      value: '{{sauce_labs_key}}'
     - name: oauth_github_client_id
       value: '{{oauth_github_client_id}}'
     - name: oauth_github_client_secret
@@ -84,6 +80,17 @@
       value: '{{wptd_notify_url}}'
     - name: wptd_notify_secret
       value: '{{wptd_notify_secret}}'
+
+- name: Insert credentials for running remote browsers
+  shell: |
+    {% for worker_host in groups['buildbot-workers'] %}
+      {% if hostvars[worker_host].sauce_labs_key %}
+        filename={{home_dir}}/master/configuration/sauce_labs_key_{{hostvars[worker_host].application_user}}
+        echo {{hostvars[worker_host].sauce_labs_key}} > $filename
+        chown {{application_user}}:{{application_group}} $filename
+        chmod 0700 $filename
+      {% endif %}
+    {% endfor %}
 
 - name: Copy Buildbot configuration files into place
   copy:

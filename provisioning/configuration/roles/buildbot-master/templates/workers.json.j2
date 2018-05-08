@@ -2,7 +2,10 @@
 {% for worker_host in groups['buildbot-workers'] %}
   {
     "name": "{{hostvars[worker_host].application_user}}",
-    "password": "{{hostvars[worker_host].buildbot_worker_password}}"
+    "password": "{{hostvars[worker_host].buildbot_worker_password}}",
+    "remote_enabled": {{
+      "true" if hostvars[worker_host].sauce_labs_key else "false"
+    }}
   }{% if not loop.last %},{% endif %}
 {% endfor %}
 ]
