@@ -13,7 +13,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision 'ansible_local' do |ansible|
     ansible.provisioning_path = '/vagrant/provisioning/configuration'
     ansible.playbook = 'provision.yml'
-    ansible.inventory_path = 'inventory/vagrant'
+    ansible.inventory_path = 'inventory/vagrant.yml'
     ansible.limit = 'all'
     ansible.extra_vars = {
       is_development: true

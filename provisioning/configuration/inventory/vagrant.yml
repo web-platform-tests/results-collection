@@ -1,0 +1,27 @@
+---
+buildbot-master:
+  hosts:
+    localhost:
+      ansible_connection: local
+      oauth_github_org_pattern: .*
+      oauth_github_client_id: b30e2d81816c5b6513f9
+      oauth_github_client_secret: 14cc1f81b3d033da37407fe4e2c000be105b9391
+      fqdn: localhost
+      # When the following variable is unset, the build master's database will be
+      # created on the root partition.
+      db_device: NULL
+      # When a suitable storage device is available, this flag may be enabled to
+      # format the disk. Typically, this should only be done during initial
+      # deployment via Ansible's `--extra_vars` command-line option.
+      db_device_reformat: False
+
+buildbot-workers:
+  hosts:
+    localworker1:
+      ansible_connection: local
+      application_user: sally
+      buildbot_worker_password: bar
+    localworker2:
+      ansible_connection: local
+      application_user: george
+      buildbot_worker_password: baz
