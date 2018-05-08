@@ -22,13 +22,13 @@ In order to improve throughput and limit the impact of intermittent failure, thi
 
 Although the system is designed to detect incomplete results and abort the upload process, unexpected errors may allow such invalid datasets to be reported. In this event, maintainers should take the following actions:
 
-1. Create a ticket in this project's issue tracker to describe the error
+1. Create an issue in this project's issue tracker to describe the error
 2. Update the database record describing the faulty dataset by modifying the
    `BrowserName` field according to the following pattern:
 
-       invalid-{{browser name}}-{{ticket reference}}
+       invalid-{{browser name}}-{{issue reference}}
 
-   For instance, to annotate an invalid data set for the "experimental" version of the Firefox browser, referencing ticket 345 on GitHub.com, the `BrowserName` filed should be renamed to:
+   For instance, to annotate an invalid data set for the "experimental" version of the Firefox browser, referencing issue 345 on GitHub.com, the `BrowserName` filed should be renamed to:
 
        invalid-firefox-experimental-gh-345
 
