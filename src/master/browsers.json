@@ -13,7 +13,7 @@
         "os_name": "linux",
         "os_version": "*"
     },
-    "edge-15-windows-10-sauce": {
+    "edge-16-windows-10-sauce": {
         "browser_name": "edge",
         "browser_channel": "stable",
         "browser_version": "16",
