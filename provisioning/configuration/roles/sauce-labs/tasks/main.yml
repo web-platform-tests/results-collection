@@ -42,7 +42,7 @@
   # service.
   #
   # https://github.com/web-platform-tests/results-collection/issues/557
-- name: Extend hosts file with configuration to shunt Firefox requests
+- name: Extend hosts file with short-term workaround
   lineinfile:
     dest: /etc/hosts
     line: 162.222.75.227 saucelabs.com
