@@ -36,3 +36,13 @@
     dest: /usr/local/bin
     mode: 0755
     remote_src: true
+
+  # This configuration is a short-term workaround recommended by Sauce Labs. It
+  # shold be removed once the underlying issue has been resolved b that
+  # service.
+  #
+  # https://github.com/web-platform-tests/results-collection/issues/557
+- name: Extend hosts file with configuration to shunt Firefox requests
+  lineinfile:
+    dest: /etc/hosts
+    line: 162.222.75.227 saucelabs.com
