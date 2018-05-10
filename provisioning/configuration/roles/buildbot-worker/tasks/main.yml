@@ -30,6 +30,12 @@
     src: buildbot-worker.service.j2
     dest: /etc/systemd/system/buildbot-worker.service
 
+- name: Install script for clearing ports
+  copy:
+    src: ../../src/scripts/kill-by-port.sh
+    dest: /usr/local/bin/kill-by-port.sh
+    mode: 0755
+
 - name: Install script for running WPT
   copy:
     src: ../../src/scripts/run-and-verify.py
