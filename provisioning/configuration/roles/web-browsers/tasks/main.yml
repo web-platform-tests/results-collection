@@ -76,7 +76,7 @@
 
 - name: Download Google Chromedriver
   get_url:
-    url: https://chromedriver.storage.googleapis.com/2.35/chromedriver_linux64.zip
+    url: https://chromedriver.storage.googleapis.com/2.38/chromedriver_linux64.zip
     dest: ~/downloads/
 
 - name: Install Google Chromedriver
