@@ -3,5 +3,5 @@
 # variable definition file named `vault`. That file is decrypted as part of the
 # system provisioning process using the password specified in the
 # `ansible-vault-password.txt` file.
-wptd_notify_url: https://wptdashboard.appspot.com/api/run
-wptd_notify_secret: '{{vault_wptd_notify_secret}}'
+wptd_legacy_notify_url: https://wptdashboard.appspot.com/api/run
+wptd_legacy_notify_secret: '{{vault_wptd_legacy_notify_secret}}'
