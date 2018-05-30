@@ -76,10 +76,10 @@
       value: '{{fqdn}}'
     - name: db_mount_point
       value: '{{db_mount_point}}'
-    - name: wptd_notify_url
-      value: '{{wptd_notify_url}}'
-    - name: wptd_notify_secret
-      value: '{{wptd_notify_secret}}'
+    - name: wptd_legacy_notify_url
+      value: '{{wptd_legacy_notify_url}}'
+    - name: wptd_legacy_notify_secret
+      value: '{{wptd_legacy_notify_secret}}'
 
 - name: Insert credentials for running remote browsers
   shell: |
@@ -131,8 +131,8 @@
     dest: /usr/local/bin/get-browser-url.py
     mode: 0755
 
-- name: Install script for uploading results
+- name: Install legacy script for uploading results
   copy:
-    src: ../../src/scripts/upload-wpt-results.py
-    dest: /usr/local/bin/upload-wpt-results.py
+    src: ../../src/scripts/upload-legacy-wpt-results.py
+    dest: /usr/local/bin/upload-legacy-wpt-results.py
     mode: 0755

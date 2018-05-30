@@ -18,7 +18,7 @@ gsutil_stub_dir = os.path.sep.join([here, 'bin-stubs'])
 gsutil_stub_args = os.path.sep.join([gsutil_stub_dir, 'gsutil_args.json'])
 gsutil_stub_content = os.path.sep.join([gsutil_stub_dir, 'content-to-upload'])
 upload_bin = os.path.sep.join(
-    [here, '..', 'src', 'scripts', 'upload-wpt-results.py']
+    [here, '..', 'src', 'scripts', 'upload-legacy-wpt-results.py']
 )
 
 
