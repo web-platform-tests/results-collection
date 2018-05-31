@@ -132,7 +132,16 @@ class TestUploadWptResults(unittest.TestCase):
         return (proc.returncode, stdout, stderr)
 
     def assertReport(self, json_data, expected_data):
-        self.assertEqual(expected_data, json.loads(json_data))
+        expected_results = expected_data['results']
+        expected_metadata = dict(expected_data)
+        del expected_metadata['results']
+        actual_data = json.loads(json_data)
+        actual_results = actual_data['results']
+        actual_metadata = dict(actual_data)
+        del actual_metadata['results']
+
+        self.assertEqual(actual_metadata, expected_metadata)
+        self.assertItemsEqual(actual_results, expected_results)
 
     def start_server(self, port):
         self.server = BaseHTTPServer.HTTPServer(('', port), Handler)
