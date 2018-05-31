@@ -6,6 +6,7 @@
 
 import argparse
 import contextlib
+import distutils
 import json
 import logging
 import os
@@ -16,7 +17,7 @@ import tempfile
 
 
 def main(raw_results_directory, product, browser_version, os_name, os_version,
-         url, user_name, secret, total_chunks):
+         url, user_name, secret, override_platform, total_chunks):
     '''Consolidate the WPT results data into a single JSON file and upload to
     the WPT results receiver.
 
@@ -45,14 +46,19 @@ def main(raw_results_directory, product, browser_version, os_name, os_version,
 
     with tmpfile() as filename:
         with open(filename, 'w') as handle:
-            platform_info = {
-                'product': product,
-                'browser_version': browser_version,
-                'os': os_name,
-                'os_version': os_version
-            }
+            platform_override = None
 
-            json.dump(consolidate(raw_results_files, platform_info), handle)
+            if override_platform:
+                platform_override = {
+                    'product': product,
+                    'browser_version': browser_version,
+                    'os': os_name,
+                    'os_version': os_version
+                }
+
+            json.dump(
+                consolidate(raw_results_files, platform_override), handle
+            )
 
         response = requests.post(
             url,
@@ -75,7 +81,7 @@ def tmpfile():
     os.remove(temp_filename)
 
 
-def consolidate(raw_results_files, platform_info):
+def consolidate(raw_results_files, platform_override):
     report = {
         'time_start': float('inf'),
         'time_end': 0,
@@ -106,9 +112,9 @@ def consolidate(raw_results_files, platform_info):
     # this metadata in reports generated via the Sauce Labs service.)
     assert 'run_info' in report
     assert isinstance(data['run_info'], object)
-    for name in (u'product', 'browser_version', 'os', 'os_version'):
-        if name not in report['run_info']:
-            report['run_info'][name] = platform_info[name]
+    if platform_override is not None:
+        for name in platform_override:
+            report['run_info'][name] = platform_override[name]
 
     return report
 
@@ -122,6 +128,9 @@ parser.add_argument('--os-version', required=True)
 parser.add_argument('--url', required=True)
 parser.add_argument('--user-name', required=True)
 parser.add_argument('--secret', required=True)
+parser.add_argument('--override-platform',
+                    type=lambda x: bool(distutils.util.strtobool(x)),
+                    required=True)
 parser.add_argument('--total-chunks', type=int, required=True)
 
 if __name__ == '__main__':

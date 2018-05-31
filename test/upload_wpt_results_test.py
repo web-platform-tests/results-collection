@@ -110,7 +110,7 @@ class TestUploadWptResults(unittest.TestCase):
             self.server_thread.join()
 
     def upload(self, product, browser_version, os_name, os_version,
-               results_dir, results, port, total_chunks):
+               results_dir, results, port, override_platform, total_chunks):
         for filename in results:
             with open(os.path.join(results_dir, filename), 'w') as handle:
                 json.dump(results[filename], handle)
@@ -124,6 +124,7 @@ class TestUploadWptResults(unittest.TestCase):
             '--url', 'http://localhost:%s' % port,
             '--user-name', 'fake-name',
             '--secret', 'fake-secret',
+            '--override-platform', override_platform,
             '--total-chunks', str(total_chunks)
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -166,6 +167,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  make_results(),
                                                  9801,
+                                                 override_platform='false',
                                                  total_chunks=2)
 
         self.assertEqual(returncode, 0, stderr)
@@ -219,6 +221,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  results,
                                                  9801,
+                                                 override_platform='false',
                                                  total_chunks=2)
 
         self.assertEqual(returncode, 0, stderr)
@@ -259,24 +262,16 @@ class TestUploadWptResults(unittest.TestCase):
         })
 
     def test_insert_platform(self):
-        results = make_results()
         self.maxDiff = None
-        del results['1_of_2.json']['run_info']['product']
-        del results['1_of_2.json']['run_info']['browser_version']
-        del results['1_of_2.json']['run_info']['os']
-        del results['1_of_2.json']['run_info']['os_version']
-        del results['2_of_2.json']['run_info']['product']
-        del results['2_of_2.json']['run_info']['browser_version']
-        del results['2_of_2.json']['run_info']['os']
-        del results['2_of_2.json']['run_info']['os_version']
         self.start_server(9801)
         returncode, stdout, stderr = self.upload('chrome',
                                                  '66.0',
                                                  'windows',
                                                  '95',
                                                  self.temp_dir,
-                                                 results,
+                                                 make_results(),
                                                  9801,
+                                                 override_platform='true',
                                                  total_chunks=2)
 
         self.assertEqual(returncode, 0, stderr)
@@ -332,6 +327,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  make_results(),
                                                  port=9804,
+                                                 override_platform='false',
                                                  total_chunks=2)
 
         self.assertNotEqual(returncode, 0, stdout)
@@ -345,6 +341,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  make_results(),
                                                  port=9802,
+                                                 override_platform='false',
                                                  total_chunks=2)
 
         self.assertNotEqual(returncode, 0, stdout)
@@ -362,6 +359,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  duplicated_results,
                                                  total_chunks=2,
+                                                 override_platform='false',
                                                  port=9801)
 
         self.assertEqual(returncode, 1, stdout)
@@ -378,6 +376,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  self.temp_dir,
                                                  partial_results,
                                                  total_chunks=2,
+                                                 override_platform='false',
                                                  port=9801)
 
         self.assertNotEqual(returncode, 0, stdout)
