@@ -112,9 +112,8 @@ def consolidate(raw_results_files, platform_override):
     # this metadata in reports generated via the Sauce Labs service.)
     assert 'run_info' in report
     assert isinstance(data['run_info'], object)
-    if platform_override is not None:
-        for name in platform_override:
-            report['run_info'][name] = platform_override[name]
+    if platform_override:
+        report['run_info'].update(platform_override)
 
     return report
 
