@@ -1,0 +1,35 @@
+---
+- name: Locate package
+  command: |
+    curl --silent 'https://developer.apple.com/safari/download/' | \
+      grep --only-matching --ignore-case --extended-regexp 'http[^ ]+\.dmg'
+  register: safari_tp_package
+
+- name: Download package
+  get_url:
+    url: '{{safari_tp_package.stdout}}'
+    dest: safari-technology-preview.dmg
+
+# Installing a .dmg application from the command line
+# http://commandlinemac.blogspot.com/2008/12/installing-dmg-application-from-command.html
+- name: Install pacakge
+  command: |
+    hdiutil mount safari_technology_preview.dmg
+    installer \
+      -package '/Volumes/Safari Technology Preview/Safari Technology Preview.pkg' \
+      -target '/Volumes/Macintosh HD'
+    hdiutil unmount '/Volumes/Safari Technology Preview'
+
+# https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
+- name: Enable WebDriver
+  command: |
+    /Applications/Safari\ Technology\ Preview.app/Contents/MacOS/safaridriver --enable
+
+# Derived from the following command targeting the Safari browser
+# https://github.com/web-platform-tests/wpt/blob/3d6920b84bac82c45a8da5c8b04b6da0c64f02fd/tools/wptrunner/wptrunner/browsers/sauce_setup/safari-prerun.sh
+- name: Disable popup blocker
+  command: |
+    defaults write \
+      com.apple.SafariTechnologyPreview \
+      com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically \
+     -bool true

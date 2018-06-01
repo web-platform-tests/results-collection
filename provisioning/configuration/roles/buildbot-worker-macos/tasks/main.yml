@@ -1,0 +1,15 @@
+---
+# https://discussions.apple.com/thread/8200117
+- name: Disable Spotlight
+  command: |
+    launchctl unload -w /System/Library/LaunchDaemons/com.apple.metadata.mds.plist
+
+# http://osxdaily.com/2015/02/03/set-or-disable-sleep-due-to-mac-system-inactivity-from-the-command-line-in-os-x/
+- name: Disable system sleep
+  command: |
+    systemsetup -setcomputersleep Never
+
+# https://discussions.apple.com/thread/7610386
+- name: Disable screen saver
+  command: |
+    sudo -u {{application_user}} defaults -currentHost write com.apple.screensaver idleTime 0
