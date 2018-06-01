@@ -1,0 +1,13 @@
+---
+- name: Define a system service
+  template:
+    src: buildbot-worker.service.j2
+    dest: /etc/systemd/system/buildbot-worker.service
+  notify:
+    - Reload systemd daemon
+
+- name: Enable and start system service
+  systemd:
+    name: buildbot-worker
+    enabled: true
+    state: started

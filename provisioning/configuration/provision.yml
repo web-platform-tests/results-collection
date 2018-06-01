@@ -34,6 +34,7 @@
     - sauce-labs
     - wpt-cli
     - buildbot-worker
+    - buildbot-worker-linux
   vars_files:
     - vars/main.yml
 - hosts: buildbot-macos-workers

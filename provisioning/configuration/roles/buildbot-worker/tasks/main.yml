@@ -29,13 +29,6 @@
   notify:
     - Restart "build worker" service
 
-- name: Define a system service
-  template:
-    src: buildbot-worker.service.j2
-    dest: /etc/systemd/system/buildbot-worker.service
-  notify:
-    - Reload systemd daemon
-
 - name: Install script for clearing ports
   copy:
     src: ../../src/scripts/kill-by-port.sh
@@ -47,9 +40,3 @@
     src: ../../src/scripts/run-and-verify.py
     dest: /usr/local/bin/run-and-verify.py
     mode: 0755
-
-- name: Enable and start system service
-  systemd:
-    name: buildbot-worker
-    enabled: true
-    state: started
