@@ -4,14 +4,16 @@
         "browser_channel": "experimental",
         "browser_version": null,
         "os_name": "linux",
-        "os_version": "*"
+        "os_version": "*",
+        "remote": false
     },
     "chrome-stable-linux": {
         "browser_name": "chrome",
         "browser_channel": "stable",
         "browser_version": null,
         "os_name": "linux",
-        "os_version": "*"
+        "os_version": "*",
+        "remote": false
     },
     "edge-17-windows-10-sauce": {
         "browser_name": "edge",
@@ -19,21 +21,23 @@
         "browser_version": "17",
         "os_name": "windows",
         "os_version": "10",
-        "sauce": true
+        "remote": true
     },
     "firefox-experimental-linux": {
         "browser_name": "firefox",
         "browser_channel": "experimental",
         "browser_version": null,
         "os_name": "linux",
-        "os_version": "*"
+        "os_version": "*",
+        "remote": false
     },
     "firefox-stable-linux": {
         "browser_name": "firefox",
         "browser_channel": "stable",
         "browser_version": null,
         "os_name": "linux",
-        "os_version": "*"
+        "os_version": "*",
+        "remote": false
     },
     "safari-11.1-macos-10.13-sauce": {
         "browser_name": "safari",
@@ -41,6 +45,6 @@
         "browser_version": "11.1",
         "os_name": "macos",
         "os_version": "10.13",
-        "sauce": true
+        "remote": true
     }
 }

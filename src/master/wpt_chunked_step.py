@@ -46,7 +46,7 @@ class WPTChunkedStep(steps.Trigger):
                         'webdriver_url': webdriver_url,
                         'os_name': self.platform['os_name'],
                         'os_version': self.platform['os_version'],
-                        'use_sauce_labs': self.platform.get('sauce', False)
+                        'use_sauce_labs': self.platform.get('remote')
                     },
                     'unimportant': unimportant
                 })
