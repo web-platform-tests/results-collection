@@ -24,22 +24,6 @@
     - xauth
     - xvfb
 
-- name: Install scripts for managing browser binaries
-  copy:
-    src: '{{item}}'
-    dest: /usr/local/bin/
-    mode: 0755
-  with_items:
-    - ../../src/scripts/install-browser.sh
-    - ../../src/scripts/install-webdriver.sh
-    - ../../src/scripts/read-browser-version.py
-
-# This allows workers to edit install web browsers via `sudo install-browser.sh`
-- name: Allow application user to install web browsers
-  lineinfile:
-    dest: /etc/sudoers
-    line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/install-browser.sh'
-
 - name: Extend hosts file with configuration to shunt Firefox requests
   lineinfile:
     dest: /etc/hosts

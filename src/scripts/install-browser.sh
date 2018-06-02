@@ -53,7 +53,40 @@ install_firefox() {
   echo $install_dir/firefox
 }
 
-wget --quiet --output-document $temp_file $url
+install_safari_technology_preview() {
+  archive=$1
+  application_dir='/Applications/Safari Technology Preview.app'
+
+  # Remove previously-installed version, if present
+  rm -rf $application_dir
+
+  # Install package
+  # http://commandlinemac.blogspot.com/2008/12/installing-dmg-application-from-command.html
+  hdiutil mount $archive >&2
+  installer \
+    -package '/Volumes/Safari Technology Preview/Safari Technology Preview.pkg' \
+    -target '/Volumes/Macintosh HD' >&2 || return 1
+  result=$?
+  hdiutil unmount '/Volumes/Safari Technology Preview' >&2
+
+  if [ $result != '0' ]; then
+    return 1
+  fi
+
+  # Enable WebDriver
+  # https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
+  #
+  # Note: as of 2018-07-13, this command has no effect in non-UI sessions such
+  # as SSH or launchd. Until this is resolved, the command must be manually
+  # invoked during initial system provisioning (the setting will persist across
+  # new installations of the browser).
+  #"$application_dir/Contents/MacOS/safaridriver" --enable >&2 || return 1
+
+  echo $application_dir/Contents/MacOS/SafariTechnologyPreview
+}
+
+# Prefer `curl` over `wget` because `wget` is not included in macOS High Sierra
+curl --silent --output $temp_file $url
 
 if [ $? != '0' ]; then
   echo Error downloading browser. >&2
@@ -64,6 +97,8 @@ if [ $browser_name == 'chrome' ]; then
   install_chrome $temp_file
 elif [ $browser_name == 'firefox' ]; then
   install_firefox $temp_file
+elif [ $browser_name == 'safari' ]; then
+  install_safari_technology_preview $temp_file
 else
   echo Unrecognized browser: $browser_name >&2
   false
@@ -71,6 +106,6 @@ fi
 
 result=$?
 
-rm --force $temp_file
+rm -f $temp_file
 
 exit $result

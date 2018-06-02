@@ -8,6 +8,7 @@ import argparse
 import json
 import logging
 import os
+import platform
 import subprocess
 import sys
 import threading
@@ -74,11 +75,19 @@ def wpt_run(logger, log_wptreport, log_raw, wpt_args):
     command = ['python', './wpt', 'run']
     command.extend(['--log-raw', log_raw, '--log-wptreport', log_wptreport])
     command.extend(wpt_args)
+    env = os.environ.copy()
+
+    if platform.system() == 'Darwin':
+        # https://github.com/web-platform-tests/wpt/issues/9007
+        logger.info('Defining environment variable: no_proxy=*')
+        env['no_proxy'] = '*'
+    else:
+        logger.info('Not modifying environment')
 
     logger.info('Invoking the WPT CLI with the following command:')
     logger.info('    %s', ' '.join(command))
     proc = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
     )
     log_streams('wpt-run', proc, logger)
 

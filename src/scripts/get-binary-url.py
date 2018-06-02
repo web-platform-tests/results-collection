@@ -29,6 +29,11 @@ def main(browser_name, channel, application, os_name, bucket_name):
     logging.basicConfig(level='INFO', format=log_format)
     logger = logging.getLogger('get-browser-url')
 
+    if not is_supported_platform(os_name, browser_name):
+        raise ValueError(
+            'Unsupported platform: %s on %s' % (browser_name, os_name)
+        )
+
     source_url = None
 
     logger.info(
@@ -43,6 +48,8 @@ def main(browser_name, channel, application, os_name, bucket_name):
             source_url = locate_firefox(channel)
         elif browser_name == 'chrome':
             source_url = locate_chrome(channel)
+        elif browser_name == 'safari':
+            source_url = locate_safari(channel)
     else:
         if channel != 'stable':
             raise ValueError(
@@ -79,6 +86,13 @@ def main(browser_name, channel, application, os_name, bucket_name):
     logger.info('Mirrored version found at %s', url)
 
     return url
+
+
+def is_supported_platform(os_name, browser_name):
+    if os_name == 'macos':
+        return browser_name == 'safari'
+
+    return browser_name in ('firefox', 'chrome')
 
 
 def locate_firefox(channel):
@@ -142,6 +156,20 @@ def locate_chromedriver():
     )
 
 
+def locate_safari(channel):
+    '''Find a public URL for Safari Technology Preview by scraping the relevant
+    "downloads" page on apple.com'''
+    with request('GET', 'https://developer.apple.com/safari/download/') as response:
+        # The search criteria should include "High Sierra" in order to avoid
+        # selecting an incompatible binary intended for the Mojave release of
+        # macOS
+        match = re.search(
+            '(http[^\s]+\.dmg).*high\s*sierra', response.read(), re.IGNORECASE
+        )
+
+        return match and match.group(1)
+
+
 @contextlib.contextmanager
 def request(method, url):
     parts = urlparse.urlparse(url)
@@ -153,7 +181,12 @@ def request(method, url):
     path = parts.path
     if parts.query:
         path += '?%s' % parts.query
-    conn.request(method, path)
+
+    # developer.apple.com rejects requests which do not specify a user
+    # agent
+    headers = {'User-Agent': 'wpt-results-collector'}
+
+    conn.request(method, path, headers=headers)
 
     yield conn.getresponse()
 
@@ -203,7 +236,7 @@ def mirror(source_artifact_url, uri):
 
 parser = argparse.ArgumentParser(description=main.__doc__)
 parser.add_argument('--browser_name',
-                    choices=('firefox', 'chrome'),
+                    choices=('firefox', 'chrome', 'safari'),
                     required=True)
 parser.add_argument('--channel',
                     choices=('stable', 'experimental'),
@@ -212,7 +245,7 @@ parser.add_argument('--application',
                     choices=('browser', 'webdriver'),
                     required=True)
 parser.add_argument('--os-name',
-                    choices=('linux',),
+                    choices=('linux', 'macos'),
                     required=True)
 parser.add_argument('--bucket-name',
                     required=True)

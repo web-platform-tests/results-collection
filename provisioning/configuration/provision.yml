@@ -41,7 +41,6 @@
   become: true
   roles:
     - user-accounts
-    - safari-technology-preview
     - wpt-cli
     - buildbot-worker
     - buildbot-worker-macos
