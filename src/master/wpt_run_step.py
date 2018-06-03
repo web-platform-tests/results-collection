@@ -4,6 +4,7 @@
 
 from buildbot.plugins import steps
 from buildbot.plugins import util
+import os
 
 
 class WptRunStep(steps.ShellCommand):
@@ -72,13 +73,21 @@ class WptRunStep(steps.ShellCommand):
                 '--run-by-dir', '3'
             ])
         else:
-            command = ['xvfb-run', '--auto-servernum'] + command
+            if browser_name != 'safari':
+                command = ['xvfb-run', '--auto-servernum'] + command
+
+                # The WPT CLI does not support specifying a path to the Safari
+                # binary. However, if the corresponding WebDriver binary is
+                # used, then that process will launch Safari Technology
+                # Preview.
+                command.extend([
+                    '--binary', properties.getProperty('browser_binary')
+                ])
 
             command.extend([
-                '--binary', properties.getProperty('browser_binary'),
                 '--webdriver-binary',
                 properties.getProperty('webdriver_binary'),
-                '--install-fonts',
+                '--install-fonts'
             ])
 
             browser_id = browser_name

@@ -41,12 +41,25 @@
     creates: '{{home_dir}}/master'
   register: create_master
 
-- name: Insert Buildbot worker definition file
+- name: Insert configuration file defining GNU/Linux-based Buildbot workers
   template:
     src: workers.json.j2
     owner: '{{application_user}}'
     group: '{{application_group}}'
-    dest: '{{home_dir}}/master/workers.json'
+    dest: '{{home_dir}}/master/workers-linux.json'
+  vars:
+    template_workers: '{{groups.get("buildbot-linux-workers")}}'
+  notify:
+    - Reload "build master" service
+
+- name: Insert configuration file defining macOS-based Buildbot workers
+  template:
+    src: workers.json.j2
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    dest: '{{home_dir}}/master/workers-macos.json'
+  vars:
+    template_workers: '{{groups.get("buildbot-macos-workers")}}'
   notify:
     - Reload "build master" service
 

@@ -46,5 +46,13 @@
         "os_name": "macos",
         "os_version": "10.13",
         "remote": true
+    },
+    "safari-technology-preview": {
+        "browser_name": "safari",
+        "browser_channel": "experimental",
+        "browser_version": null,
+        "os_name": "macos",
+        "os_version": "10.13",
+        "remote": false
     }
 }

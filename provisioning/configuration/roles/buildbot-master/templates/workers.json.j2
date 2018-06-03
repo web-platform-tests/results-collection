@@ -1,5 +1,5 @@
 [
-{% for worker_host in groups['buildbot-linux-workers'] %}
+{% for worker_host in template_workers %}
   {
     "name": "{{hostvars[worker_host].application_user}}",
     "password": "{{hostvars[worker_host].buildbot_worker_password}}",
