@@ -94,7 +94,7 @@
 
 - name: Insert credentials for running remote browsers
   shell: |
-    {% for worker_host in groups['buildbot-workers'] %}
+    {% for worker_host in groups['buildbot-linux-workers'] %}
       {% if hostvars[worker_host].sauce_labs_key %}
         filename={{home_dir}}/master/configuration/sauce_labs_key_{{hostvars[worker_host].application_user}}
         echo {{hostvars[worker_host].sauce_labs_key}} > $filename

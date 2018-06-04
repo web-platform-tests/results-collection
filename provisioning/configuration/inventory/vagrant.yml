@@ -15,7 +15,7 @@ buildbot-master:
       # deployment via Ansible's `--extra_vars` command-line option.
       data_storage_device_reformat: False
 
-buildbot-workers:
+buildbot-linux-workers:
   hosts:
     localworker1:
       ansible_connection: local
