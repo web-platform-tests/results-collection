@@ -26,4 +26,16 @@ deploy: provisioning/infrastructure/.initialized
 	cd provisioning/infrastructure && \
 		terraform apply
 	cd provisioning/configuration && \
-		ansible-playbook -i inventory/production provision.yml
+		ansible-playbook \
+			--inventory inventory/production \
+			--limit 'all:!buildbot-macos-workers' \
+			provision.yml
+
+.PHONY: deploy-macos
+deploy-macos:
+	cd provisioning/configuration && \
+		ansible-playbook \
+			--inventory inventory/production \
+			--ask-become-pass \
+			--limit buildbot-macos-workers \
+			provision.yml

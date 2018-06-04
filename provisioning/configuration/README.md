@@ -33,3 +33,11 @@ these instructions. This will require some manual modification of the
 configuration files. Those unfamiliar with Ansible may contact the project
 maintainers for more detailed instructions. Note that the resulting virtual
 machine will not have all the capabilities of the production system.
+
+## macOS configuration
+
+This project supports collecting results from macOS systems, provided the Xcode
+development environment is available (this is required by dependencies of the
+Buildbot framework). Xcode may be installed via the following command:
+
+    xcode-select --install
