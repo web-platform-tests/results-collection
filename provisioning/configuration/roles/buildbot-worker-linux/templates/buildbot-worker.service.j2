@@ -7,8 +7,8 @@ After=network.target
 
 [Service]
 Type=forking
-PIDFile={{home_dir}}/worker/twistd.pid
-WorkingDirectory={{home_dir}}
+PIDFile={{('~' + application_user) | expanduser}}/worker/twistd.pid
+WorkingDirectory={{('~' + application_user) | expanduser}}
 ExecStartPre=/usr/local/bin/reboot-if-present.sh {{reboot_sentinel}}
 ExecStart=/usr/bin/sudo --login -u {{application_user}} /usr/local/bin/buildbot-worker start worker
 ExecReload=/usr/bin/sudo --login -u {{application_user}} /usr/local/bin/buildbot-worker restart worker
