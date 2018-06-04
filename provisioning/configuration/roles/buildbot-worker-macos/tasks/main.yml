@@ -41,3 +41,15 @@
 
     hdiutil unmount '/Volumes/Git 2.17.0 Mavericks Intel Universal/'
   when: download_git.changed
+
+- name: Install script for managing SSL certificates
+  copy:
+    src:  ../../src/scripts/trust-root-ca.sh
+    dest: /usr/local/bin/
+    mode: 0755
+
+# This allows workers to trust cerfificate via `sudo trust-root-ca.sh`
+- name: Allow application user to trust root certificates
+  lineinfile:
+    dest: /etc/sudoers
+    line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/trust-root-ca.sh'
