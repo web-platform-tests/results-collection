@@ -6,7 +6,7 @@
 
 import argparse
 import contextlib
-import distutils
+import distutils.util
 import json
 import logging
 import os
