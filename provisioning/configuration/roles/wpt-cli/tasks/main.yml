@@ -1,11 +1,19 @@
 ---
-- name: Install system packages
-  apt:
-    name: '{{ item }}'
-    state: present
-  with_items:
-    - python-pip
-    - python2.7
+# The `easy_install` module offers the "state: latest" configuration, but tt
+# is incapable of installing the latest version of pip, so the system must be
+# bootstrapped with an old version. That version can then be used to update
+# itself (see the next task).
+#
+# Reference:
+# https://github.com/pypa/setuptools/issues/1334
+- name: Install package manager used by the CLI
+  easy_install:
+    name: pip
+
+- name: Update package manager used by the CLI
+  pip:
+    name: pip
+    state: latest
 
 - name: Install script for modifying system hosts file
   copy:
