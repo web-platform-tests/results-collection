@@ -35,12 +35,12 @@
         "os_name": "linux",
         "os_version": "*"
     },
-    "safari-11.0-macos-10.12-sauce": {
+    "safari-11.1-macos-10.13-sauce": {
         "browser_name": "safari",
         "browser_channel": "stable",
-        "browser_version": "11.0",
+        "browser_version": "11.1",
         "os_name": "macos",
-        "os_version": "10.12",
+        "os_version": "10.13",
         "sauce": true
     }
 }
