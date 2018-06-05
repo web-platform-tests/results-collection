@@ -7,6 +7,9 @@
 - name: Install Python dependencies
   pip:
     requirements: '{{home_dir}}/requirements.txt'
+    # macOS version 10.13 includes Python packages which conflict with the
+    # project requirements. Ignore those packages during installation.
+    extra_args: --ignore-installed
 
 - name: Create a Buildbot worker
   command: |
