@@ -82,6 +82,22 @@ resource "aws_instance" "build_master" {
   }
 }
 
+resource "aws_instance" "build_master_staging" {
+  ami = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t2.small"
+  key_name = "${var.key_name}"
+  subnet_id = "${element(module.subnet.ids, 0)}"
+  private_ip = "10.101.23.11"
+  vpc_security_group_ids = [
+    "${aws_security_group.web.id}",
+    "${aws_security_group.ssh.id}",
+    "${aws_security_group.buildbot.id}",
+  ]
+  tags {
+    "Name" = "${var.name}-build-master"
+  }
+}
+
 resource "aws_volume_attachment" "database_attachment" {
   device_name = "/dev/sdf"
   volume_id   = "${aws_ebs_volume.build_master_database.id}"

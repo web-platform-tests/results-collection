@@ -21,21 +21,22 @@ test: .deps
 provisioning/infrastructure/.initialized:
 	cd provisioning/infrastructure && terraform init
 
-.PHONY: deploy
-deploy: provisioning/infrastructure/.initialized
+.PHONY: deploy-infrastructure
+deploy-infrastructure: provisioning/infrastructure/.initialized
 	cd provisioning/infrastructure && \
 		terraform apply
+
+.PHONY: deploy
+deploy: deploy-infrastructure
 	cd provisioning/configuration && \
 		ansible-playbook \
 			--inventory inventory/production \
-			--limit 'all:!buildbot-macos-workers' \
 			provision.yml
 
-.PHONY: deploy-macos
-deploy-macos:
+.PHONY: deploy-staging
+deploy-staging: deploy-infrastructure
 	cd provisioning/configuration && \
 		ansible-playbook \
-			--inventory inventory/production \
+			--inventory inventory/staging \
 			--ask-become-pass \
-			--limit buildbot-macos-workers \
 			provision.yml

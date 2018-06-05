@@ -105,8 +105,13 @@
     - name: results_collector_revision
       value: '{{results_collector_revision.stdout}}'
 
+# Some deployments may not include any workers which are capable of running
+# tests in remote browsers. Because Ansible will fail if the "shell" module is
+# used with an empty string, insert a no-op command to ensure this task always
+# has some content.
 - name: Insert credentials for running remote browsers
   shell: |
+    true
     {% for worker_host in groups['buildbot-linux-workers'] %}
       {% if hostvars[worker_host].sauce_labs_key %}
         filename={{home_dir}}/master/configuration/sauce_labs_key_{{hostvars[worker_host].application_user}}
