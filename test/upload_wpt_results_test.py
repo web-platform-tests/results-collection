@@ -4,7 +4,6 @@
 
 import BaseHTTPServer
 import cgi
-import gzip
 import json
 import os
 import shutil
