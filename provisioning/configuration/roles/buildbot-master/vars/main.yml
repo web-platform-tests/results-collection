@@ -1,4 +1,4 @@
 ---
 application_group: wpt
 home_dir: '/home/{{application_user}}'
-db_mount_point: /mnt/buildmaster-db
+data_storage_mount_point: /mnt/buildmaster-data

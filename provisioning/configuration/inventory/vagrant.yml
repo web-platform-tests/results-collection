@@ -9,11 +9,11 @@ buildbot-master:
       fqdn: localhost
       # When the following variable is unset, the build master's database will be
       # created on the root partition.
-      db_device: NULL
+      data_storage_device: NULL
       # When a suitable storage device is available, this flag may be enabled to
       # format the disk. Typically, this should only be done during initial
       # deployment via Ansible's `--extra_vars` command-line option.
-      db_device_reformat: False
+      data_storage_device_reformat: False
 
 buildbot-workers:
   hosts:

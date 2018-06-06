@@ -22,15 +22,15 @@
   pip:
     requirements: '{{home_dir}}/requirements.txt'
 
-- name: Create a directory to store the build master database
+- name: Create a directory to store the build master's data
   file:
-    path: '{{db_mount_point}}'
+    path: '{{data_storage_mount_point}}'
     state: directory
     owner: '{{application_user}}'
     group: '{{application_group}}'
 
-- include_tasks: db_device.yml
-  when: db_device is not None
+- include_tasks: data_storage_device.yml
+  when: data_storage_device is not None
 
 - name: Create a Buildbot master
   command: |
@@ -74,8 +74,8 @@
       value: '{{oauth_github_org_pattern}}'
     - name: fqdn
       value: '{{fqdn}}'
-    - name: db_mount_point
-      value: '{{db_mount_point}}'
+    - name: data_storage_mount_point
+      value: '{{data_storage_mount_point}}'
     - name: wptd_legacy_notify_url
       value: '{{wptd_legacy_notify_url}}'
     - name: wptd_legacy_notify_secret

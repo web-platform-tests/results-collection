@@ -1,0 +1,27 @@
+---
+- name: Unmount data storage partition
+  command: umount {{data_storage_device}}
+  when: data_storage_device_reformat
+  ignore_errors: True
+
+- name: Format data storage partition
+  command: mkfs --type ext4 {{data_storage_device}}
+  when: data_storage_device_reformat
+
+- name: Enable data storage partition
+  lineinfile:
+    dest: /etc/fstab
+    regexp: '^{{data_storage_device}}\s'
+    line: '{{data_storage_device}} {{data_storage_mount_point}} ext4 defaults 0 0'
+
+- name: Determine if partition is mounted
+  command: mountpoint {{data_storage_mount_point}}
+  ignore_errors: True
+  register: check_partition
+
+- name: Mount data storage partition
+  command: mount {{data_storage_device}}
+  when: check_partition | failed
+
+- name: Grant ownership of data storage mount point to application user
+  command: chown -R {{application_user}} {{data_storage_mount_point}}
