@@ -7,6 +7,7 @@
 import argparse
 import contextlib
 import distutils.util
+import gzip
 import json
 import logging
 import os
@@ -45,7 +46,7 @@ def main(raw_results_directory, product, browser_version, os_name, os_version,
         raise Exception('Found unexpected number of results files.')
 
     with tmpfile() as filename:
-        with open(filename, 'w') as handle:
+        with gzip.open(filename, 'w') as handle:
             platform_override = None
 
             if override_platform:

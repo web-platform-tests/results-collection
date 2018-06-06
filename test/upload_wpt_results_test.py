@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import unittest
+import zlib
 
 here = os.path.dirname(os.path.abspath(__file__))
 upload_bin = os.path.sep.join(
@@ -45,6 +46,9 @@ class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if content_type[0] == 'multipart/form-data':
             body = cgi.parse_multipart(self.rfile, content_type[1])
+            body['result_file'][0] = zlib.decompress(
+                body['result_file'][0], zlib.MAX_WBITS | 16
+            )
         else:
             body = str(self.rfile.read(body_length))
 
