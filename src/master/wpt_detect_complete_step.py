@@ -6,26 +6,23 @@ import os
 
 from buildbot.plugins import steps
 from twisted.python import log
+from twisted.internet import defer
 
 
 class WptDetectCompleteStep(steps.Trigger):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, dir_name, *args, **kwargs):
         kwargs['doStepIf'] = self.allResultsPresent
+        self.dir_name = dir_name
 
         super(WptDetectCompleteStep, self).__init__(*args, **kwargs)
 
+    @defer.inlineCallbacks
     def allResultsPresent(self, step):
-        platform_id = self.build.properties.getProperty('platform_id')
-        revision = self.build.properties.getProperty('revision')
         total_chunks = self.build.properties.getProperty('total_chunks')
-        chunk_results_dir = os.path.sep.join([
-            os.path.abspath(os.path.dirname(__file__)),
-            '..',
-            'chunk-results',
-            revision,
-            platform_id
-        ])
-        actual = set(os.listdir(chunk_results_dir))
+
+        dir_name = yield self.dir_name.getRenderingFor(self.build.properties)
+
+        actual = set(os.listdir(dir_name))
         expected = set(
             [
                 '%s_of_%s.json' % (idx, total_chunks)
@@ -38,4 +35,4 @@ class WptDetectCompleteStep(steps.Trigger):
             len(missing), len(expected)
         ))
 
-        return len(missing) == 0
+        defer.returnValue(len(missing) == 0)
