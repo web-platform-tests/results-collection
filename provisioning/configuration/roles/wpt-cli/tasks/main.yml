@@ -15,6 +15,11 @@
     name: pip
     state: latest
 
+- name: Install application isolation tool used by the CLI
+  pip:
+    name: virtualenv
+    state: latest
+
 - name: Install script for modifying system hosts file
   copy:
     src: ../../src/scripts/extend-hosts.py
