@@ -115,8 +115,9 @@ class TestUploadWptResults(unittest.TestCase):
             self.server.server_close()
             self.server_thread.join()
 
-    def upload(self, product, browser_version, os_name, os_version,
-               results_dir, results, port, override_platform, total_chunks):
+    def upload(self, product, browser_channel, browser_version, os_name,
+               os_version, results_dir, results, port, override_platform,
+               total_chunks):
         for filename in results:
             with open(os.path.join(results_dir, filename), 'w') as handle:
                 json.dump(results[filename], handle)
@@ -124,6 +125,7 @@ class TestUploadWptResults(unittest.TestCase):
         proc = subprocess.Popen([
             upload_bin, '--raw-results-directory', results_dir,
             '--product', product,
+            '--browser-channel', browser_channel,
             '--browser-version', browser_version,
             '--os', os_name,
             '--os-version', os_version,
@@ -173,6 +175,7 @@ class TestUploadWptResults(unittest.TestCase):
     def test_basic(self):
         self.start_server(9801)
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '2.0',
                                                  'linux',
                                                  '4.0',
@@ -184,13 +187,14 @@ class TestUploadWptResults(unittest.TestCase):
 
         self.assertEqual(returncode, 0, stderr)
 
-        self.assertEqual(len(self.server.requests), 1)
+        requests = self.server.requests
+
+        self.assertEqual(len(requests), 1)
         self.assertBasicAuth(
-            self.server.requests[0]['headers']['Authorization'],
-            'fake-name',
-            'fake-secret'
+            requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
         )
-        self.assertReport(self.server.requests[0]['payload']['result_file'], {
+        self.assertEqual(requests[0]['payload']['labels'][0], 'stable')
+        self.assertReport(requests[0]['payload']['result_file'], {
             u'time_start': 1,
             u'time_end': 1,
             u'run_info': default_run_info,
@@ -232,6 +236,7 @@ class TestUploadWptResults(unittest.TestCase):
         results['2_of_2.json']['time_end'] = 300
         self.start_server(9801)
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '2.0',
                                                  'linux',
                                                  '4.0',
@@ -243,13 +248,14 @@ class TestUploadWptResults(unittest.TestCase):
 
         self.assertEqual(returncode, 0, stderr)
 
-        self.assertEqual(len(self.server.requests), 1)
+        requests = self.server.requests
+
+        self.assertEqual(len(requests), 1)
         self.assertBasicAuth(
-            self.server.requests[0]['headers']['Authorization'],
-            'fake-name',
-            'fake-secret'
+            requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
         )
-        self.assertReport(self.server.requests[0]['payload']['result_file'], {
+        self.assertEqual(requests[0]['payload']['labels'][0], 'stable')
+        self.assertReport(requests[0]['payload']['result_file'], {
             u'time_start': 10,
             u'time_end': 400,
             u'run_info': default_run_info,
@@ -287,6 +293,7 @@ class TestUploadWptResults(unittest.TestCase):
         self.maxDiff = None
         self.start_server(9801)
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '66.0',
                                                  'windows',
                                                  '95',
@@ -304,13 +311,14 @@ class TestUploadWptResults(unittest.TestCase):
         expected_run_info[u'os'] = u'windows'
         expected_run_info[u'os_version'] = u'95'
 
-        self.assertEqual(len(self.server.requests), 1)
+        requests = self.server.requests
+
+        self.assertEqual(len(requests), 1)
         self.assertBasicAuth(
-            self.server.requests[0]['headers']['Authorization'],
-            'fake-name',
-            'fake-secret'
+            requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
         )
-        self.assertReport(self.server.requests[0]['payload']['result_file'], {
+        self.assertEqual(requests[0]['payload']['labels'][0], 'stable')
+        self.assertReport(requests[0]['payload']['result_file'], {
             u'time_start': 1,
             u'time_end': 1,
             u'run_info': expected_run_info,
@@ -348,6 +356,7 @@ class TestUploadWptResults(unittest.TestCase):
         self.start_server(9804)
         self.server.status_code = 500
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '4.3.2',
                                                  'linux',
                                                  '4.0',
@@ -362,6 +371,7 @@ class TestUploadWptResults(unittest.TestCase):
 
     def test_no_server(self):
         returncode, stdout, stderr = self.upload('chrome',
+                                                 'stable',
                                                  '4.3.2',
                                                  'linux',
                                                  '4.0',
@@ -380,6 +390,7 @@ class TestUploadWptResults(unittest.TestCase):
             duplicated_results['1_of_2.json']['results'][0]
         )
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '1.0.1',
                                                  'linux',
                                                  '4.0',
@@ -397,6 +408,7 @@ class TestUploadWptResults(unittest.TestCase):
         partial_results = make_results()
         del partial_results['1_of_2.json']
         returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
                                                  '1.0.1',
                                                  'linux',
                                                  '4.0',

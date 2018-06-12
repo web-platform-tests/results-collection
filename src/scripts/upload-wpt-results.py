@@ -17,8 +17,9 @@ import requests
 import tempfile
 
 
-def main(raw_results_directory, product, browser_version, os_name, os_version,
-         url, user_name, secret, override_platform, total_chunks):
+def main(raw_results_directory, product, browser_channel, browser_version,
+         os_name, os_version, url, user_name, secret, override_platform,
+         total_chunks):
     '''Consolidate the WPT results data into a single JSON file and upload to
     the WPT results receiver.
 
@@ -82,6 +83,9 @@ def main(raw_results_directory, product, browser_version, os_name, os_version,
         response = requests.post(
             url,
             auth=(user_name, secret),
+            # `labels` is a comma-separated string. Runners may add arbitrary
+            # labels.
+            data={'labels': browser_channel},
             files={'result_file': open(filename, 'rb')}
         )
 
@@ -146,6 +150,9 @@ def consolidate(raw_results_files):
 parser = argparse.ArgumentParser(description=main.__doc__)
 parser.add_argument('--raw-results-directory', required=True)
 parser.add_argument('--product', required=True)
+parser.add_argument('--browser-channel',
+                    choices=('stable', 'experimental'),
+                    required=True)
 parser.add_argument('--browser-version', required=True)
 parser.add_argument('--os', dest='os_name', required=True)
 parser.add_argument('--os-version', required=True)
