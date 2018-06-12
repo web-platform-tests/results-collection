@@ -47,19 +47,37 @@ def main(raw_results_directory, product, browser_version, os_name, os_version,
 
     with tmpfile() as filename:
         with gzip.open(filename, 'w') as handle:
-            platform_override = None
+            metadata = None
+            has_results = False
 
+            handle.write('''{
+              "results":''')
+
+            for data in consolidate(raw_results_files):
+                if isinstance(data, str):
+                    handle.write(data)
+                else:
+                    metadata = data
+
+            # When the report is missing critical metadata, extend it with
+            # information provided via the command-line. (Currently, the WPT
+            # CLI does not include this metadata in reports generated via the
+            # Sauce Labs service.)
             if override_platform:
-                platform_override = {
-                    'product': product,
-                    'browser_version': browser_version,
-                    'os': os_name,
-                    'os_version': os_version
-                }
+                metadata['run_info'].update({
+                            'product': product,
+                            'browser_version': browser_version,
+                            'os': os_name,
+                            'os_version': os_version
+                        })
 
-            json.dump(
-                consolidate(raw_results_files, platform_override), handle
-            )
+            metadata['run_info'] = json.dumps(metadata['run_info'])
+
+            handle.write(''',
+              "time_start":{time_start},
+              "time_end":{time_end},
+              "run_info":{run_info}
+            }}'''.format(**metadata))
 
         response = requests.post(
             url,
@@ -82,41 +100,47 @@ def tmpfile():
     os.remove(temp_filename)
 
 
-def consolidate(raw_results_files, platform_override):
-    report = {
+def consolidate(raw_results_files):
+    metadata = {
         'time_start': float('inf'),
         'time_end': 0,
-        'results': []
+        'run_info': None
     }
+    emitted_result = False
+
+    yield '['
 
     for filename in raw_results_files:
         with open(filename) as handle:
             data = json.load(handle)
 
         assert 'run_info' in data
-        report['run_info'] = data['run_info']
+        metadata['run_info'] = data['run_info']
 
         assert 'time_start' in data
-        if data['time_start'] < report['time_start']:
-            report['time_start'] = data['time_start']
+        if data['time_start'] < metadata['time_start']:
+            metadata['time_start'] = data['time_start']
 
         assert 'time_end' in data
-        if data['time_end'] > report['time_end']:
-            report['time_end'] = data['time_end']
+        if data['time_end'] > metadata['time_end']:
+            metadata['time_end'] = data['time_end']
 
         assert 'results' in data
         assert isinstance(data['results'], list)
-        report['results'] += data['results']
 
-    # When the report is missing critical metadata, extend it with information
-    # provided via the command-line. (Currently, the WPT CLI does not include
-    # this metadata in reports generated via the Sauce Labs service.)
-    assert 'run_info' in report
-    assert isinstance(data['run_info'], object)
-    if platform_override:
-        report['run_info'].update(platform_override)
+        for result in data['results']:
+            text = json.dumps(result)
+            if emitted_result:
+                text = ',' + text
+            else:
+                emitted_result = True
 
-    return report
+            yield text
+
+    yield ']'
+
+    assert isinstance(metadata['run_info'], object)
+    yield metadata
 
 
 parser = argparse.ArgumentParser(description=main.__doc__)
