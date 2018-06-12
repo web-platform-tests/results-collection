@@ -46,13 +46,16 @@ class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if content_type[0] == 'multipart/form-data':
             body = cgi.parse_multipart(self.rfile, content_type[1])
-            body['result_file'][0] = zlib.decompress(
+            body['result_file'] = zlib.decompress(
                 body['result_file'][0], zlib.MAX_WBITS | 16
             )
         else:
             body = str(self.rfile.read(body_length))
 
-        self.server.request_payloads.append(body)
+        self.server.requests.append({
+            'headers': self.headers,
+            'payload': body
+        })
 
         self.send_response(self.server.status_code)
         self.send_header('Content-type', 'text/html')
@@ -135,6 +138,12 @@ class TestUploadWptResults(unittest.TestCase):
 
         return (proc.returncode, stdout, stderr)
 
+    def assertBasicAuth(self, authorization, name, password):
+        parts = authorization.split(' ')
+        self.assertEqual(len(parts), 2)
+        self.assertEqual(parts[0], 'Basic')
+        self.assertEqual(parts[1].decode('base64'), '%s:%s' % (name, password))
+
     def assertReport(self, json_data, expected_data):
         expected_results = expected_data['results']
         expected_metadata = dict(expected_data)
@@ -150,7 +159,7 @@ class TestUploadWptResults(unittest.TestCase):
     def start_server(self, port):
         self.server = BaseHTTPServer.HTTPServer(('', port), Handler)
         self.server.status_code = 201
-        self.server.request_payloads = []
+        self.server.requests = []
 
         def target(server):
             server.serve_forever()
@@ -175,8 +184,13 @@ class TestUploadWptResults(unittest.TestCase):
 
         self.assertEqual(returncode, 0, stderr)
 
-        self.assertEqual(len(self.server.request_payloads), 1)
-        self.assertReport(self.server.request_payloads[0]['result_file'][0], {
+        self.assertEqual(len(self.server.requests), 1)
+        self.assertBasicAuth(
+            self.server.requests[0]['headers']['Authorization'],
+            'fake-name',
+            'fake-secret'
+        )
+        self.assertReport(self.server.requests[0]['payload']['result_file'], {
             u'time_start': 1,
             u'time_end': 1,
             u'run_info': default_run_info,
@@ -229,8 +243,13 @@ class TestUploadWptResults(unittest.TestCase):
 
         self.assertEqual(returncode, 0, stderr)
 
-        self.assertEqual(len(self.server.request_payloads), 1)
-        self.assertReport(self.server.request_payloads[0]['result_file'][0], {
+        self.assertEqual(len(self.server.requests), 1)
+        self.assertBasicAuth(
+            self.server.requests[0]['headers']['Authorization'],
+            'fake-name',
+            'fake-secret'
+        )
+        self.assertReport(self.server.requests[0]['payload']['result_file'], {
             u'time_start': 10,
             u'time_end': 400,
             u'run_info': default_run_info,
@@ -285,8 +304,13 @@ class TestUploadWptResults(unittest.TestCase):
         expected_run_info[u'os'] = u'windows'
         expected_run_info[u'os_version'] = u'95'
 
-        self.assertEqual(len(self.server.request_payloads), 1)
-        self.assertReport(self.server.request_payloads[0]['result_file'][0], {
+        self.assertEqual(len(self.server.requests), 1)
+        self.assertBasicAuth(
+            self.server.requests[0]['headers']['Authorization'],
+            'fake-name',
+            'fake-secret'
+        )
+        self.assertReport(self.server.requests[0]['payload']['result_file'], {
             u'time_start': 1,
             u'time_end': 1,
             u'run_info': expected_run_info,
@@ -334,7 +358,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  total_chunks=2)
 
         self.assertNotEqual(returncode, 0, stdout)
-        self.assertEqual(len(self.server.request_payloads), 1)
+        self.assertEqual(len(self.server.requests), 1)
 
     def test_no_server(self):
         returncode, stdout, stderr = self.upload('chrome',
@@ -366,7 +390,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  port=9801)
 
         self.assertEqual(returncode, 1, stdout)
-        self.assertEqual(len(self.server.request_payloads), 0)
+        self.assertEqual(len(self.server.requests), 0)
 
     def test_missing_results(self):
         self.start_server(9802)
@@ -383,7 +407,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  port=9801)
 
         self.assertNotEqual(returncode, 0, stdout)
-        self.assertEqual(len(self.server.request_payloads), 0)
+        self.assertEqual(len(self.server.requests), 0)
 
 
 if __name__ == '__main__':
