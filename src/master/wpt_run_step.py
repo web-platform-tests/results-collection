@@ -95,6 +95,11 @@ class WptRunStep(steps.ShellCommand):
                 '--binary-arg=--use-fake-device-for-media-stream'
             ])
 
+            if properties.getProperty('browser_channel') == 'experimental':
+                command.append(
+                    '--binary-arg=--enable-experimental-web-platform-features'
+                )
+
         command.append(browser_id)
 
         return command
