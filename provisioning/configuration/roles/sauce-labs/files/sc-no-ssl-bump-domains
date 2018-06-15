@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# > Sauce Connect executes a type of "man-in-the-middle" interception of
+# > encrypted test traffic through SSL bumping, and decrypts that traffic in
+# > the course of the test. [...] The disadvantage to SSL bumping is that some
+# > network components, such as browsers and servers that use WebSockets, won't
+# > work if the traffic to them has been altered, which Sauce Connect appears
+# > to do. [...] You can disable SSL bumping by using the `-B` /
+# > `--no-ssl-bump-domains` argument when you start Sauce Connect and
+# > specifying which domains should not be bumped or specify all so that all
+# > domains that passed through the tunnel are not bumped .
+#
+# Source: https://wiki.saucelabs.com/display/DOCS/Troubleshooting+Sauce+Connect#TroubleshootingSauceConnect-DisablingSSLBumping
+#
+# The WPT CLI does not allow users to enable this option. This script serves as
+# an intermediary which enables the option and passes any additional options
+# along to the "true" Sauce Connect binary.
+
+sc --no-ssl-bump-domains all $@
