@@ -82,6 +82,8 @@
       value: '{{wptd_legacy_notify_secret}}'
     - name: wptd_upload_url
       value: '{{wptd_upload_url}}'
+    - name: wptd_staging_upload_url
+      value: '{{wptd_staging_upload_url}}'
     - name: wptd_upload_user_name
       value: '{{wptd_upload_user_name}}'
     - name: wptd_upload_secret
