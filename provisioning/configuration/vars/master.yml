@@ -6,6 +6,7 @@
 wptd_legacy_notify_url: https://wptdashboard.appspot.com/api/run
 wptd_legacy_notify_secret: '{{vault_wptd_legacy_notify_secret}}'
 
-wptd_upload_url: https://wptdashboard-staging.appspot.com/api/results/upload
+wptd_upload_url: https://wpt.fyi/api/results/upload
+wptd_staging_upload_url: https://staging.wpt.fyi/api/results/upload
 wptd_upload_user_name: buildbot
 wptd_upload_secret: '{{vault_wptd_upload_secret}}'
