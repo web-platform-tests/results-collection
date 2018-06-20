@@ -76,10 +76,6 @@
       value: '{{fqdn}}'
     - name: data_storage_mount_point
       value: '{{data_storage_mount_point}}'
-    - name: wptd_legacy_notify_url
-      value: '{{wptd_legacy_notify_url}}'
-    - name: wptd_legacy_notify_secret
-      value: '{{wptd_legacy_notify_secret}}'
     - name: wptd_upload_url
       value: '{{wptd_upload_url}}'
     - name: wptd_staging_upload_url
@@ -137,12 +133,6 @@
   copy:
     src: ../../src/scripts/get-browser-url.py
     dest: /usr/local/bin/get-browser-url.py
-    mode: 0755
-
-- name: Install legacy script for uploading results
-  copy:
-    src: ../../src/scripts/upload-legacy-wpt-results.py
-    dest: /usr/local/bin/upload-legacy-wpt-results.py
     mode: 0755
 
 - name: Install script for uploading results

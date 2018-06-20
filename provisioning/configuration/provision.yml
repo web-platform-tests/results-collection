@@ -19,7 +19,6 @@
   become: true
   roles:
     - user-accounts
-    - google-cloud-platform
     - buildbot-master
   vars_files:
     - vars/main.yml
