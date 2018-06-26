@@ -67,7 +67,7 @@ class WptRunStep(steps.ShellCommand):
                 '--sauce-user', 'wpt-%s' % workername,
                 '--sauce-key', key,
                 '--sauce-tunnel-id', properties.getProperty('workername'),
-                '--sauce-connect-binary', 'sc',
+                '--sauce-connect-binary', 'sc-no-ssl-bump-domains',
                 '--no-restart-on-unexpected',
                 '--run-by-dir', '3'
             ])

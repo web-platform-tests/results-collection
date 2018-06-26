@@ -37,6 +37,12 @@
     mode: 0755
     remote_src: true
 
+- name: Install wrapper for Sauce Connect
+  copy:
+    src: files/sc-no-ssl-bump-domains
+    dest: /usr/local/bin
+    mode: 0755
+
   # This configuration is a short-term workaround recommended by Sauce Labs. It
   # shold be removed once the underlying issue has been resolved b that
   # service.
