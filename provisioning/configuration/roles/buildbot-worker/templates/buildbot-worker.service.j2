@@ -9,11 +9,12 @@ After=network.target
 Type=forking
 PIDFile={{home_dir}}/worker/twistd.pid
 WorkingDirectory={{home_dir}}
-ExecStart=/usr/local/bin/buildbot-worker start worker
-ExecReload=/usr/local/bin/buildbot-worker restart worker
-ExecStop=/usr/local/bin/buildbot-worker stop worker
+ExecStartPre=/usr/local/bin/reboot-if-present.sh {{reboot_sentinel}}
+ExecStart=/usr/bin/sudo -u {{application_user}} /usr/local/bin/buildbot-worker start worker
+ExecReload=/usr/bin/sudo -u {{application_user}} /usr/local/bin/buildbot-worker restart worker
+ExecStop=/usr/bin/sudo -u {{application_user}} /usr/local/bin/buildbot-worker stop worker
 Restart=always
-User={{application_user}}
+User=root
 
 [Install]
 WantedBy=multi-user.target

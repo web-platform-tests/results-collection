@@ -3,3 +3,7 @@
   systemd:
     name: buildbot-worker
     state: restarted
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true

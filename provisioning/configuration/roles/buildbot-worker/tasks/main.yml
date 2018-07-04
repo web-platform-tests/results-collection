@@ -11,10 +11,14 @@
 - name: Create a Buildbot worker
   command: |
     sudo --user {{application_user}}
-        buildbot-worker create-worker {{home_dir}}/worker {{master_hostname}} {{application_user}} {{buildbot_worker_password}}
+        buildbot-worker create-worker
+          --allow-shutdown file
+          {{home_dir}}/worker {{master_hostname}} {{application_user}} {{buildbot_worker_password}}
   args:
     chdir: '{{home_dir}}'
     creates: '{{home_dir}}/worker'
+
+- include_tasks: unattended_upgrades.yml
 
 - name: Insert description of worker system
   template:
@@ -29,6 +33,8 @@
   template:
     src: buildbot-worker.service.j2
     dest: /etc/systemd/system/buildbot-worker.service
+  notify:
+    - Reload SystemD daemon
 
 - name: Install script for clearing ports
   copy:
