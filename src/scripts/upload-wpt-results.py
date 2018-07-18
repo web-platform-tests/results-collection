@@ -98,9 +98,10 @@ def main(raw_results_directory, product, browser_channel, browser_version,
 
 @contextlib.contextmanager
 def tmpfile():
-    temp_filename = tempfile.mkstemp('.json')[1]
+    fd, temp_filename = tempfile.mkstemp('.json')
     yield temp_filename
 
+    os.close(fd)
     os.remove(temp_filename)
 
 
