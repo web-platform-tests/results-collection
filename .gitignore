@@ -3,4 +3,3 @@
 /.vagrant/
 /test/gsutil-stub/gsutil_args.json
 /test/gsutil-stub/content-to-upload/
-.vscode/launch.json
