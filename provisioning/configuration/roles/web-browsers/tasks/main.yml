@@ -47,7 +47,7 @@
 
 - name: Download Mozilla Geckodriver
   get_url:
-    url: https://github.com/mozilla/geckodriver/releases/download/v0.19.1/geckodriver-v0.19.1-linux64.tar.gz
+    url: https://github.com/mozilla/geckodriver/releases/download/v0.21.0/geckodriver-v0.21.0-linux64.tar.gz
     dest: ~/downloads/
 
 - name: Extend hosts file with configuration to shunt Firefox requests
