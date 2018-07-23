@@ -70,7 +70,7 @@
 
 - name: Install Mozilla Geckodriver
   unarchive:
-    src: ~/downloads/geckodriver-v0.19.1-linux64.tar.gz
+    url: ~/downloads/geckodriver-v0.21.0-linux64.tar.gz
     dest: /usr/local/bin
     remote_src: true
 
