@@ -1,0 +1,52 @@
+---
+- name: Detect previously-created user
+  stat:
+    path: /Users/{{application_user}}
+  register: user_home
+
+- name: Request manual intervention for user deletion
+  pause:
+    prompt: Please delete account for user named "{{application_user}}"
+  when: user_home.stat.exists
+
+- name: Create a group
+  shell: |
+    dseditgroup -o read {{application_group}} ||
+      dseditgroup -o create -r "results collectors" {{application_group}}
+
+- name: Create a GUI user
+  shell: |
+    #!/bin/bash
+
+    set -e
+
+    /usr/sbin/sysadminctl -addUser {{application_user}}
+    dseditgroup -o edit -a {{application_user}} -t user {{application_group}}
+
+    # Source: "Suppressing the Data & Privacy pop-up window on macOS High
+    # Sierra"
+    # 
+    # https://derflounder.wordpress.com/2018/04/04/suppressing-the-data-privacy-pop-up-window-on-macos-high-sierra/
+    osvers=$(sw_vers -productVersion | awk -F. '{print $2}')
+    sw_vers=$(sw_vers -productVersion)
+    sw_build=$(sw_vers -buildVersion)
+    
+    USER_UID={{application_user}}
+    USER_HOME=/Users/${USER_UID}
+    
+    /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant DidSeeCloudSetup -bool TRUE
+    /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant GestureMovieSeen none
+    /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant LastSeenCloudProductVersion "${sw_vers}"
+    /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant LastSeenBuddyBuildVersion "${sw_build}"
+    /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant DidSeePrivacy -bool TRUE
+    /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant DidSeeSiriSetup -bool TRUE
+    /usr/sbin/chown "${USER_UID}" "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant.plist
+
+# The only known means to automate this process are via an unofficial
+# encryption algorithm whose original source is no longer available
+# Republished at https://github.com/xfreebird/kcpassword/blob/master/kcpassword
+- name: Request manual intervention for user login
+  pause:
+    prompt: |-
+      Please ensure that system is configured to automatically log in
+      to the "{{application_user}}" user account at startup.

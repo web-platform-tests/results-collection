@@ -77,10 +77,8 @@ install_safari_technology_preview() {
   # https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
   #
   # Note: as of 2018-07-13, this command has no effect in non-UI sessions such
-  # as SSH or launchd. Until this is resolved, the command must be manually
-  # invoked during initial system provisioning (the setting will persist across
-  # new installations of the browser).
-  #"$application_dir/Contents/MacOS/safaridriver" --enable >&2 || return 1
+  # as SSH or launchd.
+  "$application_dir/Contents/MacOS/safaridriver" --enable >&2 || return 1
 
   echo $application_dir/Contents/MacOS/SafariTechnologyPreview
 }

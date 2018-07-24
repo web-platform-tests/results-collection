@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+         <key>Label</key>
+         <string>start.buildbot.worker</string>
+
+         <key>UserName</key>
+         <string>{{application_user}}</string>
+
+         <key>WorkingDirectory</key>
+         <string>/Users/{{application_user}}</string>
+
+         <key>ProgramArguments</key>
+         <array>
+                 <string>/usr/bin/osascript</string>
+                 <string>/Users/{{application_user}}/start-buildbot-worker.applescript</string>
+         </array>
+
+         <key>KeepAlive</key>
+         <true/>
+
+         <key>RunAtLoad</key>
+         <true/>
+</dict>
+</plist>
