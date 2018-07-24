@@ -58,6 +58,11 @@
     group: '{{application_group}}'
     mode: 0700
 
+- name: Infer revision of deployed codebase
+  local_action: command git rev-parse HEAD
+  become: false
+  register: results_collector_revision
+
 - name: Insert configuration values
   copy:
     content: '{{item.value}}'
@@ -84,6 +89,8 @@
       value: '{{wptd_upload_user_name}}'
     - name: wptd_upload_secret
       value: '{{wptd_upload_secret}}'
+    - name: results_collector_revision
+      value: '{{results_collector_revision.stdout}}'
 
 - name: Insert credentials for running remote browsers
   shell: |
