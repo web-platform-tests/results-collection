@@ -30,7 +30,7 @@
     group: '{{application_group}}'
 
 - include_tasks: data_storage_device.yml
-  when: data_storage_device is not None
+  when: data_storage_device is not none
 
 - name: Create a Buildbot master
   command: |
