@@ -25,15 +25,15 @@
 
     # Source: "Suppressing the Data & Privacy pop-up window on macOS High
     # Sierra"
-    # 
+    #
     # https://derflounder.wordpress.com/2018/04/04/suppressing-the-data-privacy-pop-up-window-on-macos-high-sierra/
     osvers=$(sw_vers -productVersion | awk -F. '{print $2}')
     sw_vers=$(sw_vers -productVersion)
     sw_build=$(sw_vers -buildVersion)
-    
+
     USER_UID={{application_user}}
     USER_HOME=/Users/${USER_UID}
-    
+
     /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant DidSeeCloudSetup -bool TRUE
     /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant GestureMovieSeen none
     /usr/bin/defaults write "${USER_HOME}"/Library/Preferences/com.apple.SetupAssistant LastSeenCloudProductVersion "${sw_vers}"

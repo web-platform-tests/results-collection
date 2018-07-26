@@ -59,3 +59,10 @@
   lineinfile:
     dest: /etc/sudoers
     line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/install-browser.sh'
+
+- name: Detect operating system
+  command: uname
+  register: uname
+
+- name: Execute tasks for {{uname.stdout}} system
+  include_tasks: '{{uname.stdout|lower}}.yml'

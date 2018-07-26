@@ -3,8 +3,5 @@
   command: uname
   register: uname
 
-- import_tasks: linux.yml
-  when: uname.stdout != 'Darwin'
-
-- import_tasks: macos.yml
-  when: uname.stdout == 'Darwin'
+- name: Define user for {{uname.stdout}} system
+  include_tasks: '{{uname.stdout|lower}}.yml'

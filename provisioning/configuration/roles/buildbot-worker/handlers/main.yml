@@ -1,8 +1,19 @@
 ---
 - name: Restart "build worker" service
-  systemd:
-    name: buildbot-worker
-    state: restarted
+  shell: |
+    #!/bin/bash
+    set -e
+    uname=$(uname)
+
+    if [ $uname = "Linux" ]; then
+      systemctl restart buildbot-worker
+    elif [ $uname = "Darwin" ]; then
+      launchctl unload -w /Library/LaunchDaemons/start.buildbot.worker.plist || true
+      launchctl load -w /Library/LaunchDaemons/start.buildbot.worker.plist
+    else
+      echo Unrecognized system: $uname >&2
+      exit 1
+    fi
 
 - name: Reload systemd daemon
   systemd:
