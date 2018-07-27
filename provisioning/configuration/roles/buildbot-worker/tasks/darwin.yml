@@ -56,6 +56,9 @@
     - systemsetup -setdisplaysleep Never
     - systemsetup -setharddisksleep Never
 
+- name: Restart after power failures
+  command: systemsetup setrestartpowerfailure on
+
 # https://discussions.apple.com/thread/7610386
 - name: Disable screen saver
   command: |
