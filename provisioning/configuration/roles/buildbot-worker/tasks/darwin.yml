@@ -46,10 +46,15 @@
   command: |
     launchctl unload -w /System/Library/LaunchDaemons/com.apple.metadata.mds.plist
 
-# http://osxdaily.com/2015/02/03/set-or-disable-sleep-due-to-mac-system-inactivity-from-the-command-line-in-os-x/
 - name: Disable system sleep
-  command: |
-    systemsetup -setcomputersleep Never
+  command: '{{item}}'
+  with_items:
+    # This first command likely subsumes those that follow, however, they are all
+    # executed because the available documentation does not make this claim.
+    - systemsetup -setsleep Never
+    - systemsetup -setcomputersleep Never
+    - systemsetup -setdisplaysleep Never
+    - systemsetup -setharddisksleep Never
 
 # https://discussions.apple.com/thread/7610386
 - name: Disable screen saver
