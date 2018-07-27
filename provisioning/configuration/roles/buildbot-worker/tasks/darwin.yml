@@ -12,6 +12,35 @@
 - name: Enable the system service
   command: launchctl load -w /Library/LaunchDaemons/start.buildbot.worker.plist
 
+- name: Enable operating system automation (requires manual intervention)
+  shell: |
+    #!/bin/bash
+    set -e
+    echo '
+      set prompt to "UI element scripting is not enabled. Please allow the Terminal application to control your computer.\nThis script will pause until enabled."
+      tell application "System Events"
+          if UI elements enabled then
+              return
+          end if
+          tell application "System Preferences"
+              activate
+              set current pane to pane "com.apple.preference.security"
+                  log prompt
+              display dialog prompt
+          end tell
+
+          repeat while not (UI elements enabled)
+              delay 1
+          end repeat
+      end tell
+    ' | osascript -
+
+- name: Install script for enabling remote automation in Safari
+  copy:
+    src: ../../src/scripts/safari-enable-automation.sh
+    dest: /usr/local/bin/
+    mode: 0755
+
 # https://discussions.apple.com/thread/8200117
 - name: Disable Spotlight
   command: |

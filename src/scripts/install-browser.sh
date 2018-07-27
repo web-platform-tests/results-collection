@@ -73,14 +73,9 @@ install_safari_technology_preview() {
     return 1
   fi
 
-  # Enable WebDriver
-  # https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
-  #
-  # Note: as of 2018-07-13, this command has no effect in non-UI sessions such
-  # as SSH or launchd.
-  "$application_dir/Contents/MacOS/safaridriver" --enable >&2 || return 1
+  safari-enable-automation.sh >&2 || return 1
 
-  echo $application_dir/Contents/MacOS/SafariTechnologyPreview
+  echo "${application_dir}/Contents/MacOS/Safari Technology Preview"
 }
 
 # Prefer `curl` over `wget` because `wget` is not included in macOS High Sierra
