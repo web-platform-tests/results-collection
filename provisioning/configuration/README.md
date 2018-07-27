@@ -36,8 +36,19 @@ machine will not have all the capabilities of the production system.
 
 ## macOS configuration
 
-This project supports collecting results from macOS systems, provided the Xcode
-development environment is available (this is required by dependencies of the
-Buildbot framework). Xcode may be installed via the following command:
+This project supports collecting results from macOS systems. However, due to
+constraints of that operating system, provisioning must occur via a GUI session
+on the target machine.
+
+To prepare the system for configuration, execute the following commands from a
+terminal:
 
     xcode-select --install
+    sudo easy_install pip
+    sudo pip install ansible
+
+To configure the system, execute the following command:
+
+    make deploy-macos
+
+This command also requires human interaction.

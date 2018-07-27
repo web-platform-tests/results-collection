@@ -31,6 +31,7 @@ deploy: deploy-infrastructure
 	cd provisioning/configuration && \
 		ansible-playbook \
 			--inventory inventory/production \
+			--limit '!buildbot-macos-workers' \
 			provision.yml
 
 .PHONY: deploy-staging
@@ -38,5 +39,14 @@ deploy-staging: deploy-infrastructure
 	cd provisioning/configuration && \
 		ansible-playbook \
 			--inventory inventory/staging \
+			--limit '!buildbot-macos-workers' \
+			--ask-become-pass \
+			provision.yml
+
+deploy-macos:
+	cd provisioning/configuration && \
+		ansible-playbook \
+			--inventory inventory/staging \
+			--limit buildbot-macos-workers \
 			--ask-become-pass \
 			provision.yml
