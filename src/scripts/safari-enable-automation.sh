@@ -66,8 +66,8 @@ toggle_automation() {
       -- If Apple offers a version of Safari Technology Preview which is newer than
       -- the one under test, the browser will create a modal dialog shortly after
       -- opening. The following block pauses execution until this prompt is expected
-      -- to be available. This delay represents an unavoidable race condition, as
-      -- there is not deterministic method to verify that the prompt will *not* be
+      -- to be available. This delay represents an unavoidable race condition as
+      -- there is no deterministic method to verify that the prompt will *not* be
       -- displayed.
       tell process "Safari Technology Preview"
           log "Waiting for upgrade prompt..."
