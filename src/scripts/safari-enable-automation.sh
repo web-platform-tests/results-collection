@@ -56,8 +56,8 @@ toggle_automation() {
       set ready to false
 
       repeat while not ready
-          repeat with processd in every process
-              if name of processd as string is "Safari Technology Preview" then
+          repeat with this_process in every process
+              if name of this_process as string is "Safari Technology Preview" then
                   set ready to true
               end if
           end repeat
