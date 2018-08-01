@@ -91,8 +91,11 @@ SCRIPT
 
 if ! is_automation_enabled; then
   echo Automation not enabled. Attempting to enable.
-  "$safaridriver_binary" --enable
   toggle_automation
+
+  # This command has been found to function as expected only *after* automation
+  # has been enabled via the Safari user interface.
+  "$safaridriver_binary" --enable
 fi
 
 if ! is_automation_enabled; then
