@@ -25,6 +25,9 @@ class WPTChunkedStep(steps.Trigger):
         browser_url = self.build.properties.getProperty(
             'browser_url_%s_%s' % (browser_name, browser_channel)
         )
+        webdriver_url = self.build.properties.getProperty(
+            'webdriver_url_%s' % browser_name
+        )
 
         for scheduler in self.schedulerNames:
             unimportant = scheduler in self.unimportantSchedulerNames
@@ -40,6 +43,7 @@ class WPTChunkedStep(steps.Trigger):
                         'browser_channel': browser_channel,
                         'browser_version': self.platform['browser_version'],
                         'browser_url': browser_url,
+                        'webdriver_url': webdriver_url,
                         'os_name': self.platform['os_name'],
                         'os_version': self.platform['os_version'],
                         'use_sauce_labs': self.platform.get('sauce', False)

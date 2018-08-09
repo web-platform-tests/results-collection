@@ -17,6 +17,11 @@
     - '* soft nofile 65536'
     - '* hard nofile 65536'
 
+- name: Create directory to store downloaded files
+  file:
+    name: ~/downloads
+    state: directory
+
 - name: Download Sauce Connect
   get_url:
     url: https://saucelabs.com/downloads/sc-4.5.0-linux.tar.gz

@@ -138,8 +138,8 @@
 
 - name: Install script for mirroring browser binaries
   copy:
-    src: ../../src/scripts/get-browser-url.py
-    dest: /usr/local/bin/get-browser-url.py
+    src: ../../src/scripts/get-binary-url.py
+    dest: /usr/local/bin/get-binary-url.py
     mode: 0755
 
 - name: Install script for uploading results

@@ -76,6 +76,7 @@ class WptRunStep(steps.ShellCommand):
 
             command.extend([
                 '--binary', properties.getProperty('browser_binary'),
+                '--webdriver-binary', properties.getProperty('webdriver_binary'),
                 '--install-fonts',
             ])
 

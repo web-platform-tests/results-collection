@@ -32,6 +32,7 @@
     mode: 0755
   with_items:
     - ../../src/scripts/install-browser.sh
+    - ../../src/scripts/install-webdriver.sh
     - ../../src/scripts/read-browser-version.py
 
 # This allows workers to edit install web browsers via `sudo install-browser.sh`
@@ -39,16 +40,6 @@
   lineinfile:
     dest: /etc/sudoers
     line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/install-browser.sh'
-
-- name: Create directory to store downloaded files
-  file:
-    name: ~/downloads
-    state: directory
-
-- name: Download Mozilla Geckodriver
-  get_url:
-    url: https://github.com/mozilla/geckodriver/releases/download/v0.21.0/geckodriver-v0.21.0-linux64.tar.gz
-    dest: ~/downloads/
 
 - name: Extend hosts file with configuration to shunt Firefox requests
   lineinfile:
@@ -67,20 +58,3 @@
     - 0.0.0.0 tiles.services.mozilla.com
     - 0.0.0.0 location.services.mozilla.com
     - 0.0.0.0 *.services.mozilla.com
-
-- name: Install Mozilla Geckodriver
-  unarchive:
-    src: ~/downloads/geckodriver-v0.21.0-linux64.tar.gz
-    dest: /usr/local/bin
-    remote_src: true
-
-- name: Download Google Chromedriver
-  get_url:
-    url: https://chromedriver.storage.googleapis.com/2.38/chromedriver_linux64.zip
-    dest: ~/downloads/
-
-- name: Install Google Chromedriver
-  unarchive:
-    src: ~/downloads/chromedriver_linux64.zip
-    dest: /usr/local/bin
-    remote_src: true
