@@ -26,7 +26,7 @@
   get_url:
     url: https://saucelabs.com/downloads/sc-4.5.0-linux.tar.gz
     dest: ~/downloads
-    checksum: sha1:d257113657d9ba48029037c5c9a50d81d9e730ff
+    checksum: sha1:06e52acbbde3668a8effbf0dc970b40e32763fa6
 
 - name: Unpack Sauce Connect
   unarchive:
