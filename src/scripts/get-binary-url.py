@@ -99,7 +99,7 @@ def locate_geckodriver():
         'https://api.github.com/repos/mozilla/geckodriver/releases/latest'
     )
     conn = httplib.HTTPSConnection(parts.netloc)
-    headers={
+    headers = {
         'User-Agent': 'wpt-results-collector',
         # > By default, all requests to https://api.github.com receive the v3
         # > version of the REST API. We encourage you to explicitly request
@@ -135,7 +135,11 @@ def locate_chromedriver():
     conn = httplib.HTTPSConnection(parts.netloc)
     conn.request('GET', parts.path)
     latest_version = conn.getresponse().read()
-    return 'https://chromedriver.storage.googleapis.com/%s/chromedriver_linux64.zip' % latest_version
+    return '%s/%s/%s' % (
+        'https://chromedriver.storage.googleapis.com',
+        latest_version,
+        'chromedriver_linux64.zip'
+    )
 
 
 @contextlib.contextmanager
