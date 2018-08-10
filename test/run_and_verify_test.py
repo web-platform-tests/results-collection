@@ -141,3 +141,9 @@ class RunAndVerify(unittest.TestCase):
 
         self.assert_success(result)
         self.assertEquals(result['attempt_count'], 2)
+
+    def test_allow_missing_jsshell(self):
+        result = self.run_and_verify('missing-jsshell', 1)
+
+        self.assert_success(result)
+        self.assertEquals(result['attempt_count'], 1)
