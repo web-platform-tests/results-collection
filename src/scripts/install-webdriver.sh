@@ -14,7 +14,7 @@ install_chromedriver() {
 
   rm --force $target
 
-  unzip $archive || return 1
+  unzip -qq $archive || return 1
 
   echo $target
 }
