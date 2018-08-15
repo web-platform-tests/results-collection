@@ -1,0 +1,67 @@
+---
+# In order to ensure automatically-downloaded security updates are properly
+# installed, the system must be rebooted on a regular basis. Care has been
+# taken to avoid interrupting any ongoing results collection process and to
+# avoid granting system reboot privileges to the application user. The
+# configuration in this file implements the following strategy:
+#
+# 1. A cron task creates a sentinel file once every 24 hours
+# 2. The Buildbot worker is configured to respond to the creation of the
+#    sentinel file by requesting a "graceful shutdown" from the Buildbot
+#    master [1]. (see the "create worker" command in this role's main task
+#    file)
+# 3. The Buildbot master stops assigning new jobs to the Buildbot worker. Once
+#    the worker completes its active jobs, the master instructs it to quit.
+# 4. systemd detects that the Buildbot worker process has exited. Prior to
+#    re-starting it, invokes a verification script [2]. (see the systemd "unit
+#    file" defined by this role)
+# 5. The verification script detects the presence of the sentinel file from
+#    step 1. It removes that file and triggers system reboot.
+#
+# In this way, system reboot can be scheduled to occur on a regular basis
+# without interrupting results collection and without interfering with the
+# failure recovery service provided by systemd.
+#
+# [1] https://docs.buildbot.net/1.1.0/manual/installation/worker.html#cmdoption-buildbot-worker-create-worker-allow-shutdown
+# [2] https://www.freedesktop.org/software/systemd/man/systemd.service.html#
+- name: Schedule nightly reboot
+  cron:
+    name: Request "graceful shutdown" of Buildbot worker followed by system reboot
+    hour: 0
+    job: /usr/bin/touch {{reboot_sentinel}} && /usr/bin/sudo -u {{application_user}} /usr/bin/touch {{home_dir}}/worker/shutdown.stamp
+
+- name: Install script for rebooting following worker shutdown
+  copy:
+    src: ../../src/scripts/reboot-if-present.sh
+    dest: /usr/local/bin/reboot-if-present.sh
+    mode: 0755
+
+- name: Install system package
+  apt:
+    name: unattended-upgrades
+    state: present
+
+# https://help.ubuntu.com/lts/serverguide/automatic-updates.html
+- name: Enable unattended upgrades
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    regexp: '{{item.regexp}}'
+    line: '{{item.line}}'
+    state: present
+  with_items:
+    - regexp: APT::Periodic::Update-Package-Lists
+      line: APT::Periodic::Update-Package-Lists "1";
+    - regexp: APT::Periodic::Unattended-Upgrade
+      line: APT::Periodic::Unattended-Upgrade "1";
+
+# Left unchecked, unused kernel headers can build up and occupy a
+# significant amount of disk space. This configuration ensures that
+# unused kernel headers (along with any other unused software) are
+# removed on a regular basis.
+# https://askubuntu.com/questions/930854/does-unattended-upgrades-also-include-apt-get-autoremove#930861
+- name: Enable automatic removal of unused software
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    regexp: Unattended-Upgrade::Remove-Unused-Dependencies
+    line: Unattended-Upgrade::Remove-Unused-Dependencies  "true";
+    state: present

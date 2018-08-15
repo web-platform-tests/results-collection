@@ -19,7 +19,6 @@
     - git
     - libnss3-tools
     - rsync
-    - unattended-upgrades
     - unzip
     - virtualenv
     - xauth
