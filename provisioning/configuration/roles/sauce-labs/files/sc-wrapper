@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# The WPT CLI does not allow users to enable all options supported by
+# the Sauce Connect binary. This script serves as an intermediary which
+# enables some options and passes any additional options along to the
+# "true" Sauce Connect binary.
+#
 # > Sauce Connect executes a type of "man-in-the-middle" interception of
 # > encrypted test traffic through SSL bumping, and decrypts that traffic in
 # > the course of the test. [...] The disadvantage to SSL bumping is that some
@@ -11,10 +16,6 @@
 # > domains that passed through the tunnel are not bumped .
 #
 # Source: https://wiki.saucelabs.com/display/DOCS/Troubleshooting+Sauce+Connect#TroubleshootingSauceConnect-DisablingSSLBumping
-#
-# The WPT CLI does not allow users to enable this option. This script serves as
-# an intermediary which enables the option and passes any additional options
-# along to the "true" Sauce Connect binary.
 
 import signal
 import subprocess
@@ -25,6 +26,10 @@ import sys
 signal.signal(signal.SIGINT, lambda _, __: proc.kill())
 signal.signal(signal.SIGTERM, lambda _, __: proc.terminate())
 
-proc = subprocess.Popen(['sc', '--no-ssl-bump-domains=all'] + sys.argv[1:])
+args = [
+    '--no-ssl-bump-domains=all', '--logfile', '/var/log/sauce-connect/sc.log'
+] + sys.argv[1:]
+
+proc = subprocess.Popen(['sc'] + args)
 
 proc.communicate()

@@ -17,7 +17,7 @@ class WptRunStep(steps.ShellCommand):
         kwargs['command'] = self.makeWptRunCommand
         kwargs['logfiles'] = {
             'sauce-connect-log': {
-                'filename': '/tmp/sc.log',
+                'filename': '/var/log/sauce-connect/sc.log',
                 'follow': True
             }
         }
@@ -67,7 +67,7 @@ class WptRunStep(steps.ShellCommand):
                 '--sauce-user', 'wpt-%s' % workername,
                 '--sauce-key', key,
                 '--sauce-tunnel-id', properties.getProperty('workername'),
-                '--sauce-connect-binary', 'sc-no-ssl-bump-domains',
+                '--sauce-connect-binary', 'sc-wrapper',
                 '--no-restart-on-unexpected',
                 '--run-by-dir', '3'
             ])
