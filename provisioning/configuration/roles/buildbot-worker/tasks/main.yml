@@ -34,7 +34,7 @@
     src: buildbot-worker.service.j2
     dest: /etc/systemd/system/buildbot-worker.service
   notify:
-    - Reload SystemD daemon
+    - Reload systemd daemon
 
 - name: Install script for clearing ports
   copy:
