@@ -55,8 +55,6 @@ def main(max_attempts, log_wptreport, log_raw, wpt_args):
             for test_name in completeness[x]:
                 logger.info('- %s' % test_name)
 
-        log_allowed_missing(logger, completeness)
-
         is_complete = incorrect_count == 0
 
     if not is_complete:
@@ -163,44 +161,12 @@ def analyze(log_wptreport, log_raw):
     expected_results = get_expected_results(log_raw)
     actual_results = get_actual_results(log_wptreport)
 
-    # A regression in WPT caused the "raw log" to include tests which are never
-    # executed:
-    #
-    # https://github.com/web-platform-tests/wpt/issues/12366
-    #
-    # This logic and the `log_allowed_missing` function have been implemented
-    # as a workaround for that behavior. The workaround assumes that all
-    # invalid tests have names that end in ".js" and that no valid tests have
-    # names which satisfy that criteria.
-    #
-    # This is a partial solution because the true heuristic depends on the test
-    # contents. The effort required to implement and test a complete solution
-    # is not warranted because the upstream bug has been acknowledged, and a
-    # correction is under review.
-    #
-    # This logic should be removed when the regression has been fixed.
-    allowed_missing = set()
-    for expected in expected_results:
-        if expected.endswith('.js'):
-            allowed_missing.add(expected)
-    expected_results -= allowed_missing
-
     return {
         'total_expected': len(expected_results),
         'total_actual': len(actual_results),
         'unexpected': actual_results - expected_results,
-        'allowed_missing': allowed_missing,
         'missing': expected_results - actual_results
     }
-
-
-def log_allowed_missing(logger, completeness):
-    count = len(completeness['allowed_missing'])
-
-    logger.info('Found %s allowed missing results' % (count))
-
-    for test_name in completeness['allowed_missing']:
-        logger.info('- %s' % test_name)
 
 
 parser = argparse.ArgumentParser(description=main.__doc__)
