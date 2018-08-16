@@ -1,4 +1,6 @@
 ---
+- include_tasks: unattended_upgrades.yml
+
 - name: Define a system service
   template:
     src: buildbot-worker.service.j2

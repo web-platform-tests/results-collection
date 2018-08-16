@@ -21,7 +21,6 @@
     chdir: '{{home_dir}}'
     creates: '{{home_dir}}/worker'
 
-- include_tasks: unattended_upgrades.yml
 
 - name: Insert description of worker system
   template:
