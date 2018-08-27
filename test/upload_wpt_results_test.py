@@ -486,7 +486,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  git_branch='master',
                                                  no_timestamps=True)
 
-        self.assertEqual(returncode, 0, stdout)
+        self.assertEqual(returncode, 0, stderr)
 
         requests = self.server.requests
 
