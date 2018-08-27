@@ -32,6 +32,20 @@
 - include_tasks: data_storage_device.yml
   when: data_storage_device is not none
 
+# When individual "chunks" fail in a given collection attempt, the data
+# collected from successful "chunks" will persist on disk. In some cases, a
+# human operator may manually intervene to trigger the failed build and
+# "rescue" the overall collection attempt. Rescuing is not always appropriate,
+# so left unchecked, the system will accumulate partial results from collection
+# attempts that will never be recovered. This task schedules a cron job to
+# remove any data sets that are older than 30 days since it is highly unlikely
+# that such results will be rescued.
+- name: Schedule job to remove partial results from failed collections
+  cron:
+    name: Remove partial results from failed collections
+    hour: 1
+    job: /usr/bin/find {{data_storage_mount_point}}/chunk-results . -maxdepth 1 -mtime +30 -exec rm -r {} +
+
 - name: Create a Buildbot master
   command: |
     sudo --user {{application_user}} \
