@@ -159,7 +159,9 @@ def locate_chromedriver():
 def locate_safari(channel):
     '''Find a public URL for Safari Technology Preview by scraping the relevant
     "downloads" page on apple.com'''
-    with request('GET', 'https://developer.apple.com/safari/download/') as response:
+    download_page = 'https://developer.apple.com/safari/download/'
+
+    with request('GET', download_page) as response:
         # The search criteria should include "High Sierra" in order to avoid
         # selecting an incompatible binary intended for the Mojave release of
         # macOS
