@@ -369,7 +369,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  override_platform='false',
                                                  total_chunks=2)
 
-        self.assertNotEqual(returncode, 0, stdout)
+        self.assertNotEqual(returncode, 0, stderr)
         self.assertEqual(len(self.server.requests), 1)
 
     def test_no_server(self):
@@ -384,7 +384,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  override_platform='false',
                                                  total_chunks=2)
 
-        self.assertNotEqual(returncode, 0, stdout)
+        self.assertNotEqual(returncode, 0, stderr)
 
     def test_missing_results(self):
         self.start_server(9802)
@@ -401,7 +401,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  override_platform='false',
                                                  port=9802)
 
-        self.assertNotEqual(returncode, 0, stdout)
+        self.assertNotEqual(returncode, 0, stderr)
         self.assertEqual(len(self.server.requests), 0)
 
     def test_missing_timestamps(self):
@@ -419,7 +419,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  override_platform='false',
                                                  port=9802)
 
-        self.assertNotEqual(returncode, 0, stdout)
+        self.assertNotEqual(returncode, 0, stderr)
         self.assertEqual(len(self.server.requests), 0)
 
     def test_missing_optional_timestamps(self):
@@ -439,7 +439,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  port=9802,
                                                  timestamps_optional=True)
 
-        self.assertEqual(returncode, 0, stdout)
+        self.assertEqual(returncode, 0, stderr)
 
         requests = self.server.requests
 
