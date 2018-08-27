@@ -8,7 +8,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import threading
 import unittest
@@ -117,12 +116,12 @@ class TestUploadWptResults(unittest.TestCase):
 
     def upload(self, product, browser_channel, browser_version, os_name,
                os_version, results_dir, results, port, override_platform,
-               total_chunks, git_branch):
+               total_chunks, git_branch, no_timestamps=False):
         for filename in results:
             with open(os.path.join(results_dir, filename), 'w') as handle:
                 json.dump(results[filename], handle)
 
-        proc = subprocess.Popen([
+        cmd = [
             upload_bin, '--raw-results-directory', results_dir,
             '--product', product,
             '--browser-channel', browser_channel,
@@ -135,8 +134,12 @@ class TestUploadWptResults(unittest.TestCase):
             '--override-platform', override_platform,
             '--total-chunks', str(total_chunks),
             '--git-branch', git_branch
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ]
+        if no_timestamps:
+            cmd.append('--no-timestamps')
 
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
 
         return (proc.returncode, stdout, stderr)
@@ -425,27 +428,6 @@ class TestUploadWptResults(unittest.TestCase):
 
         self.assertNotEqual(returncode, 0, stdout)
 
-    def test_duplicated_results(self):
-        self.start_server(9802)
-        duplicated_results = make_results()
-        duplicated_results['2_of_2.json']['results'].append(
-            duplicated_results['1_of_2.json']['results'][0]
-        )
-        returncode, stdout, stderr = self.upload('firefox',
-                                                 'stable',
-                                                 '1.0.1',
-                                                 'linux',
-                                                 '4.0',
-                                                 self.temp_dir,
-                                                 duplicated_results,
-                                                 total_chunks=2,
-                                                 override_platform='false',
-                                                 port=9801,
-                                                 git_branch='master')
-
-        self.assertEqual(returncode, 1, stdout)
-        self.assertEqual(len(self.server.requests), 0)
-
     def test_missing_results(self):
         self.start_server(9802)
         partial_results = make_results()
@@ -459,11 +441,94 @@ class TestUploadWptResults(unittest.TestCase):
                                                  partial_results,
                                                  total_chunks=2,
                                                  override_platform='false',
-                                                 port=9801,
+                                                 port=9802,
                                                  git_branch='master')
 
         self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 0)
+
+    def test_missing_timestamps(self):
+        self.start_server(9802)
+        results = make_results()
+        del results['1_of_2.json']['time_start']
+        returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
+                                                 '1.0.1',
+                                                 'linux',
+                                                 '4.0',
+                                                 self.temp_dir,
+                                                 results,
+                                                 total_chunks=2,
+                                                 override_platform='false',
+                                                 port=9802,
+                                                 git_branch='master')
+
+        self.assertNotEqual(returncode, 0, stdout)
+        self.assertEqual(len(self.server.requests), 0)
+
+    def test_no_timestamps(self):
+        self.start_server(9802)
+        results = make_results()
+        del results['1_of_2.json']['time_start']
+        del results['1_of_2.json']['time_end']
+        del results['2_of_2.json']['time_start']
+        del results['2_of_2.json']['time_end']
+        returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
+                                                 '1.0.1',
+                                                 'linux',
+                                                 '4.0',
+                                                 self.temp_dir,
+                                                 results,
+                                                 total_chunks=2,
+                                                 override_platform='false',
+                                                 port=9802,
+                                                 git_branch='master',
+                                                 no_timestamps=True)
+
+        self.assertEqual(returncode, 0, stdout)
+
+        requests = self.server.requests
+
+        self.assertEqual(len(requests), 1)
+        self.assertBasicAuth(
+            requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
+        )
+        self.assertItemsEqual(
+            requests[0]['payload']['labels'][0].split(','),
+            ['stable', 'master']
+        )
+        self.assertReport(requests[0]['payload']['result_file'], {
+            u'run_info': default_run_info,
+            u'results': [
+                {
+                    u'test': u'/js/bitwise-or-2.html',
+                    u'status': u'OK',
+                    u'subtests': []
+                },
+                {
+                    u'test': u'/js/bitwise-or.html',
+                    u'status': u'OK',
+                    u'subtests': []
+                },
+                {
+                    u'test': u'/js/bitwise-and.html',
+                    u'status': u'OK',
+                    u'subtests': [
+                        {
+                            u'status': u'FAIL',
+                            u'message': u'bad',
+                            u'name': u'first'
+                        },
+                        {
+                            u'status': u'FAIL',
+                            u'message': u'bad',
+                            u'name': u'second'
+                        }
+                    ]
+                },
+            ]
+        })
 
 
 if __name__ == '__main__':
