@@ -11,15 +11,13 @@ import gzip
 import json
 import logging
 import os
-import platform
-import re
 import requests
 import tempfile
 
 
 def main(raw_results_directory, product, browser_channel, browser_version,
          os_name, os_version, url, user_name, secret, override_platform,
-         total_chunks):
+         total_chunks, timestamps_optional):
     '''Consolidate the WPT results data into a single JSON file and upload to
     the WPT results receiver.
 
@@ -49,12 +47,10 @@ def main(raw_results_directory, product, browser_channel, browser_version,
     with tmpfile() as filename:
         with gzip.open(filename, 'w') as handle:
             metadata = None
-            has_results = False
 
-            handle.write('''{
-              "results":''')
+            handle.write('{"results":\n')
 
-            for data in consolidate(raw_results_files):
+            for data in consolidate(raw_results_files, timestamps_optional):
                 if isinstance(data, str):
                     handle.write(data)
                 else:
@@ -72,13 +68,16 @@ def main(raw_results_directory, product, browser_channel, browser_version,
                             'os_version': os_version
                         })
 
-            metadata['run_info'] = json.dumps(metadata['run_info'])
+            metadata_json = '"run_info":{}'.format(
+                json.dumps(metadata['run_info'])
+            )
+            if (metadata['time_start'] != float('inf')
+                    and metadata['time_end'] != 0):
+                metadata_json += ', "time_start":{}, "time_end":{}'.format(
+                    metadata['time_start'], metadata['time_end']
+                )
 
-            handle.write(''',
-              "time_start":{time_start},
-              "time_end":{time_end},
-              "run_info":{run_info}
-            }}'''.format(**metadata))
+            handle.write(',\n%s}\n' % metadata_json)
 
         response = requests.post(
             url,
@@ -105,7 +104,7 @@ def tmpfile():
     os.remove(temp_filename)
 
 
-def consolidate(raw_results_files):
+def consolidate(raw_results_files, timestamps_optional=False):
     metadata = {
         'time_start': float('inf'),
         'time_end': 0,
@@ -122,13 +121,15 @@ def consolidate(raw_results_files):
         assert 'run_info' in data
         metadata['run_info'] = data['run_info']
 
-        assert 'time_start' in data
-        if data['time_start'] < metadata['time_start']:
-            metadata['time_start'] = data['time_start']
+        if not timestamps_optional:
+            assert 'time_start' in data
+        metadata['time_start'] = min(data.get('time_start', float('inf')),
+                                     metadata['time_start'])
 
-        assert 'time_end' in data
-        if data['time_end'] > metadata['time_end']:
-            metadata['time_end'] = data['time_end']
+        if not timestamps_optional:
+            assert 'time_end' in data
+        metadata['time_end'] = max(data.get('time_end', 0),
+                                   metadata['time_end'])
 
         assert 'results' in data
         assert isinstance(data['results'], list)
@@ -164,6 +165,8 @@ parser.add_argument('--override-platform',
                     type=lambda x: bool(distutils.util.strtobool(x)),
                     required=True)
 parser.add_argument('--total-chunks', type=int, required=True)
+parser.add_argument('--timestamps-optional', action='store_true',
+                    help='make time_start & time_end optional')
 
 if __name__ == '__main__':
     main(**vars(parser.parse_args()))
