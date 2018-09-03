@@ -179,3 +179,9 @@
     src: ../../src/scripts/upload-wpt-results.py
     dest: /usr/local/bin/upload-wpt-results.py
     mode: 0755
+
+- name: Install script for selecting WPT revision
+  copy:
+    src: ../../src/scripts/get-wpt-revision.py
+    dest: /usr/local/bin/get-wpt-revision.py
+    mode: 0755
