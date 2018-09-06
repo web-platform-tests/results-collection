@@ -1,6 +1,18 @@
 ---
 - include_tasks: unattended_upgrades.yml
 
+- name: Install system utility for log rotation
+  run_once: '{{is_development}}'
+  apt:
+    name: logrotate
+    state: present
+
+- name: Schedule log file rotation
+  cron:
+    name: Rotate log files
+    job: /usr/sbin/logrotate /etc/logrotate.conf
+    hour: '*'
+
 - name: Define a system service
   template:
     src: buildbot-worker.service.j2

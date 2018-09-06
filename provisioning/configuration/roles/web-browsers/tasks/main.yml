@@ -41,3 +41,15 @@
     - 0.0.0.0 tiles.services.mozilla.com
     - 0.0.0.0 location.services.mozilla.com
     - 0.0.0.0 *.services.mozilla.com
+
+- name: Create directory to store log files
+  file:
+    name: /var/log/xvfb
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    state: directory
+
+- name: Configure log file rotation
+  template:
+    src: logrotate.conf.j2
+    dest: /etc/logrotate.d/xvfb

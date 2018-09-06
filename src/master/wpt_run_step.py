@@ -20,6 +20,10 @@ class WptRunStep(steps.ShellCommand):
             'sauce-connect-log': {
                 'filename': '/var/log/sauce-connect/sc.log',
                 'follow': True
+            },
+            'xvfb-log': {
+                'filename': '/var/log/xvfb/xvfb.log',
+                'follow': True
             }
         }
 
@@ -75,7 +79,10 @@ class WptRunStep(steps.ShellCommand):
             ])
         else:
             if browser_name != 'safari':
-                command = ['xvfb-run', '--auto-servernum'] + command
+                command = [
+                    'xvfb-run', '--auto-servernum', '--error-file',
+                    '/var/log/xvfb/xvfb.log'
+                ] + command
 
                 # The WPT CLI does not support specifying a path to the Safari
                 # binary. However, if the corresponding WebDriver binary is
