@@ -46,7 +46,7 @@ def main(interval):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=main.__doc__)
     parser.add_argument('interval',
-                        choices=('hourly', 'two_hourly', 'four_hourly',
-                                 'eight_hourly', 'daily', 'weekly'))
+                        choices=('hourly', 'two_hourly', 'six_hourly',
+                                 'twelve_hourly', 'daily', 'weekly'))
 
     print main(**vars(parser.parse_args()))
