@@ -45,15 +45,26 @@ terraform {
   }
 }
 
-##
-# This locates the AMI for the Ubuntu image we'd like to use on all of our VMs
-# for this project.
-#
-data "aws_ami" "ubuntu" {
+data "aws_ami" "ubuntu_16_04" {
   most_recent = true
   filter {
     name = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20170221"]
+  }
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+  # Canonical
+  owners = ["099720109477"]
+}
+
+
+data "aws_ami" "ubuntu_18_04" {
+  most_recent = true
+  filter {
+    name = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-20180617"]
   }
   filter {
     name = "virtualization-type"
