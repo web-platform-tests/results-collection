@@ -21,6 +21,11 @@
 - name: Install Python dependencies
   pip:
     requirements: '{{home_dir}}/requirements.txt'
+    # Some of Buildbot's dependencies may already be present on the base system
+    # but at an incompatible version. Ignore any previously-installed packages
+    # to ensure that the speciic versions required by Buildbot are always
+    # installed.
+    extra_args: --ignore-installed
 
 - name: Create a directory to store the build master's data
   file:
