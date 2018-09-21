@@ -16,6 +16,12 @@
     state: present
   with_items:
     - curl
+    # The "firefox" apt package is not used for testing. It is installed here
+    # in order to satisfy all the system dependencies necessary to run Firefox.
+    # This could be achieved more explicitly with a list of dependencies, but
+    # the overhead of curating such a list over time is non-trivial and best
+    # left to package maintainers.
+    - firefox
     - git
     - libnss3-tools
     - rsync
