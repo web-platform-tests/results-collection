@@ -95,7 +95,10 @@ class WptRunStep(steps.ShellCommand):
             command.extend([
                 '--webdriver-binary',
                 properties.getProperty('webdriver_binary'),
-                '--install-fonts'
+                '--install-fonts',
+                # The authenticity of results collected in "headless" mode is
+                # disputed.
+                '--no-headless'
             ])
 
             browser_id = browser_name
