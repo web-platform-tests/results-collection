@@ -1,9 +1,14 @@
 # WPT Results Collector [![Build Status](https://travis-ci.org/web-platform-tests/results-collection.svg?branch=master)](https://travis-ci.org/web-platform-tests/results-collection)
 
-This project defines the procedure used to provision and deploy systems for
-running the test results collection mechanism for [the WPT Dashboard
-project](https://github.com/w3c/wptdashboard). The process is facilitated by
-[the Ansible configuration management tool](https://www.ansible.com/).
+This project defines a procedure to provision and deploy systems for running
+[the web-platform-tests](https://github.com/web-platform-tests/wpt) in a number
+of configurations. It currently provides data to power
+[wpt.fyi](https://wpt.fyi), a dashboard for reviewing current and historic test
+results.
+
+The deployment process is facilitated by [the Ansible configuration management
+tool](https://www.ansible.com/). The running system is implemented with
+[Buildbot](http://buildbot.net/).
 
 Because the system must access private infrastructure (e.g. [Google Cloud
 Storage](https://cloud.google.com/storage/) and the [Sauce
