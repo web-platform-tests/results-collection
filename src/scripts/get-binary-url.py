@@ -17,6 +17,13 @@ import tempfile
 import urlparse
 import urllib
 
+MIRRORED_STP_65 = ('https://storage.googleapis.com/' +
+                   'browsers/safari-experimental-macos/' +
+                   'dddf60d868e067107eea7585b22b193c')
+MIRRORED_STP_66_BROKEN = ('https://storage.googleapis.com/' +
+                          'browsers/safari-experimental-macos/' +
+                          'd646aa325414b596b677ee4aafeca455')
+
 
 def main(browser_name, channel, application, os_name, bucket_name):
     '''Find the most recent build of a given browser or WebDriver server and
@@ -84,6 +91,16 @@ def main(browser_name, channel, application, os_name, bucket_name):
     assert url is not None
 
     logger.info('Mirrored version found at %s', url)
+
+    # Safari Technology Preview version 66 has a known bug which prevents
+    # automation. Use version 65 until a new version is published. This script
+    # will receive the fix even if it is published as "Safari Technology
+    # Preview 66" because it operates on the etag header value.
+    #
+    # https://github.com/web-platform-tests/results-collection/issues/609
+    if url == MIRRORED_STP_66_BROKEN:
+        logger.info('Using Safari Technology Preview 65 instead of 66')
+        url = MIRRORED_STP_65
 
     return url
 
