@@ -47,7 +47,7 @@
         "os_version": "10.13",
         "remote": true
     },
-    "safari-11.1-macos-10.13": {
+    "safari-stable-macos": {
         "browser_name": "safari",
         "browser_channel": "stable",
         "browser_version": null,
