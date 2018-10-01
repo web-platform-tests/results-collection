@@ -47,6 +47,14 @@
         "os_version": "10.13",
         "remote": true
     },
+    "safari-stable-macos": {
+        "browser_name": "safari",
+        "browser_channel": "stable",
+        "browser_version": null,
+        "os_name": "macos",
+        "os_version": "10.13",
+        "remote": false
+    },
     "safari-technology-preview": {
         "browser_name": "safari",
         "browser_channel": "experimental",

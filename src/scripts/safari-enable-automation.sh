@@ -13,22 +13,46 @@
 
 set -e
 
-safaridriver_binary="/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
+if [ $1 == "stable" ]; then
+  browser_name="Safari"
+  safaridriver_binary="/usr/bin/safaridriver"
+else
+  browser_name="Safari Technology Preview"
+  safaridriver_binary="/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
+fi
 
+# Create a session using a body which satisfies both the Selenium JSON Wire
+# protocol (for Safari 11.1 and earlier) and the W3C WebDriver protocol (for
+# Safari 12 and later).
 create_session() {
   curl \
     -X POST \
-    --data '{"capabilities":{}}' \
+    --verbose \
+    --data '{"capabilities":{},"desiredCapabilities":{}}' \
     --fail \
-    http://localhost:9876/session > /dev/null 2>&1
+    http://localhost:9876/session
 }
 
 is_automation_enabled() {
   "$safaridriver_binary" --port 9876 &
   stp_pid=$!
 
+  # Pause until safaridriver's HTTP server is confirmed to be available.
+  # Although querying the `/status` endpoint would be the most explicit method,
+  # safaridriver for Safari version 11.1 and earlier does not support it [1].
+  # Instead, send a GET request to the `/session` endpoint, as a response code
+  # of 405 will reliably indicate that either implementation is ready.
+  #
+  # [1] https://developer.apple.com/documentation/webkit/macos_webdriver_commands_for_safari_11_1_and_earlier
   while true ; do
-    if curl --fail http://localhost:9876/status > /dev/null 2>&1; then
+    status_code=$(curl \
+        --silent \
+        --output /dev/null \
+        --write-out '%{http_code}' \
+        http://localhost:9876/session \
+      || true)
+
+    if [ "$status_code" == "405" ]; then
       break
     fi
 
@@ -37,11 +61,11 @@ is_automation_enabled() {
     fi
   done
 
-  create_session
+  create_session >&2
   result=$?
 
-  kill -9 $stp_pid
-  wait $stp_pid 2> /dev/null
+  kill -9 $stp_pid >&2
+  wait $stp_pid >&2 2> /dev/null
 
   return $result
 }
@@ -50,14 +74,17 @@ toggle_automation() {
   echo Toggling automation in Safari
 
   osascript - <<SCRIPT
-  activate application "Safari Technology Preview"
+  set developCheckboxLabel to "Show Develop menu in menu bar"
+  set applicationName to "$browser_name"
+
+  activate application applicationName
 
   tell application "System Events"
       set ready to false
 
       repeat while not ready
           repeat with this_process in every process
-              if name of this_process as string is "Safari Technology Preview" then
+              if name of this_process as string is applicationName then
                   set ready to true
               end if
           end repeat
@@ -69,7 +96,7 @@ toggle_automation() {
       -- to be available. This delay represents an unavoidable race condition as
       -- there is no deterministic method to verify that the prompt will *not* be
       -- displayed.
-      tell process "Safari Technology Preview"
+      tell process applicationName
           log "Waiting for upgrade prompt..."
           delay 2
 
@@ -81,24 +108,45 @@ toggle_automation() {
               end if
           end repeat
 
+          -- Enable the "Develop" menu
+          click menu item "Preferences…" of menu applicationName of menu bar item applicationName of menu bar 1
+
+          -- The window title varies according to type of Prefs initially
+          -- selected, so save to a variable
+          set currentWindowName to get value of static text 1 of window 1 as string
+
+          click button "Advanced" of toolbar 1 of window currentWindowName
+          tell group 1 of group 1 of window "Advanced"
+              set checkbox_state to value of checkbox developCheckboxLabel as number
+
+              if checkbox_state = 0 then
+                  click checkbox developCheckboxLabel
+              end if
+          end tell
+
+          -- Close the menu
+          click button 1 of window "Advanced"
+
           click menu item "Allow Remote Automation" of menu "Develop" of menu bar item "Develop" of menu bar 1
       end tell
   end tell
 
-  tell application "Safari Technology Preview" to quit
+  tell application applicationName to quit
 SCRIPT
 }
 
 if ! is_automation_enabled; then
-  echo Automation not enabled. Attempting to enable.
-  toggle_automation
+  echo Automation not enabled. Attempting to enable. >&2
+  toggle_automation >&2
 
   # This command has been found to function as expected only *after* automation
   # has been enabled via the Safari user interface.
-  "$safaridriver_binary" --enable
+  "$safaridriver_binary" --enable >&2
 fi
 
 if ! is_automation_enabled; then
   echo Unable to enable automation >&2
   exit 1
 fi
+
+echo $safaridriver_binary

@@ -73,8 +73,6 @@ install_safari_technology_preview() {
     return 1
   fi
 
-  safari-enable-automation.sh >&2 || return 1
-
   echo "${application_dir}/Contents/MacOS/Safari Technology Preview"
 }
 
