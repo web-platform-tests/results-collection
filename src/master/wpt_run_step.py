@@ -40,6 +40,7 @@ class WptRunStep(steps.ShellCommand):
             '--log-wptreport', properties.getProperty('log_wptreport'),
             '--log-raw', properties.getProperty('log_raw'),
             '--',
+            '--log-mach', '-',
             '--this-chunk', properties.getProperty('this_chunk'),
             '--total-chunks', properties.getProperty('total_chunks')
         ]
