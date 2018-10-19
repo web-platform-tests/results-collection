@@ -24,20 +24,20 @@
 
 - name: Download Sauce Connect
   get_url:
-    url: https://saucelabs.com/downloads/sc-4.5.0-linux.tar.gz
+    url: https://saucelabs.com/downloads/sc-4.5.1-linux.tar.gz
     dest: ~/downloads
-    checksum: sha1:06e52acbbde3668a8effbf0dc970b40e32763fa6
+    checksum: sha1:5ca9328724c5ff16b12ea49e7a748d44f7305be5
 
 - name: Unpack Sauce Connect
   unarchive:
-    src: ~/downloads/sc-4.5.0-linux.tar.gz
+    src: ~/downloads/sc-4.5.1-linux.tar.gz
     dest: ~/downloads
-    creates: ~/downloads/sc-4.5.0-linux/bin/sc
+    creates: ~/downloads/sc-4.5.1-linux/bin/sc
     remote_src: true
 
 - name: Install Sauce Connect
   copy:
-    src: ~/downloads/sc-4.5.0-linux/bin/sc
+    src: ~/downloads/sc-4.5.1-linux/bin/sc
     dest: /usr/local/bin
     mode: 0755
     remote_src: true
