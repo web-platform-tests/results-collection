@@ -75,7 +75,6 @@ class WptRunStep(steps.ShellCommand):
                 '--sauce-tunnel-id', properties.getProperty('workername'),
                 '--sauce-connect-binary', 'sc-wrapper',
                 '--sauce-init-timeout', '45',
-                '--no-restart-on-unexpected',
                 '--run-by-dir', '3'
             ])
         else:
