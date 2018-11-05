@@ -43,6 +43,7 @@
   with_items:
     - ../../src/scripts/safari-enable-automation.sh
     - ../../src/scripts/safari-disable-popup-blocker.sh
+    - ../../src/scripts/safari-enable-experimental-features.sh
 
 - name: Allow application user to enable remote automation in Safari
   lineinfile:

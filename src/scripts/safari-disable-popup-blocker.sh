@@ -31,11 +31,6 @@ fi
 # https://github.com/web-platform-tests/wpt/blob/1999770b55cb8cdd93dbce0e78e5c94b2ba22e0e/tools/wptrunner/wptrunner/browsers/sauce_setup/safari-prerun.sh
 defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically -bool true
 
-# turn on experimental features
-
-# TODO(cvazac) Remove this if/when Server-Timing is enabled by default in Safari
-defaults write com.apple.Safari ExperimentalServerTimingEnabled -bool true
-
 echo Closing all instances of the application to ensure the changes
 echo are observed.
 
