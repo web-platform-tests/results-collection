@@ -21,6 +21,24 @@ else
   safaridriver_binary="/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"
 fi
 
+quit_browser() {
+  # Excerpt from the manual for the BSD implementation of `killall`:
+  #
+  # > A status of 1 will be returned if either no matching process has been
+  # > found or not all processes have been signalled successfully.
+  #
+  # The two potential meanings of the exit code makes it ambiguous for use in
+  # this context. Verify that a matching process exits (via the `-s` argument)
+  # before attempting to kill the process so that process failure can more
+  # confidently be interpreted as a critical error. This approach contains a
+  # race condition since a process may die between the existence check and the
+  # attempt to kill, but the low probability of that event make it an
+  # acceptable risk as compared to ignoring the exit status entirely.
+  if killall -s "$browser_name"; then
+    killall -9 "$browser_name"
+  fi
+}
+
 # Create a session using a body which satisfies both the Selenium JSON Wire
 # protocol (for Safari 11.1 and earlier) and the W3C WebDriver protocol (for
 # Safari 12 and later).
@@ -134,6 +152,14 @@ toggle_automation() {
   tell application applicationName to quit
 SCRIPT
 }
+
+# If some previous collection attempt was interrupted (for instance, by a
+# network outage), then a browser process may already be running. Because such
+# processes are started with the `--automation` flag, they will reject all user
+# interaction, including those originating from AppleScript. Since these
+# processes no longer have any values, they may be forcibly closed in order to
+# allow automation detection to proceed.
+quit_browser >&2
 
 if ! is_automation_enabled; then
   echo Automation not enabled. Attempting to enable. >&2
