@@ -117,7 +117,7 @@ class TestUploadWptResults(unittest.TestCase):
 
     def upload(self, product, browser_channel, browser_version, os_name,
                os_version, results_dir, results, port, override_platform,
-               total_chunks):
+               total_chunks, git_branch):
         for filename in results:
             with open(os.path.join(results_dir, filename), 'w') as handle:
                 json.dump(results[filename], handle)
@@ -133,7 +133,8 @@ class TestUploadWptResults(unittest.TestCase):
             '--user-name', 'fake-name',
             '--secret', 'fake-secret',
             '--override-platform', override_platform,
-            '--total-chunks', str(total_chunks)
+            '--total-chunks', str(total_chunks),
+            '--git-branch', git_branch
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         stdout, stderr = proc.communicate()
@@ -183,7 +184,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  make_results(),
                                                  9801,
                                                  override_platform='false',
-                                                 total_chunks=2)
+                                                 total_chunks=2,
+                                                 git_branch='master')
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -193,7 +195,10 @@ class TestUploadWptResults(unittest.TestCase):
         self.assertBasicAuth(
             requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
         )
-        self.assertEqual(requests[0]['payload']['labels'][0], 'stable')
+        self.assertItemsEqual(
+            requests[0]['payload']['labels'][0].split(','),
+            ['stable', 'master']
+        )
         self.assertReport(requests[0]['payload']['result_file'], {
             u'time_start': 1,
             u'time_end': 1,
@@ -228,6 +233,33 @@ class TestUploadWptResults(unittest.TestCase):
             ]
         })
 
+    def test_alternate_branch(self):
+        self.start_server(9801)
+        returncode, stdout, stderr = self.upload('firefox',
+                                                 'stable',
+                                                 '2.0',
+                                                 'linux',
+                                                 '4.0',
+                                                 self.temp_dir,
+                                                 make_results(),
+                                                 9801,
+                                                 override_platform='false',
+                                                 total_chunks=2,
+                                                 git_branch='jelly-doughnut')
+
+        self.assertEqual(returncode, 0, stderr)
+
+        requests = self.server.requests
+
+        self.assertEqual(len(requests), 1)
+        self.assertBasicAuth(
+            requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
+        )
+        self.assertItemsEqual(
+            requests[0]['payload']['labels'][0].split(','),
+            ['stable', 'jelly-doughnut']
+        )
+
     def test_consolidate_duration(self):
         results = make_results()
         results['1_of_2.json']['time_start'] = 50
@@ -244,7 +276,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  results,
                                                  9801,
                                                  override_platform='false',
-                                                 total_chunks=2)
+                                                 total_chunks=2,
+                                                 git_branch='master')
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -254,7 +287,10 @@ class TestUploadWptResults(unittest.TestCase):
         self.assertBasicAuth(
             requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
         )
-        self.assertEqual(requests[0]['payload']['labels'][0], 'stable')
+        self.assertItemsEqual(
+            requests[0]['payload']['labels'][0].split(','),
+            ['stable', 'master']
+        )
         self.assertReport(requests[0]['payload']['result_file'], {
             u'time_start': 10,
             u'time_end': 400,
@@ -301,7 +337,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  make_results(),
                                                  9801,
                                                  override_platform='true',
-                                                 total_chunks=2)
+                                                 total_chunks=2,
+                                                 git_branch='master')
 
         self.assertEqual(returncode, 0, stderr)
 
@@ -317,7 +354,10 @@ class TestUploadWptResults(unittest.TestCase):
         self.assertBasicAuth(
             requests[0]['headers']['Authorization'], 'fake-name', 'fake-secret'
         )
-        self.assertEqual(requests[0]['payload']['labels'][0], 'stable')
+        self.assertItemsEqual(
+            requests[0]['payload']['labels'][0].split(','),
+            ['stable', 'master']
+        )
         self.assertReport(requests[0]['payload']['result_file'], {
             u'time_start': 1,
             u'time_end': 1,
@@ -364,7 +404,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  make_results(),
                                                  port=9804,
                                                  override_platform='false',
-                                                 total_chunks=2)
+                                                 total_chunks=2,
+                                                 git_branch='master')
 
         self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 1)
@@ -379,7 +420,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  make_results(),
                                                  port=9802,
                                                  override_platform='false',
-                                                 total_chunks=2)
+                                                 total_chunks=2,
+                                                 git_branch='master')
 
         self.assertNotEqual(returncode, 0, stdout)
 
@@ -398,7 +440,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  duplicated_results,
                                                  total_chunks=2,
                                                  override_platform='false',
-                                                 port=9801)
+                                                 port=9801,
+                                                 git_branch='master')
 
         self.assertEqual(returncode, 1, stdout)
         self.assertEqual(len(self.server.requests), 0)
@@ -416,7 +459,8 @@ class TestUploadWptResults(unittest.TestCase):
                                                  partial_results,
                                                  total_chunks=2,
                                                  override_platform='false',
-                                                 port=9801)
+                                                 port=9801,
+                                                 git_branch='master')
 
         self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 0)

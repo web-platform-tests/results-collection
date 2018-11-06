@@ -19,7 +19,7 @@ import tempfile
 
 def main(raw_results_directory, product, browser_channel, browser_version,
          os_name, os_version, url, user_name, secret, override_platform,
-         total_chunks):
+         total_chunks, git_branch):
     '''Consolidate the WPT results data into a single JSON file and upload to
     the WPT results receiver.
 
@@ -85,7 +85,7 @@ def main(raw_results_directory, product, browser_channel, browser_version,
             auth=(user_name, secret),
             # `labels` is a comma-separated string. Runners may add arbitrary
             # labels.
-            data={'labels': browser_channel},
+            data={'labels': ','.join([git_branch, browser_channel])},
             files={'result_file': open(filename, 'rb')}
         )
 
@@ -164,6 +164,7 @@ parser.add_argument('--override-platform',
                     type=lambda x: bool(distutils.util.strtobool(x)),
                     required=True)
 parser.add_argument('--total-chunks', type=int, required=True)
+parser.add_argument('--git-branch', required=True)
 
 if __name__ == '__main__':
     main(**vars(parser.parse_args()))
