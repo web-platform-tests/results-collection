@@ -20,6 +20,10 @@ class WptRunStep(steps.ShellCommand):
             'sauce-connect-log': {
                 'filename': '/var/log/sauce-connect/sc.log',
                 'follow': True
+            },
+            'xvfb-log': {
+                'filename': '/var/log/xvfb/xvfb.log',
+                'follow': True
             }
         }
 
@@ -36,6 +40,7 @@ class WptRunStep(steps.ShellCommand):
             '--log-wptreport', properties.getProperty('log_wptreport'),
             '--log-raw', properties.getProperty('log_raw'),
             '--',
+            '--log-mach', '-',
             '--this-chunk', properties.getProperty('this_chunk'),
             '--total-chunks', properties.getProperty('total_chunks')
         ]
@@ -69,12 +74,15 @@ class WptRunStep(steps.ShellCommand):
                 '--sauce-key', key,
                 '--sauce-tunnel-id', properties.getProperty('workername'),
                 '--sauce-connect-binary', 'sc-wrapper',
-                '--no-restart-on-unexpected',
+                '--sauce-init-timeout', '45',
                 '--run-by-dir', '3'
             ])
         else:
             if browser_name != 'safari':
-                command = ['xvfb-run', '--auto-servernum'] + command
+                command = [
+                    'xvfb-run', '--auto-servernum', '--error-file',
+                    '/var/log/xvfb/xvfb.log'
+                ] + command
 
                 # The WPT CLI does not support specifying a path to the Safari
                 # binary. However, if the corresponding WebDriver binary is
@@ -87,7 +95,10 @@ class WptRunStep(steps.ShellCommand):
             command.extend([
                 '--webdriver-binary',
                 properties.getProperty('webdriver_binary'),
-                '--install-fonts'
+                '--install-fonts',
+                # The authenticity of results collected in "headless" mode is
+                # disputed.
+                '--no-headless'
             ])
 
             browser_id = browser_name

@@ -39,13 +39,13 @@
         "os_version": "*",
         "remote": false
     },
-    "safari-11.1-macos-10.13-sauce": {
+    "safari-stable-macos": {
         "browser_name": "safari",
         "browser_channel": "stable",
-        "browser_version": "11.1",
+        "browser_version": null,
         "os_name": "macos",
         "os_version": "10.13",
-        "remote": true
+        "remote": false
     },
     "safari-technology-preview": {
         "browser_name": "safari",

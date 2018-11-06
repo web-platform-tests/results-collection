@@ -16,6 +16,19 @@
     state: present
   with_items:
     - curl
+    # The "firefox" apt package is not used for testing. It is installed here
+    # in order to satisfy all the system dependencies necessary to run Firefox.
+    # This could be achieved more explicitly with a list of dependencies, but
+    # the overhead of curating such a list over time is non-trivial and best
+    # left to package maintainers.
+    - firefox
+    # Install a system-level font so that the Ahem font (which is installed for
+    # the local user during test execution) does not take precedence. This is
+    # necessary in the Amazon-produced Ubuntu machine image used by this
+    # project; it may not be necessary to install this package if another image
+    # is used.
+    # https://github.com/web-platform-tests/results-collection/issues/610
+    - fonts-dejavu-core
     - git
     - libnss3-tools
     - rsync
@@ -41,3 +54,15 @@
     - 0.0.0.0 tiles.services.mozilla.com
     - 0.0.0.0 location.services.mozilla.com
     - 0.0.0.0 *.services.mozilla.com
+
+- name: Create directory to store log files
+  file:
+    name: /var/log/xvfb
+    owner: '{{application_user}}'
+    group: '{{application_group}}'
+    state: directory
+
+- name: Configure log file rotation
+  template:
+    src: logrotate.conf.j2
+    dest: /etc/logrotate.d/xvfb

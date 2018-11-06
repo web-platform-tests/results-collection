@@ -35,11 +35,19 @@
       end tell
     ' | osascript -
 
-- name: Install script for enabling remote automation in Safari
+- name: Install scripts for administering Safari
   copy:
-    src: ../../src/scripts/safari-enable-automation.sh
+    src: '{{item}}'
     dest: /usr/local/bin/
     mode: 0755
+  with_items:
+    - ../../src/scripts/safari-enable-automation.sh
+    - ../../src/scripts/safari-disable-popup-blocker.sh
+
+- name: Allow application user to enable remote automation in Safari
+  lineinfile:
+    dest: /etc/sudoers
+    line: '{{application_user}} ALL=(ALL) NOPASSWD: /usr/local/bin/safari-enable-automation.sh'
 
 # https://discussions.apple.com/thread/8200117
 - name: Disable Spotlight

@@ -67,7 +67,7 @@ resource "aws_security_group" "buildbot" {
 #
 # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#VPCSubnet
 resource "aws_instance" "build_master" {
-  ami = "${data.aws_ami.ubuntu.id}"
+  ami = "${data.aws_ami.ubuntu_16_04.id}"
   instance_type = "t2.small"
   key_name = "${var.key_name}"
   subnet_id = "${element(module.subnet.ids, 0)}"
@@ -83,7 +83,7 @@ resource "aws_instance" "build_master" {
 }
 
 resource "aws_instance" "build_master_staging" {
-  ami = "${data.aws_ami.ubuntu.id}"
+  ami = "${data.aws_ami.ubuntu_16_04.id}"
   instance_type = "t2.small"
   key_name = "${var.key_name}"
   subnet_id = "${element(module.subnet.ids, 0)}"
@@ -142,7 +142,7 @@ variable "instance_ips" {
 resource "aws_instance" "build_worker" {
   count = "30"
 
-  ami = "${data.aws_ami.ubuntu.id}"
+  ami = "${data.aws_ami.ubuntu_18_04.id}"
   instance_type = "t2.small"
   key_name = "${var.key_name}"
   subnet_id = "${element(module.subnet.ids, 0)}"

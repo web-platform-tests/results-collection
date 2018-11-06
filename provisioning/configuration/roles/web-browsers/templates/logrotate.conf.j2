@@ -1,0 +1,8 @@
+/var/log/xvfb/xvfb.log {
+  hourly
+  missingok
+  size 10M
+  compress
+  create 700 {{application_user}} {{application_group}}
+  rotate 4
+}
