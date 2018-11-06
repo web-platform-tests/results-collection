@@ -17,7 +17,7 @@ import tempfile
 
 def main(raw_results_directory, product, browser_channel, browser_version,
          os_name, os_version, url, user_name, secret, override_platform,
-         total_chunks, timestamps_optional):
+         total_chunks, no_timestamps):
     '''Consolidate the WPT results data into a single JSON file and upload to
     the WPT results receiver.
 
@@ -52,7 +52,7 @@ def main(raw_results_directory, product, browser_channel, browser_version,
 
             handle.write('{"results":\n')
 
-            for data in consolidate(raw_results_files, timestamps_optional):
+            for data in consolidate(raw_results_files, no_timestamps):
                 if isinstance(data, str):
                     handle.write(data)
                 else:
@@ -108,7 +108,7 @@ def tmpfile():
     os.remove(temp_filename)
 
 
-def consolidate(raw_results_files, timestamps_optional=False):
+def consolidate(raw_results_files, no_timestamps):
     metadata = {
         'time_start': float('inf'),
         'time_end': 0,
@@ -125,15 +125,16 @@ def consolidate(raw_results_files, timestamps_optional=False):
         assert 'run_info' in data
         metadata['run_info'] = data['run_info']
 
-        if not timestamps_optional:
+        if no_timestamps:
+            assert 'time_start' not in data
+            assert 'time_end' not in data
+        else:
             assert 'time_start' in data
-        metadata['time_start'] = min(data.get('time_start', float('inf')),
-                                     metadata['time_start'])
-
-        if not timestamps_optional:
             assert 'time_end' in data
-        metadata['time_end'] = max(data.get('time_end', 0),
-                                   metadata['time_end'])
+            metadata['time_start'] = min(data.get('time_start', float('inf')),
+                                         metadata['time_start'])
+            metadata['time_end'] = max(data.get('time_end', 0),
+                                       metadata['time_end'])
 
         assert 'results' in data
         assert isinstance(data['results'], list)
@@ -172,8 +173,9 @@ parser.add_argument('--total-chunks', type=int, required=True)
 
 # This is an optional flag that is only used by an external user outside of the
 # results-collection project.
-parser.add_argument('--timestamps-optional', action='store_true',
-                    help='make time_start & time_end optional')
+parser.add_argument('--no-timestamps', action='store_true', default=False,
+                    help='set when reports do not have timestamps '
+                         '(time_start & time_end)')
 
 if __name__ == '__main__':
     main(**vars(parser.parse_args()))

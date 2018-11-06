@@ -116,7 +116,7 @@ class TestUploadWptResults(unittest.TestCase):
 
     def upload(self, product, browser_channel, browser_version, os_name,
                os_version, results_dir, results, port, override_platform,
-               total_chunks, timestamps_optional=False):
+               total_chunks, no_timestamps=False):
         for filename in results:
             with open(os.path.join(results_dir, filename), 'w') as handle:
                 json.dump(results[filename], handle)
@@ -134,8 +134,8 @@ class TestUploadWptResults(unittest.TestCase):
             '--override-platform', override_platform,
             '--total-chunks', str(total_chunks)
         ]
-        if timestamps_optional:
-            cmd.append('--timestamps-optional')
+        if no_timestamps:
+            cmd.append('--no-timestamps')
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -422,11 +422,13 @@ class TestUploadWptResults(unittest.TestCase):
         self.assertNotEqual(returncode, 0, stdout)
         self.assertEqual(len(self.server.requests), 0)
 
-    def test_missing_optional_timestamps(self):
+    def test_no_timestamps(self):
         self.start_server(9802)
         results = make_results()
         del results['1_of_2.json']['time_start']
+        del results['1_of_2.json']['time_end']
         del results['2_of_2.json']['time_start']
+        del results['2_of_2.json']['time_end']
         returncode, stdout, stderr = self.upload('firefox',
                                                  'stable',
                                                  '1.0.1',
@@ -437,7 +439,7 @@ class TestUploadWptResults(unittest.TestCase):
                                                  total_chunks=2,
                                                  override_platform='false',
                                                  port=9802,
-                                                 timestamps_optional=True)
+                                                 no_timestamps=True)
 
         self.assertEqual(returncode, 0, stderr)
 
