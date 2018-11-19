@@ -62,12 +62,19 @@ install_safari_technology_preview() {
 
   # Install package
   # http://commandlinemac.blogspot.com/2008/12/installing-dmg-application-from-command.html
-  hdiutil mount $archive >&2
+  output=$(hdiutil mount $archive | tee /dev/stderr)
+  device=$(echo "$output" | grep Apple_partition_scheme | awk '{ print $1; }')
   installer \
     -package '/Volumes/Safari Technology Preview/Safari Technology Preview.pkg' \
     -target '/Volumes/Macintosh HD' >&2 || return 1
   result=$?
-  hdiutil unmount '/Volumes/Safari Technology Preview' >&2
+
+  # Use the `detach` sub-command (rather than `unmount`) so that the disk image
+  # does not remain attached to an entry in `/dev` (and the corresponding
+  # `diskimages-helper` process exits).
+  #
+  # https://stackoverflow.com/questions/4046019/error-when-detaching-volume-using-hdiutil-on-os-x
+  hdiutil detach ${device} >&2
 
   if [ $result != '0' ]; then
     return 1
