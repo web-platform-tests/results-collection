@@ -54,7 +54,7 @@ def main(interval):
 
     try:
         return data['revisions'][interval]['hash']
-    except:
+    except (KeyError, TypeError):
         raise ValueError(
             'Unable to access `revisions.%s.hash` in response:\n%s' % (
                 interval, body
