@@ -38,9 +38,28 @@ def main(interval):
     online at https://github.com/web-platform-tests/wpt.fyi/'''
 
     with request('GET', 'https://wpt.fyi/api/revisions/latest') as response:
-        data = json.loads(response.read())
+        if response.status < 200 or response.status >= 300:
+            raise Exception(
+                'HTTP Error %s: %s' % (response.status, response.reason)
+            )
 
-    return data['revisions'][interval]['hash']
+        body = response.read()
+
+        try:
+            data = json.loads(body)
+        except ValueError:
+            raise ValueError(
+                'Unable to parse response as JSON: "%s"' % body
+            )
+
+    try:
+        return data['revisions'][interval]['hash']
+    except:
+        raise ValueError(
+            'Unable to access `revisions.%s.hash` in response:\n%s' % (
+                interval, body
+            )
+        )
 
 
 if __name__ == '__main__':
