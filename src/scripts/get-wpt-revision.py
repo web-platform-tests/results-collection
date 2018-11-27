@@ -61,7 +61,7 @@ def get_with_retry(url, interval, timeout):
 
     time.sleep(interval)
 
-    with request_with_retry(method, url, interval, remaining) as response:
+    with get_with_retry(url, interval, remaining) as response:
         yield response
 
 
