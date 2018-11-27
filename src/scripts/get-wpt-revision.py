@@ -102,7 +102,7 @@ if __name__ == '__main__':
                         )
     parser.add_argument('--retry-timeout',
                         type=int,
-                        default=60 * 1000,
+                        default=60 * 10,
                         help='''Duration in seconds to wait before cancelling
                             attempts to retry failed requests'''
                         )
