@@ -1,5 +1,3 @@
 ---
 home_dir: '{{("~" + application_user) | expanduser}}'
 master_hostname: '{{groups["buildbot-master"][0]}}'
-
-reboot_sentinel: '/root/reboot_sentinel'
