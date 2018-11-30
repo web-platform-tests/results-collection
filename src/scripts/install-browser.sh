@@ -84,7 +84,7 @@ install_safari_technology_preview() {
 }
 
 # Prefer `curl` over `wget` because `wget` is not included in macOS High Sierra
-curl --silent --output $temp_file $url
+curl --silent --show-error --output $temp_file $url
 
 if [ $? != '0' ]; then
   echo Error downloading browser. >&2
