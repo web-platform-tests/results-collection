@@ -4,18 +4,6 @@
 # the Sauce Connect binary. This script serves as an intermediary which
 # enables some options and passes any additional options along to the
 # "true" Sauce Connect binary.
-#
-# > Sauce Connect executes a type of "man-in-the-middle" interception of
-# > encrypted test traffic through SSL bumping, and decrypts that traffic in
-# > the course of the test. [...] The disadvantage to SSL bumping is that some
-# > network components, such as browsers and servers that use WebSockets, won't
-# > work if the traffic to them has been altered, which Sauce Connect appears
-# > to do. [...] You can disable SSL bumping by using the `-B` /
-# > `--no-ssl-bump-domains` argument when you start Sauce Connect and
-# > specifying which domains should not be bumped or specify all so that all
-# > domains that passed through the tunnel are not bumped .
-#
-# Source: https://wiki.saucelabs.com/display/DOCS/Troubleshooting+Sauce+Connect#TroubleshootingSauceConnect-DisablingSSLBumping
 
 import signal
 import subprocess
@@ -27,7 +15,7 @@ signal.signal(signal.SIGINT, lambda _, __: proc.kill())
 signal.signal(signal.SIGTERM, lambda _, __: proc.terminate())
 
 args = [
-    '--no-ssl-bump-domains=all', '--logfile', '/var/log/sauce-connect/sc.log'
+    '--logfile', '/var/log/sauce-connect/sc.log'
 ] + sys.argv[1:]
 
 proc = subprocess.Popen(['sc'] + args)
