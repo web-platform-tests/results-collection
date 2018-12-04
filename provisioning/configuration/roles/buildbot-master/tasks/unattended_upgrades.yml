@@ -1,0 +1,36 @@
+---
+- name: Install script for rebooting following worker shutdown
+  copy:
+    src: ../../src/scripts/reboot-if-present.sh
+    dest: /usr/local/bin/reboot-if-present.sh
+    mode: 0755
+
+- name: Install system package
+  apt:
+    name: unattended-upgrades
+    state: present
+
+# https://help.ubuntu.com/lts/serverguide/automatic-updates.html
+- name: Enable unattended upgrades
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    regexp: '{{item.regexp}}'
+    line: '{{item.line}}'
+    state: present
+  with_items:
+    - regexp: APT::Periodic::Update-Package-Lists
+      line: APT::Periodic::Update-Package-Lists "1";
+    - regexp: APT::Periodic::Unattended-Upgrade
+      line: APT::Periodic::Unattended-Upgrade "1";
+
+# Left unchecked, unused kernel headers can build up and occupy a
+# significant amount of disk space. This configuration ensures that
+# unused kernel headers (along with any other unused software) are
+# removed on a regular basis.
+# https://askubuntu.com/questions/930854/does-unattended-upgrades-also-include-apt-get-autoremove#930861
+- name: Enable automatic removal of unused software
+  lineinfile:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    regexp: Unattended-Upgrade::Remove-Unused-Dependencies
+    line: Unattended-Upgrade::Remove-Unused-Dependencies  "true";
+    state: present

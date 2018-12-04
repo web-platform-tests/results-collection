@@ -190,3 +190,5 @@
     src: ../../src/scripts/get-wpt-revision.py
     dest: /usr/local/bin/get-wpt-revision.py
     mode: 0755
+
+- include_tasks: unattended_upgrades.yml
