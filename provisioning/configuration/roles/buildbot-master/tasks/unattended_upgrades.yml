@@ -1,10 +1,4 @@
 ---
-- name: Install script for rebooting following worker shutdown
-  copy:
-    src: ../../src/scripts/reboot-if-present.sh
-    dest: /usr/local/bin/reboot-if-present.sh
-    mode: 0755
-
 - name: Install system package
   apt:
     name: unattended-upgrades
