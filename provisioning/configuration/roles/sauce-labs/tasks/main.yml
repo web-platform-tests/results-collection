@@ -42,12 +42,6 @@
     mode: 0755
     remote_src: true
 
-- name: Install wrapper for Sauce Connect
-  copy:
-    src: files/sc-wrapper
-    dest: /usr/local/bin
-    mode: 0755
-
 - name: Create directory to store log files
   file:
     name: /var/log/sauce-connect
