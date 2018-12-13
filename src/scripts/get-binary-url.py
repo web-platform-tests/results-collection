@@ -183,7 +183,7 @@ def locate_safari(channel):
         # selecting an incompatible binary intended for the Mojave release of
         # macOS
         match = re.search(
-            '(http[^\s]+\.dmg).*high\s*sierra', response.read(), re.IGNORECASE
+            r'(http[^\s]+\.dmg).*high\s*sierra', response.read(), re.IGNORECASE
         )
 
         return match and match.group(1)
@@ -217,7 +217,7 @@ def get_identifier(source_artifact_url):
     # (e.g. GitHub.com's storage for releases) do not support that method.
     with request('GET', source_artifact_url) as response:
         etag = response.getheader('etag')
-        return re.match('"?([^"]*)"?', etag).groups()[0]
+        return re.match(r'"?([^"]*)"?', etag).groups()[0]
 
 
 def get_mirrored(uri):

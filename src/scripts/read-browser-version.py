@@ -22,7 +22,7 @@ def firefox(binary):
 
     stdout = subprocess.check_output([binary, '--version']).strip()
 
-    match = re.match('Mozilla Firefox (\d+\.\d+\.\d+|\d+\.[0-9a-z]+)', stdout)
+    match = re.match(r'Mozilla Firefox (\d+\.\d+\.\d+|\d+\.[0-9a-z]+)', stdout)
 
     if not match:
         raise ValueError(
@@ -41,7 +41,7 @@ def chrome(binary):
     '''
     stdout = subprocess.check_output([binary, '--version']).strip()
 
-    match = re.match('Google Chrome (\d+\.\d+\.\d+\.\d+)', stdout)
+    match = re.match(r'Google Chrome (\d+\.\d+\.\d+\.\d+)', stdout)
 
     if not match:
         raise ValueError(
