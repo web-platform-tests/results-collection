@@ -2,4 +2,4 @@ buildbot[bundle]==1.1.0
 
 # The "requests" module is a soft requirement of Buildbot, necessary only when
 # using the OAUth functionality.
-requests==2.18.4
+requests==2.21.0
