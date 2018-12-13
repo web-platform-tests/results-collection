@@ -1,5 +1,5 @@
 # The Python modules listed here facilitate local development. Application
 # dependencies are expressed with separate "requirements" files within the
 # configuration management scripts.
-pycodestyle==2.3.1
-requests==2.18.4
+pycodestyle==2.4.0
+requests==2.21.0
