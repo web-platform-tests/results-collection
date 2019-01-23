@@ -60,13 +60,13 @@ class RunAndVerify(unittest.TestCase):
             }
 
     def assert_success(self, result):
-        self.assertEquals(result['returncode'], 0, result['stderr'])
+        self.assertEqual(result['returncode'], 0, result['stderr'])
 
         with open(result['log_wptreport']) as handle:
             json.load(handle)
 
     def assert_failure(self, result):
-        self.assertNotEquals(result['returncode'], 0, result['stdout'])
+        self.assertNotEqual(result['returncode'], 0, result['stdout'])
 
         self.assertFalse(os.path.isfile(result['log_wptreport']))
 
@@ -74,70 +74,70 @@ class RunAndVerify(unittest.TestCase):
         result = self.run_and_verify('complete', 1)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 1)
+        self.assertEqual(result['attempt_count'], 1)
 
     def test_perfect_unused_retry(self):
         result = self.run_and_verify('complete', 3)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 1)
+        self.assertEqual(result['attempt_count'], 1)
 
     def test_missing_fail(self):
         result = self.run_and_verify('missing-complete', 1)
 
         self.assert_failure(result)
-        self.assertEquals(result['attempt_count'], 1)
+        self.assertEqual(result['attempt_count'], 1)
 
     def test_missing_recover(self):
         result = self.run_and_verify('missing-complete', 2)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 2)
+        self.assertEqual(result['attempt_count'], 2)
 
     def test_extra_fail(self):
         result = self.run_and_verify('extra-complete', 1)
 
         self.assert_failure(result)
-        self.assertEquals(result['attempt_count'], 1)
+        self.assertEqual(result['attempt_count'], 1)
 
     def test_extra_recover(self):
         result = self.run_and_verify('extra-complete', 2)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 2)
+        self.assertEqual(result['attempt_count'], 2)
 
     def test_missingandextra_fail(self):
         result = self.run_and_verify('missingandextra-complete', 1)
 
         self.assert_failure(result)
-        self.assertEquals(result['attempt_count'], 1)
+        self.assertEqual(result['attempt_count'], 1)
 
     def test_missingandextra_recover(self):
         result = self.run_and_verify('missingandextra-complete', 2)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 2)
+        self.assertEqual(result['attempt_count'], 2)
 
     def test_extra_missing_fail(self):
         result = self.run_and_verify('extra-missing-complete', 2)
 
         self.assert_failure(result)
-        self.assertEquals(result['attempt_count'], 2)
+        self.assertEqual(result['attempt_count'], 2)
 
     def test_extra_missing_recover(self):
         result = self.run_and_verify('extra-missing-complete', 3)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 3)
+        self.assertEqual(result['attempt_count'], 3)
 
     def test_no_expectation_fail(self):
         result = self.run_and_verify('noexpect-complete', 1)
 
         self.assert_failure(result)
-        self.assertEquals(result['attempt_count'], 1)
+        self.assertEqual(result['attempt_count'], 1)
 
     def test_no_expectation_recover(self):
         result = self.run_and_verify('noexpect-complete', 2)
 
         self.assert_success(result)
-        self.assertEquals(result['attempt_count'], 2)
+        self.assertEqual(result['attempt_count'], 2)

@@ -4,6 +4,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import print_function
 import argparse
 import contextlib
 import httplib
@@ -110,4 +111,4 @@ if __name__ == '__main__':
                         choices=('hourly', 'two_hourly', 'six_hourly',
                                  'twelve_hourly', 'daily', 'weekly'))
 
-    print main(**vars(parser.parse_args()))
+    print(main(**vars(parser.parse_args())))
