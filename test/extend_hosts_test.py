@@ -40,6 +40,10 @@ class TestExtendHosts(unittest.TestCase):
         if PY3:
             content = content.encode('utf-8')
             stdout, stderr = proc.communicate(content)
+            stdout = stdout.decode('utf-8')
+            stderr = stderr.decode('utf-8')
+        else:
+            stdout, stderr = proc.communicate(content)
 
         return proc.returncode, stdout, stderr
 
