@@ -4,13 +4,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import absolute_import
+from __future__ import print_function
 import argparse
 import contextlib
-import httplib
+import six.moves.http_client
 import json
 import logging
 import time
-import urlparse
+import six.moves.urllib.parse
 
 
 logger = logging.getLogger(__name__)
@@ -18,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 @contextlib.contextmanager
 def request(method, url):
-    parts = urlparse.urlparse(url)
+    parts = six.moves.urllib.parse.urlparse(url)
     if parts.scheme == 'https':
-        Connection = httplib.HTTPSConnection
+        Connection = six.moves.http_client.HTTPSConnection
     else:
-        Connection = httplib.HTTPConnection
+        Connection = six.moves.http_client.HTTPConnection
     conn = Connection(parts.netloc)
     path = parts.path
     if parts.query:
@@ -110,4 +112,4 @@ if __name__ == '__main__':
                         choices=('hourly', 'two_hourly', 'six_hourly',
                                  'twelve_hourly', 'daily', 'weekly'))
 
-    print main(**vars(parser.parse_args()))
+    print(main(**vars(parser.parse_args())))

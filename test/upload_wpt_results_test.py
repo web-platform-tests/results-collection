@@ -2,7 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import BaseHTTPServer
+from __future__ import absolute_import
+import six.moves.BaseHTTPServer
 import cgi
 import json
 import os
@@ -35,7 +36,7 @@ default_run_info = {
 }
 
 
-class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+class Handler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
     def log_message(*argv):
         pass
 
@@ -163,7 +164,7 @@ class TestUploadWptResults(unittest.TestCase):
         self.assertItemsEqual(actual_results, expected_results)
 
     def start_server(self, port):
-        self.server = BaseHTTPServer.HTTPServer(('', port), Handler)
+        self.server = six.moves.BaseHTTPServer.HTTPServer(('', port), Handler)
         self.server.status_code = 201
         self.server.requests = []
 

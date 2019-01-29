@@ -4,18 +4,21 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+from __future__ import absolute_import
+from __future__ import print_function
 import argparse
 import contextlib
 from datetime import datetime
-import httplib
 import json
 import logging
 import os
 import re
 import subprocess
 import tempfile
-import urlparse
-import urllib
+import six.moves.http_client
+import six.moves.urllib.error
+import six.moves.urllib.parse
+import six.moves.urllib.request
 
 MIRRORED_STP_65 = ('https://storage.googleapis.com/' +
                    'browsers/safari-experimental-macos/' +
@@ -126,10 +129,10 @@ def locate_firefox(channel):
 
 
 def locate_geckodriver():
-    parts = urlparse.urlparse(
+    parts = six.moves.urllib.parse.urlparse(
         'https://api.github.com/repos/mozilla/geckodriver/releases/latest'
     )
-    conn = httplib.HTTPSConnection(parts.netloc)
+    conn = six.moves.http_client.HTTPSConnection(parts.netloc)
     headers = {
         'User-Agent': 'wpt-results-collector',
         # > By default, all requests to https://api.github.com receive the v3
@@ -160,10 +163,10 @@ def locate_chrome(channel):
 
 
 def locate_chromedriver():
-    parts = urlparse.urlparse(
+    parts = six.moves.urllib.parse.urlparse(
         'https://chromedriver.storage.googleapis.com/LATEST_RELEASE'
     )
-    conn = httplib.HTTPSConnection(parts.netloc)
+    conn = six.moves.http_client.HTTPSConnection(parts.netloc)
     conn.request('GET', parts.path)
     latest_version = conn.getresponse().read()
     return '%s/%s/%s' % (
@@ -191,11 +194,11 @@ def locate_safari(channel):
 
 @contextlib.contextmanager
 def request(method, url):
-    parts = urlparse.urlparse(url)
+    parts = six.moves.urllib.parse.urlparse(url)
     if parts.scheme == 'https':
-        Connection = httplib.HTTPSConnection
+        Connection = six.moves.http_client.HTTPSConnection
     else:
-        Connection = httplib.HTTPConnection
+        Connection = six.moves.http_client.HTTPConnection
     conn = Connection(parts.netloc)
     path = parts.path
     if parts.query:
@@ -232,7 +235,7 @@ def mirror(source_artifact_url, uri):
     metadata_file = tempfile.mkstemp()[1]
 
     try:
-        opener = urllib.URLopener()
+        opener = six.moves.urllib.request.URLopener()
         opener.retrieve(source_artifact_url, artifact_file)
         metadata = {
             'url': source_artifact_url,
@@ -271,4 +274,4 @@ parser.add_argument('--bucket-name',
 
 
 if __name__ == '__main__':
-    print main(**vars(parser.parse_args()))
+    print(main(**vars(parser.parse_args())))

@@ -3,3 +3,4 @@
 # configuration management scripts.
 pycodestyle==2.4.0
 requests==2.21.0
+six==1.12.0
