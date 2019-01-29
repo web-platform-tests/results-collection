@@ -9,6 +9,8 @@ import subprocess
 import tempfile
 import unittest
 
+from six import PY3
+
 here = os.path.dirname(os.path.abspath(__file__))
 extend = os.path.sep.join([here, '..', 'src', 'scripts', 'extend-hosts.py'])
 
@@ -35,6 +37,8 @@ class TestExtendHosts(unittest.TestCase):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
 
+        if PY3:
+            content = content.encode('utf-8')
         stdout, stderr = proc.communicate(content)
 
         return proc.returncode, stdout, stderr
