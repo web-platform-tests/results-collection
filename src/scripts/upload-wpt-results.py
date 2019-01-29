@@ -84,7 +84,7 @@ def main(raw_results_directory, product, browser_channel, browser_version,
                     )
                 )
 
-            handle.write(',\n%s}\n' % serialized_metadata)
+            handle.write(b',\n%s}\n' % serialized_metadata)
 
         response = requests.post(
             url,
@@ -98,8 +98,7 @@ def main(raw_results_directory, product, browser_channel, browser_version,
     logger.info('Response status code: %s', response.status_code)
     logger.info('Response text: %s', response.text)
 
-    assert response.status_code >= 200 and response.status_code < 300, (
-           response.text)
+    assert 200 <= response.status_code < 300, response.text
 
 
 @contextlib.contextmanager
