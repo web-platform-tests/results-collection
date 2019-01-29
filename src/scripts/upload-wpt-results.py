@@ -15,6 +15,8 @@ import os
 import requests
 import tempfile
 
+import six
+
 
 def main(raw_results_directory, product, browser_channel, browser_version,
          os_name, os_version, url, user_name, secret, override_platform,
@@ -51,10 +53,10 @@ def main(raw_results_directory, product, browser_channel, browser_version,
         with gzip.open(filename, 'w') as handle:
             metadata = None
 
-            handle.write('{"results":\n')
+            handle.write(b'{"results":\n')
 
             for data in consolidate(raw_results_files, no_timestamps):
-                if isinstance(data, str):
+                if isinstance(data, six.binary_type):
                     handle.write(data)
                 else:
                     metadata = data
