@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import BaseHTTPServer
 import cgi
 import json
 import os
@@ -12,6 +11,11 @@ import tempfile
 import threading
 import unittest
 import zlib
+
+try:  # Python 3
+    import http.server as BaseHTTPServer
+except ImportError:  # Python 2
+    import BaseHTTPServer
 
 here = os.path.dirname(os.path.abspath(__file__))
 upload_bin = os.path.sep.join(

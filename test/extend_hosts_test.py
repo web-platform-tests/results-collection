@@ -34,7 +34,10 @@ class TestExtendHosts(unittest.TestCase):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
 
-        stdout, stderr = proc.communicate(content)
+        try:  # Python 2
+            stdout, stderr = proc.communicate(content)
+        except TypeError:  # Python 3
+            stdout, stderr = proc.communicate(content.encode('utf-8'))
 
         return proc.returncode, stdout, stderr
 
