@@ -84,6 +84,8 @@ def main(raw_results_directory, product, browser_channel, browser_version,
                     )
                 )
 
+            if six.PY3:
+                serialized_metadata = serialized_metadata.encode('utf-8')
             handle.write(b',\n%s}\n' % serialized_metadata)
 
         response = requests.post(
