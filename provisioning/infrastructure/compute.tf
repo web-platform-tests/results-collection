@@ -82,6 +82,12 @@ resource "aws_instance" "build_master" {
   }
 }
 
+resource "aws_volume_attachment" "database_attachment" {
+  device_name = "/dev/sdf"
+  volume_id   = "${aws_ebs_volume.build_master_database.id}"
+  instance_id = "${aws_instance.build_master.id}"
+}
+
 resource "aws_instance" "build_master_staging" {
   ami = "${data.aws_ami.ubuntu_16_04.id}"
   instance_type = "t2.small"
@@ -98,10 +104,10 @@ resource "aws_instance" "build_master_staging" {
   }
 }
 
-resource "aws_volume_attachment" "database_attachment" {
+resource "aws_volume_attachment" "staging_database_attachment" {
   device_name = "/dev/sdf"
-  volume_id   = "${aws_ebs_volume.build_master_database.id}"
-  instance_id = "${aws_instance.build_master.id}"
+  volume_id   = "${aws_ebs_volume.build_master_database_staging.id}"
+  instance_id = "${aws_instance.build_master_staging.id}"
 }
 
 variable "instance_ips" {

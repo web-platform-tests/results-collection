@@ -7,6 +7,15 @@ resource "aws_ebs_volume" "build_master_database" {
   }
 }
 
+resource "aws_ebs_volume" "build_master_database_staging" {
+  availability_zone = "us-east-1a"
+  type = "gp2"
+  size = 200
+  tags {
+    "Name" = "${var.name}-build-master-database-staging"
+  }
+}
+
 # The results collector uploads JSON-formatted WPT results to this bucket. The
 # https://wpt.fyi website currently retrieves files from this bucket directly,
 # necessitating CORS support.
