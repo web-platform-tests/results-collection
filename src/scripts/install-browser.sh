@@ -29,6 +29,16 @@ install_chrome() {
     update-alternatives --remove-all google-chrome || return 1
   fi
 
+  # The system periodically applies security fixes automatically. While this
+  # process is active, the package repository is locked, and attempts to
+  # install additional software will fail. Wait until any such update completes
+  # before proceeding.
+  #
+  # https://unix.stackexchange.com/questions/463498/terminate-and-disable-remove-unattended-upgrade-before-command-returns
+  systemd-run \
+    --property="After=apt-daily.service apt-daily-upgrade.service" \
+    --wait /bin/true
+
   # Installation will fail in cases where the package has unmet dependencies.
   # When this occurs, attempt to use the system package manager to fetch the
   # required packages and retry.
