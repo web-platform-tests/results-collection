@@ -15,10 +15,10 @@
         "os_version": "*",
         "remote": false
     },
-    "edge-17-windows-10-sauce": {
+    "edge-18-windows-10-sauce": {
         "browser_name": "edge",
         "browser_channel": "stable",
-        "browser_version": "17",
+        "browser_version": "18",
         "os_name": "windows",
         "os_version": "10",
         "remote": true
