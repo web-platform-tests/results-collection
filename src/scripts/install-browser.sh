@@ -56,9 +56,9 @@ install_firefox() {
 
   rm --recursive --force $install_dir
 
-  tar -xvf $archive >&2 || return 1
+  chown $SUDO_USER $archive
 
-  chown --recursive $SUDO_USER $install_dir >&2 || return 1
+  sudo -u $SUDO_USER tar -xvf $archive >&2 || return 1
 
   echo $install_dir/firefox
 }
