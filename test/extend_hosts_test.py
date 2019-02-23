@@ -41,12 +41,12 @@ class TestExtendHosts(unittest.TestCase):
     def test_non_existent_file(self):
         returncode, stdout, stderr = self.extend('/foo/bar/baz', 'anything')
 
-        self.assertNotEquals(returncode, 0, stdout)
+        self.assertNotEqual(returncode, 0, stdout)
 
     def test_empty_file(self):
         returncode, stdout, stderr = self.extend(self.temp_file, 'foobar')
 
-        self.assertEquals(returncode, 0, stderr)
+        self.assertEqual(returncode, 0, stderr)
 
         self.assertTrue(hasLine(self.temp_file, 'foobar'))
 
@@ -56,7 +56,7 @@ class TestExtendHosts(unittest.TestCase):
 
         returncode, stdout, stderr = self.extend(self.temp_file, 'foobar')
 
-        self.assertEquals(returncode, 0, stderr)
+        self.assertEqual(returncode, 0, stderr)
 
         self.assertTrue(hasLine(self.temp_file, 'first'))
         self.assertTrue(hasLine(self.temp_file, 'second'))
@@ -80,7 +80,7 @@ class TestExtendHosts(unittest.TestCase):
 
         returncode, stdout, stderr = self.extend(self.temp_file, 'bar')
 
-        self.assertEquals(returncode, 0, stderr)
+        self.assertEqual(returncode, 0, stderr)
 
         self.assertTrue(hasLine(self.temp_file, 'first'))
         self.assertTrue(hasLine(self.temp_file, 'second'))
@@ -96,7 +96,7 @@ class TestExtendHosts(unittest.TestCase):
 
         returncode, stdout, stderr = self.extend(self.temp_file, 'bar')
 
-        self.assertEquals(returncode, 0, stderr)
+        self.assertEqual(returncode, 0, stderr)
 
         self.assertTrue(hasLine(self.temp_file, 'bar'))
         self.assertFalse(hasLine(self.temp_file, 'foo'))
@@ -117,7 +117,7 @@ class TestExtendHosts(unittest.TestCase):
         returncode, stdout, stderr = self.extend(self.temp_file,
                                                  'oof\nrab\nzab')
 
-        self.assertEquals(returncode, 0, stderr)
+        self.assertEqual(returncode, 0, stderr)
 
         self.assertTrue(hasLine(self.temp_file, 'first'))
         self.assertTrue(hasLine(self.temp_file, 'second'))
