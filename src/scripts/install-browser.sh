@@ -74,8 +74,14 @@ install_safari_technology_preview() {
   # http://commandlinemac.blogspot.com/2008/12/installing-dmg-application-from-command.html
   output=$(hdiutil mount $archive | tee /dev/stderr)
   device=$(echo "$output" | grep Apple_partition_scheme | awk '{ print $1; }')
+  # The package volume is partially dependent on the state of the system, so
+  # the path must be inferred from the output of `hdiutil`. (Specifically, if a
+  # package volume from some prior installation attempt is present, then the
+  # volume produced for this invocation will include a unique identifier.)
+  pkg_volume=$(echo "$output" | egrep '^/.*Apple_HFS' | \
+    sed -E 's/[[:space:]]+/ /g' | cut -d' ' -f 3-)
   installer \
-    -package '/Volumes/Safari Technology Preview/Safari Technology Preview.pkg' \
+    -package "$pkg_volume/Safari Technology Preview.pkg" \
     -target '/Volumes/Macintosh HD' >&2 || return 1
   result=$?
 
