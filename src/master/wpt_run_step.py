@@ -82,8 +82,9 @@ class WptRunStep(steps.ShellCommand):
         else:
             if browser_name != 'safari':
                 command = [
-                    'xvfb-run', '--auto-servernum', '--error-file',
-                    '/var/log/xvfb/xvfb.log'
+                    'xvfb-run', '--auto-servernum',
+                    '--server-args=-screen 0 1280x1024x24',
+                    '--error-file', '/var/log/xvfb/xvfb.log'
                 ] + command
 
                 # The WPT CLI does not support specifying a path to the Safari
