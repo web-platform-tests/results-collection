@@ -23,6 +23,9 @@ MIRRORED_STP_65 = ('https://storage.googleapis.com/' +
 MIRRORED_STP_66_BROKEN = ('https://storage.googleapis.com/' +
                           'browsers/safari-experimental-macos/' +
                           'd646aa325414b596b677ee4aafeca455')
+MIRRORED_STP_82 = ('https://storage.googleapis.com/' +
+                   'browsers/safari-experimental-macos/' +
+                   '0f8a3b3606f70d59a09bf12d6e997976')
 
 
 def main(browser_name, channel, application, os_name, bucket_name):
@@ -57,6 +60,23 @@ def main(browser_name, channel, application, os_name, bucket_name):
             source_url = locate_chrome(channel)
         elif browser_name == 'safari':
             source_url = locate_safari(channel)
+
+            # Version 83 of Safari Technology Preview was the last to be
+            # published with support for the "High Sierra" release of macOS
+            # [1]. That version also includes a regression which interrupts
+            # testing. In order to collect results from a High Sierra system,
+            # STP version 82 (as previously mirrored in this project's object
+            # storage) must be used.
+            #
+            # [1]
+            # https://github.com/web-platform-tests/wpt/issues/17186#issuecomment-499247191
+            # [2] https://github.com/web-platform-tests/wpt/pull/17187
+            if not source_url:
+                logger.info(
+                    'The latest version of Safari Technology Preview is not ' +
+                    'available. Using version 82.'
+                )
+                source_url = MIRRORED_STP_82
     else:
         if channel != 'stable':
             raise ValueError(
