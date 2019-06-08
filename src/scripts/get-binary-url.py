@@ -25,7 +25,7 @@ MIRRORED_STP_66_BROKEN = ('https://storage.googleapis.com/' +
                           'd646aa325414b596b677ee4aafeca455')
 MIRRORED_STP_82 = ('https://storage.googleapis.com/' +
                    'browsers/safari-experimental-macos/' +
-                   '0f8a3b3606f70d59a09bf12d6e997976')
+                   '7900b44cd78b4c084112443dd40f4909')
 
 
 def main(browser_name, channel, application, os_name, bucket_name):
