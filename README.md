@@ -1,10 +1,13 @@
 # WPT Results Collector [![Build Status](https://travis-ci.org/web-platform-tests/results-collection.svg?branch=master)](https://travis-ci.org/web-platform-tests/results-collection)
 
+**Notice** This project was decommissioned on 2019-11-05. It was used to
+collect results published to [wpt.fyi](https://wpt.fyi) for the two years prior
+to this date, so the source code is available online for historical reference.
+
 This project defines a procedure to provision and deploy systems for running
 [the web-platform-tests](https://github.com/web-platform-tests/wpt) in a number
-of configurations. It currently provides data to power
-[wpt.fyi](https://wpt.fyi), a dashboard for reviewing current and historic test
-results.
+of configurations. It once provided data to power [wpt.fyi](https://wpt.fyi), a
+dashboard for reviewing current and historic test results.
 
 The deployment process is facilitated by [the Ansible configuration management
 tool](https://www.ansible.com/). The running system is implemented with
