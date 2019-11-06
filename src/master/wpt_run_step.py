@@ -116,7 +116,10 @@ class WptRunStep(steps.ShellCommand):
             # Chrome to call getUserMedia without failing out.
             command.extend([
                 '--binary-arg=--use-fake-ui-for-media-stream',
-                '--binary-arg=--use-fake-device-for-media-stream'
+                '--binary-arg=--use-fake-device-for-media-stream',
+                # See
+                # https://developers.google.com/web/updates/2017/09/autoplay-policy-changes
+                '--binary-arg=--autoplay-policy=no-user-gesture-required'
             ])
 
             if properties.getProperty('browser_channel') == 'experimental':
