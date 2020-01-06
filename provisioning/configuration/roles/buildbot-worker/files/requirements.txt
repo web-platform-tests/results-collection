@@ -1,1 +1,1 @@
-buildbot[bundle]==1.1.0
+buildbot[bundle]==1.8.2
