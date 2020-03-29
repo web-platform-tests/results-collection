@@ -116,7 +116,8 @@ class WptRunStep(steps.ShellCommand):
             # Chrome to call getUserMedia without failing out.
             command.extend([
                 '--binary-arg=--use-fake-ui-for-media-stream',
-                '--binary-arg=--use-fake-device-for-media-stream'
+                '--binary-arg=--use-fake-device-for-media-stream',
+                '--binary-arg=--enable-blink-features=MojoJS,MojoJSTest'
             ])
 
             if properties.getProperty('browser_channel') == 'experimental':
